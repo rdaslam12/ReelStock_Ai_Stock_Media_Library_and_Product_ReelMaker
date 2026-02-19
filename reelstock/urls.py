@@ -38,5 +38,6 @@ urlpatterns = [
     path('create/', studio_views.create, name='create'),
     path('my-assets/', studio_views.my_assets, name='my_assets'),
     # Moderation dashboard
-    path('moderation/', include('moderation.urls')),
+    path('admin-panel/', include('moderation.urls')),
+
 ]

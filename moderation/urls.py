@@ -6,7 +6,9 @@ The moderation dashboard is available at ``/moderation/``.
 from django.urls import path
 from . import views
 
-
 urlpatterns = [
-    path('', views.dashboard, name='moderation_dashboard'),
+    path("", views.admin_dashboard, name="admin_dashboard"),
+    path("login/", views.admin_login, name="admin_login"),
+    path("assets/", views.admin_assets, name="admin_assets"),
+
 ]

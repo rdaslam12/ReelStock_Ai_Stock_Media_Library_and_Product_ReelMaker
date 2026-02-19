@@ -1,76 +1,154 @@
-{% extends 'base.html' %}
+{% extends "admin_base.html" %}
 {% load static %}
 
+{% block page_title %}Admin Dashboard - Overview{% endblock %}
+
 {% block content %}
-  <h1 class="h3 mb-4">Moderation Dashboard</h1>
-  <p class="text-muted">This admin interface lists all assets and reports.  Actions are placeholders for future functionality.</p>
-  <div class="mb-4">
-    <h2 class="h5">Assets</h2>
-    <div class="table-responsive">
-      <table class="table table-striped align-middle">
-        <thead class="table-light">
-          <tr>
-            <th scope="col">ID</th>
-            <th scope="col">Thumbnail</th>
-            <th scope="col">Title</th>
-            <th scope="col">Category</th>
-            <th scope="col">Owner</th>
-            <th scope="col">Published</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for asset in assets %}
-            <tr>
-              <td>{{ asset.id }}</td>
-              <td><img src="{% static asset.thumbnail %}" alt="thumb" width="60" class="rounded" /></td>
-              <td>{{ asset.title }}</td>
-              <td>{{ asset.category }}</td>
-              <td>{{ asset.owner }}</td>
-              <td>{% if asset.published %}Yes{% else %}No{% endif %}</td>
-              <td>
-                <div class="btn-group" role="group" aria-label="Actions">
-                  <button class="btn btn-sm btn-success">Approve</button>
-                  <button class="btn btn-sm btn-warning">Hide</button>
-                  <button class="btn btn-sm btn-danger">Delete</button>
-                </div>
-              </td>
-            </tr>
+  <!-- KPI Row -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-lg">
+      <div class="admin-card p-3 h-100">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="kpi-title">Total Assets</div>
+            <p class="kpi-value">{{ assets|length }}</p>
+            <p class="kpi-sub">Published only (mock)</p>
+          </div>
+          <div class="rounded-3 p-2" style="background:#e8f0ff;color:#1d4ed8;"><i class="bi bi-collection-play"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg">
+      <div class="admin-card p-3 h-100">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="kpi-title">Open Reports</div>
+            <p class="kpi-value">{{ reports|length }}</p>
+            <p class="kpi-sub">Waiting review</p>
+          </div>
+          <div class="rounded-3 p-2" style="background:#fff7ed;color:#c2410c;"><i class="bi bi-flag"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg">
+      <div class="admin-card p-3 h-100">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <div class="kpi-title">New Uploads</div>
+            <p class="kpi-value">+{{ assets|length }}</p>
+            <p class="kpi-sub">Today (mock)</p>
+          </div>
+          <div class="rounded-3 p-2" style="background:#ecfdf5;color:#047857;"><i class="bi bi-upload"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg">
+      <div class="admin-card p-3 h-100">
+        <div class="kpi-title mb-2">Quick Actions</div>
+        <div class="d-flex gap-2 flex-wrap">
+          <button class="btn btn-sm btn-outline-secondary">Export CSV (UI)</button>
+          <button class="btn btn-sm btn-outline-secondary">Bulk Review (UI)</button>
+          <button class="btn btn-sm btn-outline-secondary">Settings (UI)</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg">
+      <div class="admin-card p-3 h-100">
+        <div class="kpi-title mb-2">Moderation Queue Summary</div>
+        <div class="text-muted small">Recent reported items (mock)</div>
+        <div class="mt-3 d-grid gap-2">
+          {% for r in reports|slice:":2" %}
+            <div class="d-flex align-items-center justify-content-between">
+              <div>
+                <div class="fw-semibold">Asset #{{ r.asset_id }}</div>
+                <div class="text-muted small">Reason: {{ r.reason }}</div>
+              </div>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-primary">Review</button>
+                <button class="btn btn-sm btn-outline-danger">Remove</button>
+                <button class="btn btn-sm btn-outline-secondary">Dismiss</button>
+              </div>
+            </div>
           {% endfor %}
-        </tbody>
-      </table>
+        </div>
+      </div>
     </div>
   </div>
-  <div>
-    <h2 class="h5">Reports</h2>
-    <div class="table-responsive">
-      <table class="table table-striped align-middle">
-        <thead class="table-light">
-          <tr>
-            <th scope="col">Report ID</th>
-            <th scope="col">Asset ID</th>
-            <th scope="col">Reason</th>
-            <th scope="col">Status</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for report in reports %}
-            <tr>
-              <td>{{ report.id }}</td>
-              <td>{{ report.asset_id }}</td>
-              <td>{{ report.reason }}</td>
-              <td>{{ report.status }}</td>
-              <td>
-                <div class="btn-group" role="group">
-                  <button class="btn btn-sm btn-primary">Mark Resolved</button>
-                  <button class="btn btn-sm btn-danger">Delete Report</button>
-                </div>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+
+  <!-- Tables -->
+  <div class="row g-3">
+    <div class="col-lg-7" id="assets">
+      <div class="admin-card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="fw-semibold">Recent Assets</div>
+          <span class="text-muted small">Latest uploads (mock)</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>Preview</th>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Owner</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in assets|slice:":5" %}
+              <tr>
+                <td><img src="{% static a.thumbnail %}" width="64" class="rounded-3 border" alt=""></td>
+                <td class="fw-semibold">{{ a.title }}</td>
+                <td><span class="badge badge-soft">{{ a.category }}</span></td>
+                <td class="text-muted">{{ a.owner }}</td>
+                <td>
+                  <div class="btn-group">
+                    <a class="btn btn-sm btn-outline-secondary" href="/asset/{{ a.id }}/">View</a>
+                    <button class="btn btn-sm btn-outline-warning">Hide</button>
+                    <button class="btn btn-sm btn-outline-danger">Delete</button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-5" id="reports">
+      <div class="admin-card p-3">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <div class="fw-semibold">Recent Reports</div>
+          <span class="text-muted small">Community flags (mock)</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Asset</th>
+                <th>Reason</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in reports %}
+              <tr>
+                <td class="fw-semibold">#{{ r.id }}</td>
+                <td class="text-muted">#{{ r.asset_id }}</td>
+                <td>{{ r.reason }}</td>
+                <td><span class="badge badge-soft">{{ r.status }}</span></td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
 {% endblock %}

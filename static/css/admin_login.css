@@ -1,0 +1,66 @@
+/* ===== Background ===== */
+.admin-body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #040913, #2e4365, #9203f9);
+    background-size: 200% 200%;
+    animation: gradientMove 12s ease infinite;
+    color: #e5e7eb;
+  }
+  
+  /* Animated gradient */
+  @keyframes gradientMove {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  /* ===== Glass Card ===== */
+  .card {
+    background: rgba(23, 2, 26, 0.485);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 16px;
+    color: #e5e7eb;
+    animation: fadeUp 0.8s ease;
+  }
+  
+  /* ===== Subtle Fade + Float Animation ===== */
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(80px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .card:hover {
+    transform: translateY(-6px);
+    transition: all 0.9s ease;
+  }
+  
+  /* Input styling */
+  .form-control {
+    background: rgba(255,255,255,0.08);
+    border: 0.5px solid rgb(252, 252, 252);
+    color: #fff;
+  }
+  
+  .form-control:focus {
+    background: rgba(255,255,255,0.12);
+    border-color: #010509;
+    box-shadow: none;
+    color: #efdff8;
+  }
+  .form-control::placeholder {
+    color: rgba(205, 230, 238, 0.41); /* Change this to whatever light color you prefer */
+    opacity: 1; /* Ensures browsers don't wash out the color */
+  }
+  
+  .text-muted {
+    color: rgba(255, 255, 255, 0.825) !important;
+  }
+  

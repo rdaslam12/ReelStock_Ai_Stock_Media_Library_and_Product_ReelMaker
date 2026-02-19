@@ -1,0 +1,38 @@
+/* ===== Admin (Light Clean) ===== */
+.admin-wrap { background: #f5f7fb; min-height: 100vh; }
+.admin-sidebar {
+  width: 260px; min-height: 100vh;
+  background: #ffffff;
+  border-right: 1px solid #e9eef5;
+}
+.admin-brand { font-weight: 800; }
+.admin-link {
+  color: #334155; border-radius: 12px; padding: 10px 12px;
+}
+.admin-link:hover { background: #f1f5f9; }
+.admin-link.active { background: #e8f0ff; color: #1d4ed8; font-weight: 600; }
+
+.admin-topbar {
+  background: #ffffff;
+  border-bottom: 1px solid #e9eef5;
+}
+
+.admin-card {
+  background: #ffffff;
+  border: 1px solid #e9eef5;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+}
+
+.kpi-title { font-size: 0.85rem; color: #64748b; }
+.kpi-value { font-size: 1.7rem; font-weight: 800; margin: 0; }
+.kpi-sub { font-size: 0.85rem; color: #64748b; margin: 0; }
+
+.badge-soft {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+}
+
+.table thead th { color: #64748b; font-weight: 600; }
+.table td, .table th { vertical-align: middle; }
