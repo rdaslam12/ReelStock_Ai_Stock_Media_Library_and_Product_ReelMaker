@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+  <h1 class="h3 mb-4">My Assets</h1>
+  <p class="text-muted">Draft assets are visible only to you.  Published assets appear in the public library.</p>
+  <!-- Draft assets section -->
+  <h2 class="h5 mt-4">Drafts</h2>
+  <div class="row">
+    {% for asset in draft_assets %}
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm position-relative">
+          <a href="/asset/{{ asset.id }}/" class="text-decoration-none">
+            <img src="{% static asset.thumbnail %}" class="card-img-top" alt="{{ asset.title }}" />
+          </a>
+          <div class="card-body">
+            <h5 class="card-title fs-6 fw-bold mb-1">{{ asset.title }}</h5>
+            <span class="badge bg-secondary">{{ asset.category }}</span>
+          </div>
+          <div class="card-footer bg-white border-top-0 d-flex gap-2">
+            <button class="btn btn-sm btn-success">Publish</button>
+            <button class="btn btn-sm btn-danger">Delete</button>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <p>You have no draft assets.</p>
+      </div>
+    {% endfor %}
+  </div>
+  <!-- Published assets section -->
+  <h2 class="h5 mt-4">Published</h2>
+  <div class="row">
+    {% for asset in published_assets %}
+      <div class="col-md-4 mb-4">
+        <div class="card h-100 shadow-sm position-relative">
+          <a href="/asset/{{ asset.id }}/" class="text-decoration-none">
+            <img src="{% static asset.thumbnail %}" class="card-img-top" alt="{{ asset.title }}" />
+          </a>
+          <div class="card-body">
+            <h5 class="card-title fs-6 fw-bold mb-1">{{ asset.title }}</h5>
+            <span class="badge bg-secondary">{{ asset.category }}</span>
+          </div>
+          <div class="card-footer bg-white border-top-0 d-flex gap-2">
+            <button class="btn btn-sm btn-warning">Unpublish</button>
+            <button class="btn btn-sm btn-danger">Delete</button>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <div class="col-12">
+        <p>You have no published assets.</p>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

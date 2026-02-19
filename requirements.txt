@@ -1,0 +1,2 @@
+# Required Python packages for running the ReelStock Django frontend
+Django>=4.2,<5.0

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+  <h1 class="h3 mb-4">Moderation Dashboard</h1>
+  <p class="text-muted">This admin interface lists all assets and reports.  Actions are placeholders for future functionality.</p>
+  <div class="mb-4">
+    <h2 class="h5">Assets</h2>
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Thumbnail</th>
+            <th scope="col">Title</th>
+            <th scope="col">Category</th>
+            <th scope="col">Owner</th>
+            <th scope="col">Published</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for asset in assets %}
+            <tr>
+              <td>{{ asset.id }}</td>
+              <td><img src="{% static asset.thumbnail %}" alt="thumb" width="60" class="rounded" /></td>
+              <td>{{ asset.title }}</td>
+              <td>{{ asset.category }}</td>
+              <td>{{ asset.owner }}</td>
+              <td>{% if asset.published %}Yes{% else %}No{% endif %}</td>
+              <td>
+                <div class="btn-group" role="group" aria-label="Actions">
+                  <button class="btn btn-sm btn-success">Approve</button>
+                  <button class="btn btn-sm btn-warning">Hide</button>
+                  <button class="btn btn-sm btn-danger">Delete</button>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div>
+    <h2 class="h5">Reports</h2>
+    <div class="table-responsive">
+      <table class="table table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">Report ID</th>
+            <th scope="col">Asset ID</th>
+            <th scope="col">Reason</th>
+            <th scope="col">Status</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for report in reports %}
+            <tr>
+              <td>{{ report.id }}</td>
+              <td>{{ report.asset_id }}</td>
+              <td>{{ report.reason }}</td>
+              <td>{{ report.status }}</td>
+              <td>
+                <div class="btn-group" role="group">
+                  <button class="btn btn-sm btn-primary">Mark Resolved</button>
+                  <button class="btn btn-sm btn-danger">Delete Report</button>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

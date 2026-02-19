@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1 class="h3 mb-4">Asset Library</h1>
+  <!-- Search and filter controls -->
+  <form method="get" class="row g-3 align-items-center mb-3" id="searchForm">
+    <div class="col-md-4">
+      <input
+        type="text"
+        class="form-control"
+        name="search"
+        id="searchInput"
+        placeholder="Search by title or tag"
+        value="{{ search_query }}"
+      />
+    </div>
+    <div class="col-md-4">
+      <select name="category" class="form-select" id="categorySelect">
+        <option value="" {% if not current_category %}selected{% endif %}>All Categories</option>
+        {% for cat in categories %}
+          <option value="{{ cat }}" {% if cat == current_category %}selected{% endif %}>{{ cat }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-primary w-100">Filter</button>
+    </div>
+    <div class="col-md-2">
+      <a href="{% url 'library' %}" class="btn btn-outline-secondary w-100">Reset</a>
+    </div>
+  </form>
+  <!-- Asset grid -->
+  <div class="row" id="assetGrid">
+    {% for asset in assets %}
+      <div class="col-md-4 mb-4 asset-card" data-title="{{ asset.title|lower }}" data-tags="{{ asset.tags|join:' '|lower }}" data-category="{{ asset.category|lower }}">
+        {% include 'libraryapp/_asset_card.html' with asset=asset %}
+      </div>
+    {% empty %}
+      <div class="col-12"><p>No assets found.</p></div>
+    {% endfor %}
+  </div>
+  <!-- Pagination -->
+  {% if total_pages > 1 %}
+    {% include 'libraryapp/_pagination.html' %}
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  <!-- Optional client‑side filtering script (works when all assets are passed in ``all_assets``) -->
+  <script>
+    // When the search form is submitted, the server handles filtering via query parameters.
+    // The following script demonstrates client‑side filtering but is disabled because the
+    // server already implements filtering.  If you wish to use client‑side filtering,
+    // uncomment the code below and remove the form's submission.
+    /*
+    const searchInput = document.getElementById('searchInput');
+    const categorySelect = document.getElementById('categorySelect');
+    const cards = document.querySelectorAll('.asset-card');
+    function filter() {
+      const searchValue = searchInput.value.toLowerCase();
+      const categoryValue = categorySelect.value.toLowerCase();
+      cards.forEach(card => {
+        const title = card.dataset.title;
+        const tags = card.dataset.tags;
+        const cat = card.dataset.category;
+        const matchesSearch = !searchValue || title.includes(searchValue) || tags.includes(searchValue);
+        const matchesCategory = !categoryValue || cat === categoryValue;
+        card.style.display = matchesSearch && matchesCategory ? '' : 'none';
+      });
+    }
+    searchInput.addEventListener('input', filter);
+    categorySelect.addEventListener('change', filter);
+    */
+  </script>
+{% endblock %}

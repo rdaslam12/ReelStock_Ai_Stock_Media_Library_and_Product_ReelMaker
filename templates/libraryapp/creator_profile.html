@@ -1,0 +1,34 @@
+{% load static %}
+
+{% extends 'base.html' %}
+
+{% block content %}
+  {% if creator %}
+    <div class="row align-items-center mb-4">
+      <div class="col-auto">
+        {% if creator.avatar %}
+          <img src="{% static creator.avatar %}" alt="{{ creator.username }} avatar" class="rounded-circle" width="80" height="80" />
+        {% else %}
+          <div class="rounded-circle bg-secondary" style="width:80px;height:80px;"></div>
+        {% endif %}
+      </div>
+      <div class="col">
+        <h2 class="h4 mb-1">{{ creator.display_name|default:creator.username }}</h2>
+        <p class="mb-0 text-muted small">@{{ creator.username }}</p>
+        {% if creator.bio %}<p class="mt-2">{{ creator.bio }}</p>{% endif %}
+      </div>
+    </div>
+    <h3 class="h5 mb-3">Published Assets</h3>
+    <div class="row">
+      {% for asset in assets %}
+        <div class="col-md-3 mb-4">
+          {% include 'libraryapp/_asset_card.html' with asset=asset %}
+        </div>
+      {% empty %}
+        <div class="col-12"><p>No assets published yet.</p></div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>Creator not found.</p>
+  {% endif %}
+{% endblock %}

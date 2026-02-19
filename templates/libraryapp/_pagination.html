@@ -1,0 +1,24 @@
+{#
+  Pagination control.  Expects ``page``, ``total_pages``, ``page_range``,
+  ``current_category`` and ``search_query`` in the context.  Generates
+  links that preserve the current filters.
+#}
+<nav aria-label="Page navigation">
+  <ul class="pagination justify-content-center">
+    {% if page > 1 %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page|add:'-1' }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Previous</a>
+      </li>
+    {% endif %}
+    {% for p in page_range %}
+      <li class="page-item {% if p == page %}active{% endif %}">
+        <a class="page-link" href="?page={{ p }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">{{ p }}</a>
+      </li>
+    {% endfor %}
+    {% if page < total_pages %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page|add:'1' }}{% if current_category %}&category={{ current_category }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}">Next</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>

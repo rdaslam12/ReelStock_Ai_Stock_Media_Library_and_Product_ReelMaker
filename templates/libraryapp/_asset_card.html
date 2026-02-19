@@ -1,0 +1,15 @@
+{% load static %}
+
+<div class="card h-100 shadow-sm">
+  <a href="/asset/{{ asset.id }}/" class="text-decoration-none">
+    <img
+      src="{% static asset.thumbnail %}"
+      class="card-img-top"
+      alt="{{ asset.title }} thumbnail"
+    />
+  </a>
+  <div class="card-body">
+    <h5 class="card-title fs-6 fw-bold mb-1 text-truncate">{{ asset.title }}</h5>
+    <p class="mb-0"><span class="badge bg-secondary">{{ asset.category }}</span></p>
+  </div>
+</div>

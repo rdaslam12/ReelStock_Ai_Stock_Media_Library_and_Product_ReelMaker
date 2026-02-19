@@ -1,0 +1,39 @@
+/* Custom styles for ReelStock */
+
+body {
+  /* Ensure space for the fixed navbar */
+  padding-top: 4.5rem;
+}
+
+.navbar-brand {
+  font-weight: 700;
+}
+
+.card-img-top {
+  object-fit: cover;
+  height: 200px;
+}
+
+.asset-card .card-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Responsive grid spacing */
+@media (min-width: 576px) {
+  .card-img-top {
+    height: 180px;
+  }
+}
+
+@media (min-width: 768px) {
+  .card-img-top {
+    height: 200px;
+  }
+}
+
+/* Footer styling */
+footer {
+  border-top: 1px solid #e9ecef;
+}

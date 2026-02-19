@@ -1,0 +1,94 @@
+{% load static %}
+
+{% extends 'base.html' %}
+
+{% block content %}
+  {% if asset %}
+    <div class="row mb-4">
+      <div class="col-md-8">
+        {% if asset.type == 'video' %}
+          <div class="ratio ratio-16x9">
+            <video controls poster="{% static asset.thumbnail %}" class="w-100">
+              <source src="{% static asset.file %}" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        {% else %}
+          <img src="{% static asset.file %}" alt="{{ asset.title }}" class="img-fluid rounded shadow-sm" />
+        {% endif %}
+      </div>
+      <div class="col-md-4">
+        <h2 class="h4">{{ asset.title }}</h2>
+        <p><span class="badge bg-secondary">{{ asset.category }}</span></p>
+        <p class="small text-muted">Uploaded on {{ asset.created_at }}</p>
+        {% if asset.tags %}
+          <p>
+            {% for tag in asset.tags %}
+              <span class="badge bg-light text-dark me-1">#{{ tag }}</span>
+            {% endfor %}
+          </p>
+        {% endif %}
+        <p>
+          Creator:
+          {% if creator %}
+            <a href="/creator/{{ creator.username }}/">{{ creator.display_name|default:creator.username }}</a>
+          {% else %}
+            <span class="text-muted">Unknown</span>
+          {% endif %}
+        </p>
+        <div class="d-flex gap-2 mt-3">
+          <a class="btn btn-primary" href="{% static asset.file %}" download>Download</a>
+          <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#reportModal">
+            Report
+          </button>
+        </div>
+      </div>
+    </div>
+    <!-- Other assets by creator -->
+    {% if other_assets %}
+      <h3 class="h5 mb-3">More by this creator</h3>
+      <div class="row">
+        {% for other in other_assets %}
+          <div class="col-md-3 mb-4">
+            {% include 'libraryapp/_asset_card.html' with asset=other %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Report modal -->
+    <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="reportModalLabel">Report Asset</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form>
+              <div class="mb-3">
+                <label for="reportReason" class="form-label">Reason</label>
+                <select id="reportReason" class="form-select">
+                  <option value="spam">Spam</option>
+                  <option value="inappropriate">Inappropriate content</option>
+                  <option value="copyright">Copyright infringement</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="reportDetails" class="form-label">Additional details (optional)</label>
+                <textarea id="reportDetails" class="form-control" rows="3"></textarea>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Submit Report</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <p>Asset not found.</p>
+  {% endif %}
+{% endblock %}

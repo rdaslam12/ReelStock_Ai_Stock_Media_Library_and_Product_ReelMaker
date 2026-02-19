@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="text-center py-5">
+    <h1 class="display-4 fw-bold mb-3">Welcome to ReelStock</h1>
+    <p class="lead mb-4">
+      Discover AI‑generated stock videos and images or create your own.
+    </p>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="{% url 'library' %}" class="btn btn-primary btn-lg">Browse Library</a>
+      <a href="{% url 'create' %}" class="btn btn-outline-primary btn-lg">Create Now</a>
+    </div>
+  </div>
+{% endblock %}

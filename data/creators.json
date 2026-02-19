@@ -1,0 +1,20 @@
+[
+  {
+    "username": "alice",
+    "display_name": "Alice Smith",
+    "bio": "Fashion enthusiast and AI creator.",
+    "avatar": "img/placeholder.png"
+  },
+  {
+    "username": "bob",
+    "display_name": "Bob Lee",
+    "bio": "Creative video maker and storyteller.",
+    "avatar": "img/placeholder.png"
+  },
+  {
+    "username": "charlie",
+    "display_name": "Charlie Kim",
+    "bio": "AI enthusiast exploring generative media.",
+    "avatar": "img/placeholder.png"
+  }
+]

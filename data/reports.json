@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "asset_id": 2,
+    "reporter_id": "charlie",
+    "reason": "inappropriate",
+    "status": "Pending"
+  },
+  {
+    "id": 2,
+    "asset_id": 7,
+    "reporter_id": "alice",
+    "reason": "spam",
+    "status": "Resolved"
+  }
+]
