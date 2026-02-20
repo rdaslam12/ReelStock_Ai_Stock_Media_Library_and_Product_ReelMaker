@@ -1,5 +1,4 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,6 +14,7 @@
 <body>
   <div class="admin-wrap">
     <div class="d-flex">
+
       <!-- Sidebar -->
       <aside class="admin-sidebar p-3">
         <div class="d-flex align-items-center gap-2 mb-4">
@@ -28,15 +28,18 @@
         </div>
 
         <nav class="d-grid gap-1">
-          <a class="admin-link active text-decoration-none" href="{% url 'admin_dashboard' %}">
+          <a class="admin-link {% if request.path == '/admin-panel/' %}active{% endif %} text-decoration-none"
+             href="{% url 'admin_dashboard' %}">
             <i class="bi bi-grid-1x2 me-2"></i>Overview
           </a>
-          <a class="admin-link text-decoration-none" href="{% url 'admin_assets' %}">
+
+          <a class="admin-link {% if '/admin-panel/assets/' in request.path %}active{% endif %} text-decoration-none"
+             href="{% url 'admin_assets' %}">
             <i class="bi bi-collection-play me-2"></i>Assets
-          </a>
-          
-          <a class="admin-link text-decoration-none" href="{% url 'admin_dashboard' %}#reports">
-            <i class="bi bi-flag me-2"></i>Reports
+        <a class="admin-link {% if '/admin-panel/reports/' in request.path %}active{% endif %} text-decoration-none"
+            href="{% url 'admin_reports' %}">
+           <i class="bi bi-flag me-2"></i>Reports
+         </a>
           </a>
         </nav>
 
@@ -70,6 +73,7 @@
           {% block content %}{% endblock %}
         </main>
       </div>
+
     </div>
   </div>
 

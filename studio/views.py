@@ -43,3 +43,8 @@ def my_assets(request: HttpRequest) -> HttpResponse:
         'published_assets': published_assets,
     }
     return render(request, 'studio/my_assets.html', context)
+
+from django.shortcuts import render
+
+def prompt_to_image(request):
+    return render(request, "studio/prompt_to_image.html")

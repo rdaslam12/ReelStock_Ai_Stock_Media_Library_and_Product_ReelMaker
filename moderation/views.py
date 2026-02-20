@@ -9,6 +9,7 @@ import json
 import os
 from django.conf import settings
 from django.shortcuts import render
+from django.shortcuts import redirect
 
 def _load_json(filename):
     path = os.path.join(settings.BASE_DIR, "data", filename)
@@ -25,4 +26,22 @@ def admin_login(request):
 def admin_assets(request):
     assets = _load_json("assets.json")
     return render(request, "moderation/admin_assets.html", {"assets": assets})
+def admin_reports(request):
+    reports = _load_json("reports.json")
+    assets = _load_json("assets.json")
+    return render(request, "moderation/admin_reports.html", {"reports": reports, "assets": assets})
+
+
+def mock_login(request):
+    # UI-only login: set session flags
+    request.session["is_logged_in"] = True
+    request.session["username"] = "Towhid"  # demo name (change anything)
+    return redirect("library")  # after login go to Library
+
+def mock_logout(request):
+    request.session["is_logged_in"] = False
+    request.session.pop("username", None)
+    return redirect("home")  # after logout go to Home (change to "library" if you want)
+def account_page(request):
+    return render(request, "core/account.html")
 

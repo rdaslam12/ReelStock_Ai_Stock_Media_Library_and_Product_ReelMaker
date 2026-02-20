@@ -7,71 +7,158 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>ReelStock</title>
-    <!-- Bootstrap 5 CSS -->
-     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Custom styles -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
   </head>
-  <body>
-    <!-- Navigation bar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
-      <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="{% url 'home' %}">ReelStock</a>
-        <button
-          class="navbar-toggler"
-          type="button"
-          data-bs-toggle="collapse"
-          data-bs-target="#navbarNav"
-          aria-controls="navbarNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+  <body class="d-flex flex-column min-vh-100">
+    <nav class="navbar fixed-top glass-nav">
+      <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
+    
+        <!-- Left: Brand -->
+        <a class="navbar-brand fs-4 mb-0 text-dark text-decoration-none" href="{% url 'home' %}" style="letter-spacing:-0.5px;">
+          <span class="text-primary">Reel</span>Stock
+        </a>
+    
+        <!-- Center: Pill Nav -->
+        <div class="nav-pills-wrap">
+          <ul class="navbar-nav flex-row align-items-center gap-1 m-0 p-1 nav-pills-inner">
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'home' %}">Home</a>
+              {% url 'library' as url_lib %}
+              <a class="nav-link custom-link {% if request.path == url_lib %}active{% endif %}" href="{{ url_lib }}">Library</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'library' %}">Library</a>
+              {% url 'create' as url_create %}
+              <a class="nav-link custom-link {% if request.path == url_create %}active{% endif %}" href="{{ url_create }}">Reel Maker</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="{% url 'create' %}">Create</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'my_assets' %}">My Assets</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'login' %}">Login</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="{% url 'register' %}">Register</a>
+              {% url 'prompt_to_image' as url_gen %}
+              <a class="nav-link custom-link {% if request.path == url_gen or url_gen in request.path %}active{% endif %}"
+                 href="{{ url_gen }}">
+                Generate
+              </a>
             </li>
           </ul>
         </div>
+    
+        <!-- Right: Login / User -->
+        <div class="d-flex align-items-center gap-2">
+          {% if request.session.is_logged_in %}
+            <img src="{% static 'img/avatar.png' %}" class="nav-avatar" alt="avatar">
+            <div class="dropdown">
+              <a class="btn btn-primary px-3 rounded-pill shadow-sm dropdown-toggle"
+                 href="#" role="button" data-bs-toggle="dropdown">
+                {{ request.session.username|default:"Admin" }}
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2">
+                <li><a class="dropdown-item" href="{% url 'my_assets' %}">My Creations</a></li>
+                <li><a class="dropdown-item" href="{% url 'account' %}">My Account</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'mock_logout' %}">Logout</a></li>
+              </ul>
+            </div>
+          {% else %}
+            <button class="btn btn-primary px-4 rounded-pill shadow-sm" data-bs-toggle="modal" data-bs-target="#loginModal">
+              Log in
+            </button>
+          {% endif %}
+        </div>
+    
       </div>
     </nav>
 
-    <!-- Main content area -->
-    <main class="container" style="padding-top: 4.5rem;">
+    <main class="container flex-grow-1" style="padding-top: 6rem;">
       {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
+    <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4">
+          <div class="modal-header border-0">
+            <h5 class="modal-title fw-bold">Log in to ReelStock</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+    
+          <div class="modal-body pt-0">
+            <button class="btn btn-outline-dark w-100 d-flex align-items-center justify-content-center gap-2 mb-3">
+              <span style="font-weight:600;">G</span>
+              Continue with Google
+            </button>
+    
+            <div class="text-center text-muted small mb-3">or</div>
+    
+            <form>
+              <div class="mb-2">
+                <label class="form-label">Email</label>
+                <input class="form-control" type="email" placeholder="you@email.com">
+              </div>
+    
+              <div class="mb-3">
+                <label class="form-label">Password</label>
+                <input class="form-control" type="password" placeholder="••••••••">
+              </div>
+    
+              <a href="{% url 'mock_login' %}" class="btn btn-primary w-100">Log in </a>
+              <div class="text-muted small mt-2">
+                Demo only. Google login will be connected later.
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <footer class="bg-light text-center mt-5 py-3">
       <div class="container">
         <small>&copy; {% now 'Y' %} ReelStock. All rights reserved.</small>
       </div>
     </footer>
 
-    <!-- Bootstrap 5 JS bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const navContainer = document.querySelector('.nav-pills-inner');
+        const links = document.querySelectorAll('.custom-link');
+        
+        // Create the pill element and add it to the navbar
+        const pill = document.createElement('div');
+        pill.classList.add('magic-pill');
+        navContainer.appendChild(pill);
+    
+        // Find the currently active page, or default to the first link
+        let activeLink = document.querySelector('.custom-link.active');
+    
+        // Function to move the pill to a specific link
+        function movePill(targetLink) {
+          if (!targetLink) {
+            pill.style.opacity = '0';
+            return;
+          }
+          pill.style.opacity = '1';
 
+          const linkRect = targetLink.getBoundingClientRect();
+          const containerRect = navContainer.getBoundingClientRect();
 
-    <!-- Page specific scripts can be inserted by child templates -->
+          pill.style.width = `${linkRect.width}px`;
+          pill.style.height = `${linkRect.height}px`;
+          pill.style.left = `${linkRect.left - containerRect.left}px`;
+          pill.style.top = `${linkRect.top - containerRect.top}px`;
+        }
+    
+        // Set initial position
+        movePill(activeLink);
+    
+        // Make it glide on hover
+        links.forEach(link => {
+          link.addEventListener('mouseenter', () => movePill(link));
+        });
+    
+        // Make it snap back to the active page when the mouse leaves the navbar
+        navContainer.addEventListener('mouseleave', () => {
+          movePill(activeLink);
+        });
+      });
+    </script>
     {% block scripts %}{% endblock %}
   </body>
 </html>

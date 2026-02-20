@@ -1,9 +1,17 @@
 /* ===== Admin (Light Clean) ===== */
 .admin-wrap { background: #f5f7fb; min-height: 100vh; }
 .admin-sidebar {
-  width: 260px; min-height: 100vh;
-  background: #ffffff;
+  
+  width: 260px;
+  min-width: 260px; 
+  flex-shrink: 0; 
+  height: 100vh; 
+  position: sticky; 
+  top: 0; 
+  background: #ffffffd4;
   border-right: 1px solid #e9eef5;
+  display: flex;
+  flex-direction: column;
 }
 .admin-brand { font-weight: 800; }
 .admin-link {
@@ -36,3 +44,30 @@
 
 .table thead th { color: #64748b; font-weight: 600; }
 .table td, .table th { vertical-align: middle; }
+
+
+.admin-link{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  padding: 10px 12px;
+}
+
+.admin-link i{
+  font-size: 16px;
+}
+/* Right details panel */
+.report-panel {
+  background: #fff;
+  border: 1px solid #e9eef5;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  position: sticky;
+  top: 88px; /* below topbar */
+}
+
+/* Status pills */
+.pill-open { background:#fee2e2; color:#991b1b; border:1px solid #fecaca; }
+.pill-resolved { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
+.pill-dismissed { background:#e2e8f0; color:#334155; border:1px solid #cbd5e1; }

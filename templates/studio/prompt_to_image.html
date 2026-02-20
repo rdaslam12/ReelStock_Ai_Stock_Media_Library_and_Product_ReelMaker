@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="row g-5">
+
+  <div class="col-lg-7">
+    <h2 class="fw-bold mb-4">Prompt to Image</h2>
+
+    <div class="mb-4">
+      <textarea id="promptInput" class="form-control rounded-4 p-3"
+        rows="4"
+        placeholder="Describe the image you want to generate... e.g., cinematic product photo of a luxury watch on black marble"></textarea>
+    </div>
+
+    <div class="row g-3 align-items-end mb-4">
+      <div class="col-md-4">
+        <label class="form-label">Style</label>
+        <select class="form-select rounded-pill">
+          <option>Cinematic</option>
+          <option>Minimal</option>
+          <option>Studio</option>
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Aspect Ratio</label>
+        <select class="form-select rounded-pill">
+          <option>16:9</option>
+          <option>1:1</option>
+          <option>9:16</option>
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <button id="generateBtn" class="btn btn-primary w-100 rounded-pill">
+          Generate Image
+        </button>
+      </div>
+    </div>
+
+    <div id="statusCard" class="card p-3 rounded-4 shadow-sm d-none">
+      <div class="fw-semibold">Generation Status</div>
+      <div id="statusText" class="text-success small mt-2">Done</div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card p-3 rounded-4 shadow-sm">
+      <div class="fw-semibold mb-2">Results</div>
+
+      <div id="resultCard" class="d-none">
+        <div class="fw-semibold mb-2">Generated Image</div>
+        <img id="resultImage" src="" class="img-fluid rounded-4 mb-3" style="height:260px; object-fit:cover;">
+
+        <div class="d-flex gap-2">
+          <a id="downloadBtn" class="btn btn-outline-primary w-100">Download PNG</a>
+          <button id="publishBtn" class="btn btn-primary w-100">Publish to Library</button>
+        </div>
+      </div>
+
+      <div id="emptyState" class="text-muted small">
+        Generate an image to preview results here.
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const generateBtn = document.getElementById("generateBtn");
+const resultCard = document.getElementById("resultCard");
+const emptyState = document.getElementById("emptyState");
+const statusCard = document.getElementById("statusCard");
+const resultImage = document.getElementById("resultImage");
+const downloadBtn = document.getElementById("downloadBtn");
+const publishBtn = document.getElementById("publishBtn");
+const promptInput = document.getElementById("promptInput");
+
+generateBtn.addEventListener("click", () => {
+  if (!promptInput.value.trim()) return;
+
+  statusCard.classList.remove("d-none");
+  resultCard.classList.add("d-none");
+  emptyState.classList.remove("d-none");
+
+  setTimeout(() => {
+    const img = `https://picsum.photos/seed/${Date.now()}/900/520`;
+
+    resultImage.src = img;
+    downloadBtn.href = img;
+    downloadBtn.download = "generated.png";
+
+    sessionStorage.setItem("latestGenerated", JSON.stringify({
+      title: promptInput.value.substring(0, 40),
+      image: img
+    }));
+
+    emptyState.classList.add("d-none");
+    resultCard.classList.remove("d-none");
+  }, 1200);
+});
+
+publishBtn.addEventListener("click", () => {
+  const data = JSON.parse(sessionStorage.getItem("latestGenerated"));
+  if (!data) return;
+
+  const published = JSON.parse(sessionStorage.getItem("publishedAssets")) || [];
+  published.unshift(data);
+  sessionStorage.setItem("publishedAssets", JSON.stringify(published));
+
+  window.location.href = "{% url 'library' %}";
+});
+</script>
+{% endblock %}

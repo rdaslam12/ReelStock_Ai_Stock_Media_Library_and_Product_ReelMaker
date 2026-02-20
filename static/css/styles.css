@@ -1,39 +1,213 @@
-/* Custom styles for ReelStock */
+/* =========================
+   ReelStock — Vibrant Modern UI
+   Animated layered gradients + glass + neon accents
+   ========================= */
 
-body {
-  /* Ensure space for the fixed navbar */
-  padding-top: 4.5rem;
+/* ---- Theme tokens ---- */
+:root{
+  --ink: #0b1220;
+  --muted: rgba(15,23,42,0.62);
+
+  --primary: #5b7cfa;       /* electric blue */
+  --primary2: #7c3aed;      /* violet */
+  --accent: #22c55e;        /* green */
+  --hot: #ff4d8d;           /* pink */
+
+  --glass: rgba(255,255,255,0.42);
+  --glassBorder: rgba(255,255,255,0.55);
+  --shadow: 0 18px 55px rgba(15,23,42,0.14);
 }
 
-.navbar-brand {
-  font-weight: 700;
+/* ---- Background: layered animated gradients ---- */
+body{
+  color: var(--ink);
+  min-height: 100vh;
+  background: radial-gradient(1200px 800px at 15% 10%, rgba(91,124,250,0.35), transparent 60%),
+              radial-gradient(900px 700px at 85% 15%, rgba(255,77,141,0.22), transparent 55%),
+              radial-gradient(1100px 900px at 75% 90%, rgba(34,197,94,0.18), transparent 60%),
+              linear-gradient(135deg, #f7f7ff 0%, #eef2ff 45%, #fdf2f8 100%);
+  background-size: 100% 100%;
+  position: relative;
+  overflow-x: hidden;
 }
 
-.card-img-top {
+/* Animated overlay blobs (no HTML needed) */
+body::before,
+body::after{
+  content:"";
+  position: fixed;
+  inset: -200px;
+  z-index: -1;
+  pointer-events: none;
+  filter: blur(48px);
+  opacity: 0.85;
+  animation: floaty 18s ease-in-out infinite;
+  transform: translate3d(0,0,0);
+}
+
+body::before{
+  background:
+    radial-gradient(600px 420px at 20% 30%, rgba(91,124,250,0.28), transparent 60%),
+    radial-gradient(520px 420px at 60% 20%, rgba(124,58,237,0.22), transparent 60%),
+    radial-gradient(560px 420px at 80% 70%, rgba(255,77,141,0.18), transparent 60%);
+}
+
+body::after{
+  animation-duration: 24s;
+  animation-direction: reverse;
+  background:
+    radial-gradient(520px 380px at 25% 80%, rgba(34,197,94,0.18), transparent 60%),
+    radial-gradient(620px 520px at 70% 70%, rgba(91,124,250,0.16), transparent 60%),
+    radial-gradient(520px 420px at 80% 25%, rgba(255,77,141,0.12), transparent 60%);
+}
+
+@keyframes floaty{
+  0%   { transform: translate(-1.5%, -1.0%) scale(1.02); }
+  50%  { transform: translate( 1.5%,  1.2%) scale(1.06); }
+  100% { transform: translate(-1.5%, -1.0%) scale(1.02); }
+}
+
+/* ---- Brand ---- */
+.navbar-brand{
+  font-weight: 800;
+  letter-spacing: -0.6px;
+}
+
+/* ---- Cards / Images ---- */
+.card{
+  border: 1px solid rgba(255,255,255,0.65);
+  box-shadow: 0 16px 42px rgba(15,23,42,0.10);
+  border-radius: 18px;
+}
+
+.card-img-top{
   object-fit: cover;
   height: 200px;
 }
 
-.asset-card .card-title {
+.asset-card .card-title{
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 /* Responsive grid spacing */
-@media (min-width: 576px) {
-  .card-img-top {
-    height: 180px;
-  }
-}
+@media (min-width: 576px){ .card-img-top{ height: 180px; } }
+@media (min-width: 768px){ .card-img-top{ height: 200px; } }
 
-@media (min-width: 768px) {
-  .card-img-top {
-    height: 200px;
-  }
-}
-
-/* Footer styling */
+/* ---- Footer ---- */
 footer {
-  border-top: 1px solid #e9ecef;
+  border-top: 1px solid rgba(252, 253, 255, 0);
+  backdrop-filter: blur(118px);
+  -webkit-backdrop-filter: blur(118px);
+  background: rgba(255, 255, 255, 0);
+}
+/* =========================
+   Glass Navbar + Center Pill Nav
+   ========================= */
+.glass-nav{
+  background: rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-bottom: 1px solid rgba(255,255,255,0.75);
+  box-shadow: var(--shadow);
+  padding: 10px 0;
+}
+
+/* Needed to contain magic pill */
+.navbar-nav{
+  position: relative;
+}
+
+/* Center pill container */
+.nav-pills-wrap{
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+/* The pill track itself */
+.nav-pills-inner{
+  background: rgba(255,255,255,0.55);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255,255,255,0.85);
+  border-radius: 999px;
+  box-shadow: 0 14px 40px rgba(15,23,42,0.12);
+  position: relative;
+}
+
+/* Links */
+.custom-link{
+  font-weight: 600;
+  color: rgba(15,23,42,0.72) !important;
+  padding: 9px 16px !important;
+  border-radius: 16px;
+  position: relative;
+  z-index: 1;
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.custom-link:hover{
+  color: rgba(15,23,42,0.95) !important;
+  transform: translateY(-1px);
+}
+
+/* Active/hover glow */
+.custom-link.active{
+  color: rgba(15,23,42,0.95) !important;
+  text-shadow: 0 0 18px rgba(91,124,250,0.22);
+}
+
+/* The gliding highlight pill */
+.magic-pill{
+  position: absolute;
+  background:
+    linear-gradient(135deg,
+      rgba(91,124,250,0.22),
+      rgba(124,58,237,0.18),
+      rgba(255,77,141,0.14));
+  border: 1px solid rgba(255,255,255,0.65);
+  border-radius: 16px;
+  transition: all 0.32s cubic-bezier(0.25, 1, 0.5, 1);
+  z-index: 0;
+  pointer-events: none;
+  box-shadow: 0 12px 34px rgba(91,124,250,0.16);
+}
+
+/* Dropdown menu positioning */
+.navbar-nav .dropdown-menu{
+  position: absolute !important;
+}
+
+/* ---- Buttons: more vibrant ---- */
+.btn-primary{
+  background: linear-gradient(135deg, var(--primary), var(--primary2)) !important;
+  border: 0 !important;
+  box-shadow: 0 10px 26px rgba(91,124,250,0.22);
+}
+
+.btn-primary:hover{
+  filter: brightness(1.05);
+  box-shadow: 0 14px 32px rgba(124,58,237,0.22);
+}
+
+/* ---- Avatar: modern gradient ring ---- */
+.nav-avatar{
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid transparent;
+  background:
+    linear-gradient(#fff,#fff) padding-box,
+    linear-gradient(135deg, var(--primary), var(--hot), var(--accent)) border-box;
+  box-shadow: 0 10px 24px rgba(15,23,42,0.14);
+}
+
+/* Accessibility: reduce motion */
+@media (prefers-reduced-motion: reduce){
+  body::before, body::after{ animation: none; }
+  .magic-pill{ transition: none; }
+  .custom-link{ transition: none; }
 }

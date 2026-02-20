@@ -28,16 +28,15 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # Core pages
     path('', include('core.urls')),
+    path('', include('studio.urls')),
     # Library browsing
     path('library/', include('libraryapp.urls')),
     # Standalone routes for asset and creator detail pages to match the
     # specification (e.g. /asset/1/ and /creator/alice/)
     path('asset/<int:asset_id>/', library_views.asset_detail, name='asset_detail'),
     path('creator/<str:username>/', library_views.creator_profile, name='creator_profile'),
-    # Studio (creation and my assets)
-    path('create/', studio_views.create, name='create'),
-    path('my-assets/', studio_views.my_assets, name='my_assets'),
     # Moderation dashboard
     path('admin-panel/', include('moderation.urls')),
+    
 
 ]
