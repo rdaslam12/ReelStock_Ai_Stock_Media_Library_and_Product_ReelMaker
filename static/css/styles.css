@@ -214,3 +214,277 @@ footer {
 
 
 /*Comment 2*/
+
+/* --- Premium Reel Maker UI --- */
+.reel-maker-wrapper {
+    max-width: 1300px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.reel-maker-layout {
+    display: grid;
+    grid-template-columns: 450px 1fr; /* Left side fixed, Right side expands */
+    gap: 30px;
+}
+
+.card-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.glass-card {
+    background: var(--glass);
+    backdrop-filter: blur(25px);
+    border: 1px solid var(--glassBorder);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+}
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.category-item {
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 12px;
+    padding: 15px 5px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.category-item.active {
+    background: white;
+    border-color: var(--primary);
+    box-shadow: 0 5px 15px rgba(91, 124, 250, 0.2);
+}
+
+.upload-zone {
+    border: 2px dashed var(--primary);
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 15px;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+/* Premium Preview & Status Look */
+.preview-card-premium {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    min-height: 600px; /* Boro preview */
+}
+
+.video-display-area {
+    background: #000;
+    border-radius: 18px;
+    flex-grow: 1;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.play-btn-circle {
+    width: 70px;
+    height: 70px;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 24px;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.status-footer-premium {
+    margin-top: 30px;
+    padding: 10px 5px;
+}
+
+.status-labels {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 800;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+    color: var(--ink);
+    letter-spacing: 1px;
+}
+
+.premium-progress-track {
+    background: rgba(0, 0, 0, 0.1);
+    height: 14px;
+    border-radius: 30px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.4);
+}
+
+.premium-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--primary), #00f2fe);
+    box-shadow: 0 0 20px rgba(91, 124, 250, 0.6);
+    transition: width 0.4s ease;
+}
+
+.btn-generate-premium {
+    background: linear-gradient(135deg, var(--primary), var(--primary2));
+    color: white;
+    border: none;
+    padding: 18px;
+    border-radius: 15px;
+    font-weight: 900;
+    text-transform: uppercase;
+    box-shadow: 0 12px 25px rgba(124, 58, 237, 0.25);
+}
+
+.spinner-premium {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255,255,255,0.1);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 1100px) {
+    .reel-maker-layout { grid-template-columns: 1fr; }
+}
+
+/* =========================
+   Prompt to Image Page Styles
+   ========================= */
+
+/* Use your existing root variables */
+:root {
+    --primary: #5b7cfa;
+    --primary2: #7c3aed;
+    --glass: rgba(255, 255, 255, 0.42);
+    --glassBorder: rgba(255, 255, 255, 0.55);
+    --shadow: 0 18px 55px rgba(15, 23, 42, 0.14);
+}
+
+.prompt-to-image-page {
+    /* Mix with Reel Maker styles if needed, but keep maximum consistent */
+}
+
+/* Style Tags */
+.style-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.tag-badge {
+    background: rgba(124, 58, 237, 0.1);
+    border: 1px solid rgba(124, 58, 237, 0.3);
+    color: var(--primary2);
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.tag-badge:hover {
+    background: var(--primary2);
+    color: white;
+}
+
+/* Image Canvas & Loading */
+.image-display-area {
+    background: rgba(0,0,0,0.85); /* Black glossy background */
+    border-radius: 18px;
+    flex-grow: 1;
+    min-height: 400px;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid rgba(255,255,255,0.1);
+    overflow: hidden;
+}
+
+.canvas-placeholder {
+    text-align: center;
+    color: rgba(255,255,255,0.3);
+}
+
+.placeholder-icon {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.canvas-placeholder p {
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+/* Actions */
+.action-icons-mock {
+    display: flex;
+    gap: 15px;
+    margin-right: 10px;
+}
+
+.icon-action {
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #555;
+    transition: 0.3s;
+}
+
+.icon-action:hover {
+    color: var(--primary2);
+}
+
+/* Skeleton Pulse Loader */
+.loader-overlay {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+}
+
+.skeleton-pulse {
+    width: 80%;
+    height: 80%;
+    background: linear-gradient(-90deg, #111, #222, #111);
+    background-size: 400% 400%;
+    animation: pulse 1.5s ease-in-out infinite;
+    border-radius: 15px;
+}
+
+.loader-text {
+    color: white;
+    font-weight: bold;
+    margin-top: 15px;
+    letter-spacing: 1px;
+}
+
+@keyframes pulse {
+    0% { background-position: 0% 0%; }
+    100% { background-position: -135% 0%; }
+}

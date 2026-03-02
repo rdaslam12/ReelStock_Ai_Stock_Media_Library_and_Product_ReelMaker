@@ -1,117 +1,148 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
 {% load static %}
 
 {% block content %}
-<div class="row g-5">
-
-  <div class="col-lg-7">
-    <h2 class="fw-bold mb-4">Prompt to Image</h2>
-
-    <div class="mb-4">
-      <textarea id="promptInput" class="form-control rounded-4 p-3"
-        rows="4"
-        placeholder="Describe the image you want to generate... e.g., cinematic product photo of a luxury watch on black marble"></textarea>
+<div class="reel-maker-wrapper prompt-to-image-page">
+    <div class="header-section">
+        <h1 class="page-title">Generate AI Image</h1>
+        <p class="text-muted">Turn your textual description into photorealistic or cinematic images.</p>
     </div>
 
-    <div class="row g-3 align-items-end mb-4">
-      <div class="col-md-4">
-        <label class="form-label">Style</label>
-        <select class="form-select rounded-pill">
-          <option>Cinematic</option>
-          <option>Minimal</option>
-          <option>Studio</option>
-        </select>
-      </div>
+    <div class="reel-maker-layout">
+        
+        <div class="controls-column">
+            
+            <div class="glass-card">
+                <div class="card-header-flex">
+                    <h3>1. YOUR PROMPT</h3>
+                    <span class="icon-small">✍</span>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="small-label mb-2">Detailed Description</label>
+                    <textarea id="promptInput" class="form-control glass-input" rows="5" placeholder="e.g. A majestic white horse running on a beach during sunset, 8k, photorealistic, cinematic lighting..."></textarea>
+                </div>
+                <div class="style-tags-container">
+                    <span class="tag-badge" data-tag="8K Resolution">8K</span>
+                    <span class="tag-badge" data-tag="Photorealistic">Photorealistic</span>
+                    <span class="tag-badge" data-tag="Cinematic Lighting">Cinematic</span>
+                    <span class="tag-badge" data-tag="Cyberpunk style">Cyberpunk</span>
+                </div>
+            </div>
 
-      <div class="col-md-4">
-        <label class="form-label">Aspect Ratio</label>
-        <select class="form-select rounded-pill">
-          <option>16:9</option>
-          <option>1:1</option>
-          <option>9:16</option>
-        </select>
-      </div>
+            <div class="glass-card">
+                <div class="card-header-flex">
+                    <h3>2. SETTINGS</h3>
+                    <span class="icon-small">⚙</span>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label class="small-label">Image Style</label>
+                        <select id="imageStyle" class="form-select glass-select">
+                            <option>Realistic</option>
+                            <option>Anime</option>
+                            <option>Oil Painting</option>
+                            <option>Digital Art</option>
+                        </select>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label class="small-label">Aspect Ratio</label>
+                        <select id="aspectRatio" class="form-select glass-select">
+                            <option value="1:1">1:1 (Square)</option>
+                            <option value="16:9">16:9 (Cinematic)</option>
+                            <option value="9:16">9:16 (Portrait)</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="button" id="generateImageBtn" class="btn-generate-premium w-100">Generate Image</button>
+            </div>
 
-      <div class="col-md-4">
-        <button id="generateBtn" class="btn btn-primary w-100 rounded-pill">
-          Generate Image
-        </button>
-      </div>
-    </div>
-
-    <div id="statusCard" class="card p-3 rounded-4 shadow-sm d-none">
-      <div class="fw-semibold">Generation Status</div>
-      <div id="statusText" class="text-success small mt-2">Done</div>
-    </div>
-  </div>
-
-  <div class="col-lg-5">
-    <div class="card p-3 rounded-4 shadow-sm">
-      <div class="fw-semibold mb-2">Results</div>
-
-      <div id="resultCard" class="d-none">
-        <div class="fw-semibold mb-2">Generated Image</div>
-        <img id="resultImage" src="" class="img-fluid rounded-4 mb-3" style="height:260px; object-fit:cover;">
-
-        <div class="d-flex gap-2">
-          <a id="downloadBtn" class="btn btn-outline-primary w-100">Download PNG</a>
-          <button id="publishBtn" class="btn btn-primary w-100">Publish to Library</button>
         </div>
-      </div>
 
-      <div id="emptyState" class="text-muted small">
-        Generate an image to preview results here.
-      </div>
+        <div class="preview-column">
+            <div class="glass-card preview-card-premium">
+                <div class="card-header-flex">
+                    <h3>GENERATED RESULT</h3>
+                    <div class="action-icons-mock" style="display: none;" id="canvas-actions">
+                        <span class="icon-action">📥</span>
+                        <span class="icon-action">💾</span>
+                    </div>
+                </div>
+                
+                <div class="image-display-area" id="image-canvas">
+                    <div class="canvas-placeholder" id="placeholder-text">
+                        <span class="placeholder-icon">🖼</span>
+                        <p>GENERATED IMAGE<br>WILL APPEAR HERE</p>
+                    </div>
+                    <div class="loader-overlay" id="loader-overlay" style="display: none;">
+                        <div class="skeleton-pulse"></div>
+                        <p class="loader-text">AI is creating...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
-  </div>
-
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script>
-const generateBtn = document.getElementById("generateBtn");
-const resultCard = document.getElementById("resultCard");
-const emptyState = document.getElementById("emptyState");
-const statusCard = document.getElementById("statusCard");
-const resultImage = document.getElementById("resultImage");
-const downloadBtn = document.getElementById("downloadBtn");
-const publishBtn = document.getElementById("publishBtn");
-const promptInput = document.getElementById("promptInput");
+  {{ block.super }}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const promptInput = document.getElementById('promptInput');
+        const generateBtn = document.getElementById('generateImageBtn');
+        const styleTags = document.querySelectorAll('.tag-badge');
+        
+        const canvas = document.getElementById('image-canvas');
+        const placeholderText = document.getElementById('placeholder-text');
+        const loaderOverlay = document.getElementById('loader-overlay');
+        const canvasActions = document.getElementById('canvas-actions');
 
-generateBtn.addEventListener("click", () => {
-  if (!promptInput.value.trim()) return;
+        // 1. Style Tags Logic
+        styleTags.forEach(tag => {
+            tag.addEventListener('click', function() {
+                const tagValue = this.getAttribute('data-tag');
+                if(!promptInput.value.includes(tagValue)) {
+                    promptInput.value += (promptInput.value ? ', ' : '') + tagValue;
+                }
+            });
+        });
 
-  statusCard.classList.remove("d-none");
-  resultCard.classList.add("d-none");
-  emptyState.classList.remove("d-none");
+        // 2. Generate simulation (Bonus)
+        generateBtn.addEventListener('click', function() {
+            const prompt = promptInput.value.trim();
+            if (!prompt) {
+                alert("Please write a prompt first!");
+                return;
+            }
 
-  setTimeout(() => {
-    const img = `https://picsum.photos/seed/${Date.now()}/900/520`;
+            // Start simulation
+            this.disabled = true;
+            this.textContent = "Creating...";
+            placeholderText.style.display = 'none';
+            loaderOverlay.style.display = 'flex';
+            canvasActions.style.display = 'none';
+            canvas.style.backgroundImage = 'none';
 
-    resultImage.src = img;
-    downloadBtn.href = img;
-    downloadBtn.download = "generated.png";
+            // Fake processing time (3 sec)
+            setTimeout(() => {
+                // Success
+                this.textContent = "Generate Image";
+                this.disabled = false;
+                loaderOverlay.style.display = 'none';
+                canvasActions.style.display = 'flex';
 
-    sessionStorage.setItem("latestGenerated", JSON.stringify({
-      title: promptInput.value.substring(0, 40),
-      image: img
-    }));
+                // Display a default placeholder image (Bonus)
+                // You can replace this URL with an actual generated image path in Phase 2
+                const mockImageUrl = 'https://images.unsplash.com/photo-1718042457814-c151475c40fb?q=80&w=600&auto=format&fit=crop';
+                
+                canvas.style.backgroundImage = `url(${mockImageUrl})`;
+                canvas.style.backgroundSize = 'contain';
+                canvas.style.backgroundRepeat = 'no-repeat';
+                canvas.style.backgroundPosition = 'center';
 
-    emptyState.classList.add("d-none");
-    resultCard.classList.remove("d-none");
-  }, 1200);
-});
-
-publishBtn.addEventListener("click", () => {
-  const data = JSON.parse(sessionStorage.getItem("latestGenerated"));
-  if (!data) return;
-
-  const published = JSON.parse(sessionStorage.getItem("publishedAssets")) || [];
-  published.unshift(data);
-  sessionStorage.setItem("publishedAssets", JSON.stringify(published));
-
-  window.location.href = "{% url 'library' %}";
-});
-</script>
+            }, 3500);
+        });
+    });
+  </script>
 {% endblock %}

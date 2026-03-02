@@ -1,74 +1,197 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block content %}
-  <h1 class="h3 mb-4">Make Reels for Your Product</h1>
-  <p class="text-muted">Use the form below to generate a new image or video.  This interface simulates the reel maker and prompt‑based studio.</p>
-  <div class="card mb-4">
-    <div class="card-body">
-      <form id="generationForm" onsubmit="return false;">
-        <div class="mb-3">
-          <label for="promptInput" class="form-label">Text Prompt</label>
-          <textarea class="form-control" id="promptInput" rows="3" placeholder="Describe what you want to generate"></textarea>
-        </div>
-        <div class="mb-3">
-          <label for="categorySelect" class="form-label">Category</label>
-          <select id="categorySelect" class="form-select">
-            <option value="">Select category</option>
-            <option value="Shoe">Shoe</option>
-            <option value="Watch">Watch</option>
-            <option value="Bag">Bag</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label for="imageInput" class="form-label">Upload Product Image</label>
-          <input class="form-control" type="file" id="imageInput" accept="image/*" />
-        </div>
-        <!-- Image preview -->
-        <div id="imagePreview" class="mb-3 d-none">
-          <p class="fw-bold">Image Preview:</p>
-          <img src="" alt="Image preview" class="img-fluid border rounded" />
-        </div>
-        <button type="button" id="generateBtn" class="btn btn-primary">Generate</button>
-      </form>
-      <!-- Generated output placeholder -->
-      <div id="generatedOutput" class="mt-4 d-none">
-        <p class="fw-bold">Generated Output:</p>
-        <img src="{% static 'img/placeholder.png' %}" alt="Generated output" class="img-fluid border rounded" />
-        <div class="mt-3 d-flex gap-2">
-          <button class="btn btn-success">Add to Library</button>
-          <a class="btn btn-outline-primary" href="{% static 'img/placeholder.png' %}" download>
-            Download
-          </a>
-        </div>
-      </div>
+<div class="reel-maker-wrapper">
+    <div class="header-section">
+        <h1 class="page-title">Create Asset</h1>
+        <p class="text-muted">Generate professional reels using AI-powered studio tools.</p>
     </div>
-  </div>
+
+    <div class="reel-maker-layout">
+        
+        <div class="controls-column">
+            
+            <div class="glass-card">
+                <div class="card-header-flex">
+                    <h3>1. SELECT CATEGORY</h3>
+                    <span class="icon-small">⋮≡</span>
+                </div>
+                <div class="category-grid">
+                    <div class="category-item active" data-category="Shoe">
+                        <span class="icon">👟</span>
+                        <p>Shoe</p>
+                    </div>
+                    <div class="category-item" data-category="Watch">
+                        <span class="icon">⌚</span>
+                        <p>Watch</p>
+                    </div>
+                    <div class="category-item" data-category="Bag">
+                        <span class="icon">🎒</span>
+                        <p>Bag</p>
+                    </div>
+                    <div class="category-item" data-category="Other">
+                        <span class="icon">📦</span>
+                        <p>Other</p>
+                    </div>
+                </div>
+
+                <div id="other-input-container" class="mt-3" style="display: none;">
+                    <label class="fw-bold mb-1" style="font-size: 0.8rem; color: var(--primary2);">Product Name</label>
+                    <input type="text" id="other-product-name" class="form-control glass-input" placeholder="e.g. Sunglasses, Perfume">
+                </div>
+                <input type="hidden" id="selected-category" value="Shoe">
+            </div>
+
+            <div class="glass-card">
+                <div class="card-header-flex">
+                    <h3>2. UPLOAD IMAGE</h3>
+                    <span class="icon-small">📤</span>
+                </div>
+                <div class="upload-zone" id="drop-zone">
+                    <div class="upload-content">
+                        <p><strong>DRAG & DROP</strong></p>
+                        <p class="sub-text">YOUR PRODUCT IMAGE</p>
+                        <button type="button" class="btn-upload">+ UPLOAD</button>
+                        <input type="file" id="imageInput" accept="image/*" hidden>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div class="card-header-flex">
+                    <h3>3. CUSTOMIZE REEL</h3>
+                    <span class="icon-small">⚙</span>
+                </div>
+                <div class="customization-options">
+                    <div class="row">
+                        <div class="col-6 mb-3">
+                            <label class="small-label">Duration</label>
+                            <select class="form-select glass-select">
+                                <option>5 Sec</option>
+                                <option>10 Sec</option>
+                            </select>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <label class="small-label">Video Style</label>
+                            <select class="form-select glass-select">
+                                <option>Cinematic</option>
+                                <option>Retro</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" id="generateBtn" class="btn-generate-premium w-100">Generate Reel</button>
+            </div>
+
+        </div>
+
+        <div class="preview-column">
+            <div class="glass-card preview-card-premium">
+                <div class="card-header-flex">
+                    <h3>PREVIEW & STATUS</h3>
+                    <span class="info-icon">ⓘ</span>
+                </div>
+                
+                <div class="video-display-area" id="video-preview-area">
+                    <div class="play-overlay" id="play-overlay" style="display: none;">
+                        <div class="play-btn-circle">▶</div>
+                    </div>
+                    <div class="loader-overlay" id="loader-overlay" style="display: none;">
+                        <div class="spinner-premium"></div>
+                    </div>
+                </div>
+                
+                <div class="status-footer-premium">
+                    <div class="status-labels">
+                        <span id="status-label">READY...</span>
+                        <span id="status-percent">0%</span>
+                    </div>
+                    <div class="premium-progress-track">
+                        <div class="premium-progress-fill" id="progress-bar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
   {{ block.super }}
   <script>
-    // Preview uploaded image
-    const imageInput = document.getElementById('imageInput');
-    const imagePreview = document.getElementById('imagePreview');
-    const previewImg = imagePreview.querySelector('img');
-    imageInput.addEventListener('change', function () {
-      const file = this.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          previewImg.src = e.target.result;
-          imagePreview.classList.remove('d-none');
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-    // Simulate generation
-    document.getElementById('generateBtn').addEventListener('click', function () {
-      const output = document.getElementById('generatedOutput');
-      output.classList.remove('d-none');
-      output.scrollIntoView({ behavior: 'smooth' });
+    document.addEventListener('DOMContentLoaded', function() {
+        const categoryItems = document.querySelectorAll('.category-item');
+        const hiddenCategoryInput = document.getElementById('selected-category');
+        const otherInputContainer = document.getElementById('other-input-container');
+        const imageInput = document.getElementById('imageInput');
+        const uploadBtn = document.querySelector('.btn-upload');
+        const previewArea = document.getElementById('video-preview-area');
+        const subText = document.querySelector('.sub-text');
+        const generateBtn = document.getElementById('generateBtn');
+        const progressBar = document.getElementById('progress-bar');
+        const statusLabel = document.getElementById('status-label');
+        const statusPercent = document.getElementById('status-percent');
+        const playOverlay = document.getElementById('play-overlay');
+        const loaderOverlay = document.getElementById('loader-overlay');
+
+        // 1. Category logic
+        categoryItems.forEach(item => {
+            item.addEventListener('click', function() {
+                categoryItems.forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                const selected = this.getAttribute('data-category');
+                hiddenCategoryInput.value = selected;
+                otherInputContainer.style.display = (selected === 'Other') ? 'block' : 'none';
+            });
+        });
+
+        // 2. Upload & Preview
+        uploadBtn.addEventListener('click', () => imageInput.click());
+        imageInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                const file = this.files[0];
+                subText.innerHTML = `<span style="color: var(--primary2); font-weight: bold;">✔ ${file.name}</span>`;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewArea.style.backgroundImage = `url(${e.target.result})`;
+                    previewArea.style.backgroundSize = 'contain';
+                    previewArea.style.backgroundRepeat = 'no-repeat';
+                    previewArea.style.backgroundPosition = 'center';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 3. Generate Logic
+        generateBtn.addEventListener('click', function() {
+            if (imageInput.files.length === 0) {
+                alert("Please upload a product image first!");
+                return;
+            }
+            this.disabled = true;
+            this.textContent = "Processing...";
+            loaderOverlay.style.display = 'flex';
+            statusLabel.textContent = "PROCESSING...";
+
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 10) + 5;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    statusLabel.textContent = "COMPLETED!";
+                    this.textContent = "Download Reel";
+                    this.style.background = "#22c55e";
+                    this.disabled = false;
+                    loaderOverlay.style.display = 'none';
+                    playOverlay.style.display = 'flex';
+                }
+                statusPercent.textContent = progress + "%";
+                progressBar.style.width = progress + "%";
+            }, 600);
+        });
     });
   </script>
 {% endblock %}
