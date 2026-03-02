@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
-  <h1 class="h3 mb-4">Create Asset</h1>
-  <p class="text-muted">Use the form below to generate a new image or video.  This interface simulates the reel maker and prompt‑based studio.  No files are uploaded or generated during this phase.</p>
+  <h1 class="h3 mb-4">Make Reels for Your Product</h1>
+  <p class="text-muted">Use the form below to generate a new image or video.  This interface simulates the reel maker and prompt‑based studio.</p>
   <div class="card mb-4">
     <div class="card-body">
       <form id="generationForm" onsubmit="return false;">
@@ -21,7 +21,7 @@
           </select>
         </div>
         <div class="mb-3">
-          <label for="imageInput" class="form-label">Upload Product Image (optional)</label>
+          <label for="imageInput" class="form-label">Upload Product Image</label>
           <input class="form-control" type="file" id="imageInput" accept="image/*" />
         </div>
         <!-- Image preview -->
@@ -35,8 +35,11 @@
       <div id="generatedOutput" class="mt-4 d-none">
         <p class="fw-bold">Generated Output:</p>
         <img src="{% static 'img/placeholder.png' %}" alt="Generated output" class="img-fluid border rounded" />
-        <div class="mt-3">
+        <div class="mt-3 d-flex gap-2">
           <button class="btn btn-success">Add to Library</button>
+          <a class="btn btn-outline-primary" href="{% static 'img/placeholder.png' %}" download>
+            Download
+          </a>
         </div>
       </div>
     </div>

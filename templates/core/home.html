@@ -11,4 +11,219 @@
       <a href="{% url 'prompt_to_image' %}" class="btn btn-outline-primary btn-lg">Create Now</a>
     </div>
   </div>
+  <!-- Divider -->
+  <div class="container">
+    <hr class="my-5" />
+  </div>
+
+  <!-- ABOUT / WHAT IS REELSTOCK -->
+  <section class="container pb-5">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-6">
+        <h2 class="fw-bold mb-3">What is ReelStock?</h2>
+        <p class="text-muted mb-3">
+          ReelStock is an AI-first stock library where creators can generate visuals, organize them into a searchable
+          library, and reuse assets across projects. Think “stock media”, but built for prompt-to-content workflows.
+        </p>
+
+        <ul class="list-unstyled text-muted mb-0">
+          <li class="d-flex gap-2 mb-2">
+            <span class="badge text-bg-primary">AI</span>
+            <span>Generate images/videos and save results to your library.</span>
+          </li>
+          <li class="d-flex gap-2 mb-2">
+            <span class="badge text-bg-primary">Search</span>
+            <span>Discover assets fast with tags, categories, and smart filtering.</span>
+          </li>
+          <li class="d-flex gap-2">
+            <span class="badge text-bg-primary">Reels</span>
+            <span>Build short-form reels from multiple assets using a simple creator workflow.</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="p-4 p-md-5 rounded-4 border bg-light">
+          <h5 class="fw-semibold mb-3">Built for creators who need speed</h5>
+          <p class="text-muted mb-4">
+            Save iterations, keep everything organized, and move from idea → asset → reel without leaving the platform.
+          </p>
+
+          <div class="row g-3">
+            <div class="col-6">
+              <div class="p-3 rounded-4 border bg-white h-100">
+                <div class="fw-semibold">Reusable library</div>
+                <div class="text-muted small">Your generated assets stay searchable.</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 rounded-4 border bg-white h-100">
+                <div class="fw-semibold">Project-ready</div>
+                <div class="text-muted small">Download, share, and publish faster.</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 rounded-4 border bg-white h-100">
+                <div class="fw-semibold">Moderation-ready</div>
+                <div class="text-muted small">Admin workflow for quality control.</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="p-3 rounded-4 border bg-white h-100">
+                <div class="fw-semibold">Future AI pipeline</div>
+                <div class="text-muted small">Hook models/APIs later without redesign.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="container pb-5">
+    <div class="d-flex justify-content-between align-items-end mb-3">
+      <div>
+        <h2 class="fw-bold mb-1">How it works</h2>
+        <p class="text-muted mb-0">A simple workflow that matches your proposal.</p>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="p-4 rounded-4 border h-100">
+          <div class="fw-semibold mb-2">1) Generate</div>
+          <p class="text-muted mb-0">Use prompts to create an image/video (AI generation integration later).</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-4 rounded-4 border h-100">
+          <div class="fw-semibold mb-2">2) Save to Library</div>
+          <p class="text-muted mb-0">Add tags, categories, and descriptions so assets stay easy to find.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-4 rounded-4 border h-100">
+          <div class="fw-semibold mb-2">3) Build & Share</div>
+          <p class="text-muted mb-0">Combine assets into reels and export/share for social platforms.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURED ASSETS (mock cards for now) -->
+  <section class="container pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h2 class="fw-bold mb-1">Featured picks</h2>
+        <p class="text-muted mb-0">Trending assets (placeholder cards for now).</p>
+      </div>
+      <a href="{% url 'library' %}" class="btn btn-outline-secondary">View all</a>
+    </div>
+
+    <div class="row g-3">
+      {% for item in "123456"|make_list %}
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card border rounded-4 h-100 overflow-hidden">
+            <div class="ratio ratio-16x9 bg-light"></div>
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <h5 class="card-title mb-1">AI Stock Asset #{{ forloop.counter }}</h5>
+                  <p class="card-text text-muted small mb-2">
+                    A short description for this featured item. Replace with real DB content later.
+                  </p>
+                </div>
+                <span class="badge text-bg-dark">NEW</span>
+              </div>
+
+              <div class="d-flex flex-wrap gap-2">
+                <span class="badge rounded-pill text-bg-light border">Cinematic</span>
+                <span class="badge rounded-pill text-bg-light border">Product</span>
+                <span class="badge rounded-pill text-bg-light border">Social</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- BLOG POSTS (static placeholders for now) -->
+  <section class="container pb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <div>
+        <h2 class="fw-bold mb-1">From the blog</h2>
+        <p class="text-muted mb-0">Tips, updates, and creator workflows (static for now).</p>
+      </div>
+      <a href="#" class="btn btn-outline-secondary disabled" tabindex="-1" aria-disabled="true">Blog (soon)</a>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-lg-4">
+        <div class="p-4 rounded-4 border h-100">
+          <div class="text-muted small mb-2">Workflow</div>
+          <h5 class="fw-semibold">How to turn a product photo into a reel</h5>
+          <p class="text-muted mb-3">
+            A simple pipeline: generate variations, choose a style, assemble a sequence, export.
+          </p>
+          <a href="#" class="text-decoration-none disabled" tabindex="-1" aria-disabled="true">Read more →</a>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="p-4 rounded-4 border h-100">
+          <div class="text-muted small mb-2">Library</div>
+          <h5 class="fw-semibold">Tagging system that actually helps</h5>
+          <p class="text-muted mb-3">
+            Practical tagging rules: content type, mood, camera style, use-case, and brand.
+          </p>
+          <a href="#" class="text-decoration-none disabled" tabindex="-1" aria-disabled="true">Read more →</a>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="p-4 rounded-4 border h-100">
+          <div class="text-muted small mb-2">Updates</div>
+          <h5 class="fw-semibold">Roadmap: AI generation integration</h5>
+          <p class="text-muted mb-3">
+            How the backend will connect later (models/APIs), while the frontend stays stable.
+          </p>
+          <a href="#" class="text-decoration-none disabled" tabindex="-1" aria-disabled="true">Read more →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CREATOR HIGHLIGHTS -->
+  <section class="container pb-5">
+    <div class="p-4 p-md-5 rounded-4 border bg-light">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+          <h2 class="fw-bold mb-2">Creator highlights</h2>
+          <p class="text-muted mb-0">
+            Showcase top creators, most downloaded assets, and featured reels. (This can be powered by real stats later.)
+          </p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+          <a href="{% url 'library' %}" class="btn btn-primary">Explore trending</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="container pb-5">
+    <div class="text-center p-4 p-md-5 rounded-4 border">
+      <h2 class="fw-bold mb-2">Ready to create?</h2>
+      <p class="text-muted mb-4">
+        Start building your personal library of AI-generated visuals and reuse them for reels, ads, and storytelling.
+      </p>
+      <div class="d-flex justify-content-center gap-3">
+        <a href="{% url 'prompt_to_image' %}" class="btn btn-primary btn-lg">Create Now</a>
+        <a href="{% url 'library' %}" class="btn btn-outline-primary btn-lg">Browse Library</a>
+      </div>
+    </div>
+  </section>
 {% endblock %}
