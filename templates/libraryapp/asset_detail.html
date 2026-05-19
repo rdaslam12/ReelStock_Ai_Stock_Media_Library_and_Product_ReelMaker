@@ -1,93 +1,834 @@
 {% extends 'base.html' %}
-{% load static %}
-
+{% block title %}{{ asset.display_title }} – ReelStock{% endblock %}
 {% block content %}
-  {% if asset %}
-    <div class="row mb-4">
-      <div class="col-md-8">
-        {% if asset.type == 'video' %}
-          <div class="ratio ratio-16x9">
-            <video controls poster="{% static asset.thumbnail %}" class="w-100">
-              <source src="{% static asset.file %}" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
-          </div>
+<div class="container py-5" style="max-width:1100px;">
+  <a href="{% url 'library' %}?type={{ asset_type }}s" class="btn btn-outline-secondary btn-sm rounded-pill mb-4">← Back to Library</a>
+
+  <div class="row g-5">
+    <div class="col-lg-7">
+      <div class="asset-detail-media rounded-4 overflow-hidden shadow">
+        {% if asset_type == 'video' %}
+          {% if asset.playback_url %}
+            <video src="{{ asset.playback_url }}" controls loop playsinline preload="metadata"
+                   {% if asset.source_media_url %}poster="{{ asset.source_media_url }}"{% endif %}
+                   class="w-100" style="max-height:520px;object-fit:contain;background:#000;"></video>
+          {% elif asset.source_media_url %}
+            <img src="{{ asset.source_media_url }}" alt="{{ asset.display_title }}" class="w-100" style="max-height:520px;object-fit:contain;background:#111;">
+          {% endif %}
         {% else %}
-          <img src="{% static asset.file %}" alt="{{ asset.title }}" class="img-fluid rounded shadow-sm" />
+          <img src="{{ asset.media_url }}" alt="{{ asset.display_title }}" class="w-100" style="max-height:520px;object-fit:contain;background:#f8f8f8;">
         {% endif %}
       </div>
-      <div class="col-md-4">
-        <h2 class="h4">{{ asset.title }}</h2>
-        <p><span class="badge bg-secondary">{{ asset.category }}</span></p>
-        <p class="small text-muted">Uploaded on {{ asset.created_at }}</p>
-        {% if asset.tags %}
-          <p>
-            {% for tag in asset.tags %}
-              <span class="badge bg-light text-dark me-1">#{{ tag }}</span>
-            {% endfor %}
-          </p>
+
+      <div class="rating-block mt-3 d-flex align-items-center gap-3 flex-wrap">
+        <div class="star-display" id="avgStars">
+          {% for i in "12345" %}
+            <span class="star-icon {% if avg_rating >= forloop.counter %}filled{% endif %}">&#9733;</span>
+          {% endfor %}
+        </div>
+        <span class="text-muted small">
+          <strong id="avgVal">{{ avg_rating }}</strong> / 5
+          (<span id="ratingCount">{{ rating_count }}</span> rating{{ rating_count|pluralize }})
+        </span>
+      </div>
+
+      {% if user.is_authenticated %}
+      <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+        <span class="text-muted small">Your rating:</span>
+        <div class="star-input" id="starInput" data-asset-type="{{ asset_type }}" data-asset-id="{{ asset.pk }}">
+          {% for i in "12345" %}
+            <button class="star-btn {% if user_rating and user_rating >= forloop.counter %}active{% endif %}"
+                    data-val="{{ forloop.counter }}" type="button">&#9733;</button>
+          {% endfor %}
+        </div>
+        <span class="text-muted small" id="yourRatingLabel">
+          {% if user_rating %}You rated {{ user_rating }}★{% else %}Not rated yet{% endif %}
+        </span>
+      </div>
+      {% else %}
+      <p class="text-muted small mt-2">
+        <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</a> to rate this {{ asset_type }}.
+      </p>
+      {% endif %}
+    </div>
+
+    <div class="col-lg-5">
+      <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="badge bg-primary rounded-pill">{{ asset_type|title }}</span>
+        {% if asset_type == 'video' %}
+          <span class="badge bg-secondary rounded-pill">{{ asset.category }}</span>
+        {% else %}
+          {% if asset.style %}<span class="badge bg-secondary rounded-pill">{{ asset.style }}</span>{% endif %}
         {% endif %}
-        <p>
-          Creator:
-          {% if creator %}
-            <a href="/creator/{{ creator.username }}/">{{ creator.display_name|default:creator.username }}</a>
-          {% else %}
-            <span class="text-muted">Unknown</span>
+      </div>
+
+      <h2 class="fw-bold mb-3">{{ asset.display_title }}</h2>
+
+      {% if asset_type == 'image' and asset.prompt %}
+        <div class="bg-light rounded-3 p-3 mb-4">
+          <div class="text-muted small fw-semibold mb-1">PROMPT</div>
+          <p class="mb-0 small">{{ asset.prompt }}</p>
+        </div>
+      {% endif %}
+
+      <a href="{% url 'creator_profile' asset.user.username %}" class="text-decoration-none">
+        <div class="d-flex align-items-center gap-3 p-3 rounded-3 border bg-white shadow-sm mb-4 creator-hover-card">
+          <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ asset.user.username }}"
+               class="rounded-circle" width="48" height="48" alt="{{ asset.user.username }}">
+          <div>
+            <div class="fw-bold">{{ asset.user.get_full_name|default:asset.user.username }}</div>
+            <div class="text-muted small">@{{ asset.user.username }}
+              {% if profile.bio %} · {{ profile.bio|truncatechars:50 }}{% endif %}
+            </div>
+          </div>
+          <span class="ms-auto text-muted small">View profile →</span>
+        </div>
+      </a>
+
+      <div class="asset-stat-row text-muted small mb-3">
+        <span>Published {{ asset.created_at|date:"F j, Y" }}</span>
+        <span>👁 {{ asset.view_count }} view{{ asset.view_count|pluralize }}</span>
+      </div>
+
+      <div class="asset-price-box">
+        <div>
+          <div class="asset-price-label">Download Price</div>
+          <div class="asset-price-value">
+            <span>🪙</span>
+            <span>{{ asset.coin_price }}</span>
+            <small style="font-size:0.85rem;opacity:0.7;font-weight:600;">RC</small>
+          </div>
+        </div>
+        {% if user.is_authenticated %}
+          <span class="text-muted small">
+            Your balance: <strong>🪙 {{ wallet_balance }}</strong>
+          </span>
+        {% endif %}
+      </div>
+
+      <div class="d-flex flex-wrap gap-2 align-items-center">
+        {% if user.is_authenticated and user.id == asset.user_id %}
+          {% if asset_type == 'video' and asset.playback_url %}
+            <a href="{{ asset.playback_url }}" target="_blank" class="btn btn-success rounded-pill px-5">⬇ Download (it's yours, free)</a>
+          {% elif asset_type == 'image' %}
+            <a href="{{ asset.media_url }}" download class="btn btn-success rounded-pill px-5">⬇ Download (it's yours, free)</a>
           {% endif %}
-        </p>
-        <div class="d-flex gap-2 mt-3">
-          <a class="btn btn-primary" href="{% static asset.file %}" download>Download</a>
-          <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#reportModal">
-            Report
+        {% elif asset_type == 'image' and asset.pk in basket_image_ids %}
+          <button class="btn-basket btn-basket-large is-in-basket" disabled>✓ Already in Basket</button>
+          <a href="{% url 'basket_page' %}" class="btn btn-outline-primary rounded-pill px-4">View Basket</a>
+        {% elif asset_type == 'video' and asset.pk in basket_video_ids %}
+          <button class="btn-basket btn-basket-large is-in-basket" disabled>✓ Already in Basket</button>
+          <a href="{% url 'basket_page' %}" class="btn btn-outline-primary rounded-pill px-4">View Basket</a>
+        {% else %}
+          <button type="button" class="btn-basket btn-basket-large"
+                  data-asset-type="{{ asset_type }}"
+                  data-asset-id="{{ asset.pk }}">
+            Add to Basket — {{ asset.coin_price }} RC
+          </button>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+          <button class="btn btn-outline-secondary rounded-pill px-3 btn-bookmark {% if is_bookmarked %}bookmarked{% endif %}"
+                  id="bookmark-btn"
+                  data-asset-type="{{ asset_type }}" data-asset-id="{{ asset.pk }}" type="button">
+            {% if is_bookmarked %}Saved{% else %}Save{% endif %}
+          </button>
+
+          <button class="btn btn-outline-secondary rounded-pill px-3"
+                  data-bs-toggle="modal" data-bs-target="#collectionModal" type="button">
+            Add to Collection
+          </button>
+
+          {% if user != asset.user %}
+            <button class="btn btn-follow {% if is_following_creator %}following{% else %}btn-outline-primary{% endif %} rounded-pill px-3"
+                    id="follow-creator-btn" data-username="{{ asset.user.username }}" type="button">
+              {% if is_following_creator %}Following{% else %}Follow Creator{% endif %}
+            </button>
+          {% endif %}
+        {% endif %}
+      </div>
+
+      <div class="share-panel mt-4">
+        <div class="share-panel-title">Share this {{ asset_type }}</div>
+        <div class="d-flex gap-2 mb-3 flex-wrap">
+          <button class="btn btn-outline-secondary rounded-pill px-3" id="copyLinkBtn" type="button" data-url="{{ public_url }}" style="font-size:.78rem;">
+            Copy Link
           </button>
         </div>
+        <div class="share-btn-grid" id="assetShareGrid"></div>
+        <div class="text-success small mt-2" id="copyLinkFeedback" style="display:none;">Link copied.</div>
       </div>
     </div>
-    <!-- Other assets by creator -->
-    {% if other_assets %}
-      <h3 class="h5 mb-3">More by this creator</h3>
-      <div class="row">
-        {% for other in other_assets %}
-          <div class="col-md-3 mb-4">
-            {% include 'libraryapp/_asset_card.html' with asset=other %}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
+  </div>
 
-    <!-- Report modal -->
-    <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="reportModalLabel">Report Asset</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+  {% if user.is_authenticated %}
+  <div class="modal fade" id="collectionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content rounded-4 border-0 shadow-lg">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-bold">Save to Collection</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body px-4 pb-4">
+          {% if user_collections %}
+            <p class="text-muted small mb-3">Choose a collection:</p>
+            <div class="d-flex flex-column gap-2" id="collection-list">
+              {% for col in user_collections %}
+                <button class="btn btn-outline-secondary rounded-3 text-start collection-pick-btn"
+                        data-col-id="{{ col.pk }}" type="button">
+                  📁 {{ col.name }}
+                </button>
+              {% endfor %}
+            </div>
+            <hr>
+          {% endif %}
+          <p class="text-muted small mb-2">Or create a new one:</p>
+          <div class="d-flex gap-2">
+            <input type="text" id="new-col-name" class="form-control rounded-3" placeholder="New collection name" maxlength="100">
+            <button class="btn btn-primary rounded-3 px-3" id="new-col-create-btn" type="button">Create & Add</button>
           </div>
-          <div class="modal-body">
-            <form>
-              <div class="mb-3">
-                <label for="reportReason" class="form-label">Reason</label>
-                <select id="reportReason" class="form-select">
-                  <option value="spam">Spam</option>
-                  <option value="inappropriate">Inappropriate content</option>
-                  <option value="copyright">Copyright infringement</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              <div class="mb-3">
-                <label for="reportDetails" class="form-label">Additional details </label>
-                <textarea id="reportDetails" class="form-control" rows="3"></textarea>
-              </div>
-            </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Submit Report</button>
-          </div>
+          <div id="col-feedback" class="mt-2 text-success small" style="display:none;"></div>
         </div>
       </div>
     </div>
-  {% else %}
-    <p>Asset not found.</p>
+  </div>
   {% endif %}
+
+  <hr class="my-5">
+  <div id="commentsSection">
+    <h4 class="fw-bold mb-4">
+      💬 Comments
+      <span class="badge bg-secondary rounded-pill ms-2 fs-6" id="commentCountBadge">{{ comments_data|length }}</span>
+    </h4>
+
+    {% if user.is_authenticated %}
+    <div class="comment-compose mb-4 d-flex gap-3 align-items-start">
+      <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ user.username }}"
+           class="rounded-circle flex-shrink-0" width="40" height="40" alt="{{ user.username }}">
+      <div class="flex-grow-1">
+        <textarea id="newCommentBody" class="form-control rounded-3 mb-2"
+                  rows="2" maxlength="1000" placeholder="Add a comment…"></textarea>
+        <div class="d-flex justify-content-between align-items-center">
+          <span class="text-muted small"><span id="charCount">0</span>/1000</span>
+          <button class="btn btn-primary btn-sm rounded-pill px-4" id="submitComment" type="button">Post</button>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="alert alert-light rounded-3 mb-4">
+      <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</a> to leave a comment.
+    </div>
+    {% endif %}
+
+    <div id="commentList">
+      {% for cd in comments_data %}
+      <div class="comment-thread mb-3" id="thread-{{ cd.obj.id }}">
+        <div class="comment-card mb-2" id="comment-{{ cd.obj.id }}">
+          <div class="d-flex gap-2 align-items-start">
+            <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ cd.obj.user.username }}"
+                 class="comment-avatar" alt="{{ cd.obj.user.username }}">
+            <div class="flex-grow-1">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="comment-username">{{ cd.obj.user.get_full_name|default:cd.obj.user.username }}</span>
+                <span class="comment-date">{{ cd.obj.created_at|date:"M d, Y" }}</span>
+                {% if user.is_authenticated %}
+                  <span class="reply-link" onclick="openReply({{ cd.obj.id }})">↩ Reply</span>
+                {% endif %}
+                {% if user == cd.obj.user or is_creator %}
+                  <span class="delete-link" onclick="deleteComment({{ cd.obj.id }})">🗑 Delete</span>
+                {% endif %}
+              </div>
+              <div class="comment-body">{{ cd.obj.body|linebreaksbr }}</div>
+              <div class="reaction-bar" id="rxbar-{{ cd.obj.id }}">
+                {% for em, cnt in cd.reaction_counts.items %}
+                <button class="reaction-btn {% if em in cd.user_reacted %}reacted{% endif %}"
+                        data-emoji="{{ em }}" onclick="doReact({{ cd.obj.id }},'{{ em }}')" type="button">
+                  {{ em }} <span>{{ cnt }}</span>
+                </button>
+                {% endfor %}
+                <div class="position-relative d-inline-block">
+                  <button class="add-reaction-btn" onclick="toggleEmojiPicker({{ cd.obj.id }},this)" type="button">😊 +</button>
+                  <div class="emoji-picker-pop" id="epop-{{ cd.obj.id }}">
+                    {% for em in emoji_choices %}
+                    <span class="ep-emoji" onclick="doReact({{ cd.obj.id }},'{{ em }}')">{{ em }}</span>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="replies ms-5 mt-1" id="replies-{{ cd.obj.id }}">
+          {% for rd in cd.replies %}
+          <div class="comment-card mb-2 reply-card" id="comment-{{ rd.obj.id }}">
+            <div class="d-flex gap-2 align-items-start">
+              <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ rd.obj.user.username }}"
+                   class="comment-avatar" style="width:30px;height:30px;" alt="{{ rd.obj.user.username }}">
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <span class="comment-username">{{ rd.obj.user.get_full_name|default:rd.obj.user.username }}</span>
+                  <span class="comment-date">{{ rd.obj.created_at|date:"M d, Y" }}</span>
+                  {% if user == rd.obj.user or is_creator %}
+                    <span class="delete-link" onclick="deleteComment({{ rd.obj.id }})">🗑 Delete</span>
+                  {% endif %}
+                </div>
+                <div class="comment-body">{{ rd.obj.body|linebreaksbr }}</div>
+                <div class="reaction-bar" id="rxbar-{{ rd.obj.id }}">
+                  {% for em, cnt in rd.reaction_counts.items %}
+                  <button class="reaction-btn {% if em in rd.user_reacted %}reacted{% endif %}"
+                          data-emoji="{{ em }}" onclick="doReact({{ rd.obj.id }},'{{ em }}')" type="button">
+                    {{ em }} <span>{{ cnt }}</span>
+                  </button>
+                  {% endfor %}
+                  <div class="position-relative d-inline-block">
+                    <button class="add-reaction-btn" onclick="toggleEmojiPicker({{ rd.obj.id }},this)" type="button">😊 +</button>
+                    <div class="emoji-picker-pop" id="epop-{{ rd.obj.id }}">
+                      {% for em in emoji_choices %}
+                      <span class="ep-emoji" onclick="doReact({{ rd.obj.id }},'{{ em }}')">{{ em }}</span>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="reply-compose ms-5 mt-2 d-none" id="reply-compose-{{ cd.obj.id }}">
+          <div class="d-flex gap-2 align-items-start">
+            <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ user.username }}"
+                 class="rounded-circle flex-shrink-0" width="32" height="32" alt="{{ user.username }}">
+            <div class="flex-grow-1">
+              <textarea class="form-control form-control-sm rounded-3 mb-1 reply-body"
+                        rows="2" maxlength="1000" placeholder="Write a reply…"></textarea>
+              <div class="d-flex gap-2">
+                <button class="btn btn-primary btn-sm rounded-pill px-3 submit-reply"
+                        data-parent="{{ cd.obj.id }}" type="button">Reply</button>
+                <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 cancel-reply"
+                        data-parent="{{ cd.obj.id }}" type="button">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% empty %}
+      <p class="text-muted" id="noCommentsMsg">No comments yet. Be the first.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if other_assets %}
+  <hr class="my-5">
+  <h4 class="fw-bold mb-4">More by {{ asset.user.get_full_name|default:asset.user.username }}</h4>
+  <div class="library-grid library-grid-sm">
+    {% for other in other_assets %}
+      <a href="{% url 'asset_detail' asset_type other.pk %}" class="lib-card text-decoration-none reveal-up">
+        <div class="lib-card-media">
+          {% if asset_type == 'image' %}
+            <img src="{{ other.media_url }}" alt="{{ other.display_title }}" loading="lazy">
+          {% else %}
+            {% if other.playback_url %}
+              <video src="{{ other.playback_url }}" muted loop playsinline preload="metadata"
+                     {% if other.source_media_url %}poster="{{ other.source_media_url }}"{% endif %}
+                     onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>
+            {% elif other.source_media_url %}
+              <img src="{{ other.source_media_url }}" alt="{{ other.display_title }}" loading="lazy">
+            {% endif %}
+            <div class="lib-play-icon">▶</div>
+          {% endif %}
+        </div>
+        <div class="lib-card-info">
+          <div class="lib-card-title">{{ other.display_title }}</div>
+          <div class="lib-card-meta">
+            <span class="lib-price-chip"><span class="coin-icon">🪙</span>{{ other.coin_price }} RC</span>
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<style>
+.star-display .star-icon{font-size:1.4rem;color:#d1d5db;}
+.star-display .star-icon.filled{color:#f59e0b;}
+.star-input{display:inline-flex;gap:2px;}
+.star-btn{background:none;border:none;padding:0 2px;font-size:1.7rem;color:#d1d5db;cursor:pointer;transition:color .12s,transform .1s;line-height:1;}
+.star-btn:hover,.star-btn.hover{color:#f59e0b;transform:scale(1.18);}
+.star-btn.active{color:#f59e0b;}
+.comment-card{background:rgba(255,255,255,0.6);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.7);border-radius:14px;padding:14px 16px;}
+.reply-card{background:rgba(255,255,255,0.45);}
+.comment-avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;}
+.comment-username{font-weight:600;font-size:.9rem;}
+.comment-date{color:#94a3b8;font-size:.78rem;}
+.comment-body{font-size:.93rem;line-height:1.55;margin-top:4px;}
+.reaction-bar{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;}
+.reaction-btn{background:rgba(91,124,250,.08);border:1px solid rgba(91,124,250,.18);border-radius:20px;padding:2px 9px;font-size:.8rem;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:3px;}
+.reaction-btn:hover{background:rgba(91,124,250,.2);}
+.reaction-btn.reacted{background:rgba(91,124,250,.22);border-color:#5b7cfa;font-weight:700;}
+.add-reaction-btn{background:none;border:1px dashed #cbd5e1;border-radius:20px;padding:2px 9px;font-size:.8rem;cursor:pointer;color:#94a3b8;transition:.15s;}
+.add-reaction-btn:hover{border-color:#5b7cfa;color:#5b7cfa;}
+.emoji-picker-pop{display:none;position:absolute;z-index:300;bottom:calc(100% + 4px);left:0;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.1);gap:4px;flex-wrap:wrap;width:168px;}
+.emoji-picker-pop.open{display:flex;}
+.ep-emoji{font-size:1.25rem;cursor:pointer;padding:4px 6px;border-radius:8px;transition:.1s;}
+.ep-emoji:hover{background:#f1f5f9;transform:scale(1.2);}
+.reply-link{font-size:.8rem;color:#64748b;cursor:pointer;}
+.reply-link:hover{color:#5b7cfa;text-decoration:underline;}
+.delete-link{font-size:.8rem;color:#ef4444;cursor:pointer;}
+.delete-link:hover{text-decoration:underline;}
+.asset-stat-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+.share-panel{background:rgba(255,255,255,.62);border:1px solid rgba(255,255,255,.8);border-radius:16px;padding:14px 16px;backdrop-filter:blur(12px);}
+.share-panel-title{font-weight:800;font-size:.82rem;color:var(--ink);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em;}
+</style>
+{% endblock %}
+
+{% block scripts %}{{ block.super }}
+<script>
+const ASSET_TYPE = '{{ asset_type }}';
+const ASSET_ID = {{ asset.pk }};
+const IS_AUTH = {{ user.is_authenticated|yesno:"true,false" }};
+const IS_CREATOR = {{ is_creator|yesno:"true,false" }};
+const CUR_USER = '{{ user.username|escapejs }}';
+const EMOJI_CHOICES = [{% for em in emoji_choices %}'{{ em|escapejs }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+
+const collectionModal = document.getElementById('collectionModal');
+if (collectionModal && collectionModal.parentElement !== document.body) {
+  document.body.appendChild(collectionModal);
+}
+
+const copyLinkBtn = document.getElementById('copyLinkBtn');
+if (copyLinkBtn) {
+  copyLinkBtn.addEventListener('click', async () => {
+    const url = copyLinkBtn.dataset.url;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch (e) {
+      const tmp = document.createElement('input');
+      tmp.value = url;
+      document.body.appendChild(tmp);
+      tmp.select();
+      document.execCommand('copy');
+      tmp.remove();
+    }
+    const feedback = document.getElementById('copyLinkFeedback');
+    if (feedback) {
+      feedback.style.display = 'block';
+      setTimeout(() => { feedback.style.display = 'none'; }, 1800);
+    }
+  });
+}
+
+function getCookie(name) {
+  const match = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return match ? match[2] : null;
+}
+
+function postJson(url, data) {
+  return fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+    body: JSON.stringify(data || {})
+  }).then(async response => {
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(payload.error || 'Request failed.');
+    return payload;
+  });
+}
+
+function avatarUrl(username) {
+  return 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(username || 'user');
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br>');
+}
+
+const starInput = document.getElementById('starInput');
+if (starInput) {
+  const buttons = [...starInput.querySelectorAll('.star-btn')];
+  buttons.forEach(button => {
+    button.addEventListener('mouseover', () => {
+      buttons.forEach(b => b.classList.toggle('hover', Number(b.dataset.val) <= Number(button.dataset.val)));
+    });
+    button.addEventListener('mouseout', () => buttons.forEach(b => b.classList.remove('hover')));
+    button.addEventListener('click', () => {
+      const score = Number(button.dataset.val);
+      postJson('{% url "rate_asset" %}', {asset_type: ASSET_TYPE, asset_id: ASSET_ID, score}).then(data => {
+        buttons.forEach(b => b.classList.toggle('active', Number(b.dataset.val) <= score));
+        document.getElementById('yourRatingLabel').textContent = 'You rated ' + score + '★';
+        document.getElementById('avgVal').textContent = data.avg;
+        document.getElementById('ratingCount').textContent = data.count;
+        document.getElementById('avgStars').querySelectorAll('.star-icon').forEach((star, index) => {
+          star.classList.toggle('filled', data.avg >= index + 1);
+        });
+      });
+    });
+  });
+}
+
+const newCommentBody = document.getElementById('newCommentBody');
+if (newCommentBody) {
+  newCommentBody.addEventListener('input', () => {
+    document.getElementById('charCount').textContent = newCommentBody.value.length;
+  });
+}
+
+const submitComment = document.getElementById('submitComment');
+if (submitComment) {
+  submitComment.addEventListener('click', () => {
+    const body = newCommentBody.value.trim();
+    if (!body) return;
+    submitComment.disabled = true;
+    postJson('{% url "post_comment" %}', {asset_type: ASSET_TYPE, asset_id: ASSET_ID, body}).then(comment => {
+      submitComment.disabled = false;
+      newCommentBody.value = '';
+      document.getElementById('charCount').textContent = '0';
+      document.getElementById('noCommentsMsg')?.remove();
+      const thread = document.createElement('div');
+      thread.className = 'comment-thread mb-3';
+      thread.id = 'thread-' + comment.id;
+      thread.appendChild(buildCommentCard(comment, false));
+      const replies = document.createElement('div');
+      replies.className = 'replies ms-5 mt-1';
+      replies.id = 'replies-' + comment.id;
+      thread.appendChild(replies);
+      thread.appendChild(buildReplyCompose(comment.id));
+      document.getElementById('commentList').appendChild(thread);
+      updateCommentCount(1);
+    }).catch(error => {
+      submitComment.disabled = false;
+      alert(error.message);
+    });
+  });
+}
+
+function buildCommentCard(comment, isReply) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'comment-card mb-2' + (isReply ? ' reply-card' : '');
+  wrapper.id = 'comment-' + comment.id;
+  const replyButton = (!isReply && IS_AUTH) ? `<span class="reply-link" onclick="openReply(${comment.id})">↩ Reply</span>` : '';
+  const deleteButton = (comment.username === CUR_USER || IS_CREATOR) ? `<span class="delete-link" onclick="deleteComment(${comment.id})">🗑 Delete</span>` : '';
+  wrapper.innerHTML = `<div class="d-flex gap-2 align-items-start">
+    <img src="${avatarUrl(comment.username)}" class="comment-avatar"${isReply ? ' style="width:30px;height:30px;"' : ''} alt="${comment.username}">
+    <div class="flex-grow-1">
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="comment-username">${escapeHtml(comment.user)}</span>
+        <span class="comment-date">${escapeHtml(comment.created_at)}</span>
+        ${replyButton}${deleteButton}
+      </div>
+      <div class="comment-body">${escapeHtml(comment.body)}</div>
+      <div class="reaction-bar" id="rxbar-${comment.id}">
+        <div class="position-relative d-inline-block">
+          <button class="add-reaction-btn" onclick="toggleEmojiPicker(${comment.id},this)" type="button">😊 +</button>
+          <div class="emoji-picker-pop" id="epop-${comment.id}"></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  const picker = wrapper.querySelector('#epop-' + comment.id);
+  EMOJI_CHOICES.forEach(emoji => {
+    const item = document.createElement('span');
+    item.className = 'ep-emoji';
+    item.textContent = emoji;
+    item.onclick = () => doReact(comment.id, emoji);
+    picker.appendChild(item);
+  });
+  return wrapper;
+}
+
+function buildReplyCompose(parentId) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'reply-compose ms-5 mt-2 d-none';
+  wrapper.id = 'reply-compose-' + parentId;
+  wrapper.innerHTML = `<div class="d-flex gap-2 align-items-start">
+    <img src="${avatarUrl(CUR_USER)}" class="rounded-circle flex-shrink-0" width="32" height="32" alt="${CUR_USER}">
+    <div class="flex-grow-1">
+      <textarea class="form-control form-control-sm rounded-3 mb-1 reply-body" rows="2" maxlength="1000" placeholder="Write a reply…"></textarea>
+      <div class="d-flex gap-2">
+        <button class="btn btn-primary btn-sm rounded-pill px-3 submit-reply" data-parent="${parentId}" type="button">Reply</button>
+        <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 cancel-reply" data-parent="${parentId}" type="button">Cancel</button>
+      </div>
+    </div>
+  </div>`;
+  bindReplyButtons(wrapper);
+  return wrapper;
+}
+
+function openReply(parentId) {
+  document.getElementById('reply-compose-' + parentId)?.classList.remove('d-none');
+}
+
+function closeReply(parentId) {
+  document.getElementById('reply-compose-' + parentId)?.classList.add('d-none');
+}
+
+function bindReplyButtons(container) {
+  container.querySelectorAll('.submit-reply').forEach(button => {
+    button.addEventListener('click', () => {
+      const parentId = Number(button.dataset.parent);
+      const textarea = button.closest('.reply-compose').querySelector('.reply-body');
+      const body = textarea.value.trim();
+      if (!body) return;
+      button.disabled = true;
+      postJson('{% url "post_comment" %}', {
+        asset_type: ASSET_TYPE,
+        asset_id: ASSET_ID,
+        body,
+        parent_id: parentId
+      }).then(comment => {
+        button.disabled = false;
+        textarea.value = '';
+        closeReply(parentId);
+        document.getElementById('replies-' + parentId)?.appendChild(buildCommentCard(comment, true));
+        updateCommentCount(1);
+      }).catch(error => {
+        button.disabled = false;
+        alert(error.message);
+      });
+    });
+  });
+  container.querySelectorAll('.cancel-reply').forEach(button => {
+    button.addEventListener('click', () => closeReply(Number(button.dataset.parent)));
+  });
+}
+document.querySelectorAll('.reply-compose').forEach(bindReplyButtons);
+
+function deleteComment(id) {
+  if (!confirm('Delete this comment?')) return;
+  postJson('/library/api/comment/' + id + '/delete/', {}).then(data => {
+    if (data.deleted) {
+      document.getElementById('thread-' + id)?.remove();
+      document.getElementById('comment-' + id)?.remove();
+      updateCommentCount(-1);
+    }
+  }).catch(error => alert(error.message));
+}
+
+function toggleEmojiPicker(commentId, button) {
+  const picker = document.getElementById('epop-' + commentId);
+  if (!picker) return;
+  picker.classList.toggle('open');
+  setTimeout(() => {
+    function closeOnAway(event) {
+      if (!picker.contains(event.target) && event.target !== button) {
+        picker.classList.remove('open');
+        document.removeEventListener('click', closeOnAway);
+      }
+    }
+    document.addEventListener('click', closeOnAway);
+  }, 10);
+}
+
+function doReact(commentId, emoji) {
+  if (!IS_AUTH) return;
+  document.getElementById('epop-' + commentId)?.classList.remove('open');
+  postJson('{% url "toggle_reaction" %}', {comment_id: commentId, emoji}).then(data => {
+    updateReactionBar(commentId, data.emoji, data.count, data.active);
+  }).catch(error => alert(error.message));
+}
+
+function updateReactionBar(commentId, emoji, count, active) {
+  const bar = document.getElementById('rxbar-' + commentId);
+  if (!bar) return;
+  let button = bar.querySelector('[data-emoji="' + emoji + '"]');
+  if (count === 0 && button) {
+    button.remove();
+    return;
+  }
+  if (!button) {
+    button = document.createElement('button');
+    button.className = 'reaction-btn';
+    button.dataset.emoji = emoji;
+    button.type = 'button';
+    button.setAttribute('onclick', 'doReact(' + commentId + ',"' + emoji + '")');
+    bar.insertBefore(button, bar.firstChild);
+  }
+  button.innerHTML = emoji + ' <span>' + count + '</span>';
+  button.classList.toggle('reacted', active);
+}
+
+function updateCommentCount(delta) {
+  const badge = document.getElementById('commentCountBadge');
+  if (!badge) return;
+  badge.textContent = Math.max(0, Number(badge.textContent || 0) + delta);
+}
+
+const bookmarkBtn = document.getElementById('bookmark-btn');
+if (bookmarkBtn) {
+  bookmarkBtn.addEventListener('click', function() {
+    postJson('{% url "toggle_bookmark" %}', {asset_type: ASSET_TYPE, asset_id: ASSET_ID}).then(data => {
+      if (data.bookmarked) {
+        bookmarkBtn.textContent = 'Saved';;
+        bookmarkBtn.classList.add('bookmarked');
+      } else {
+        bookmarkBtn.textContent = 'Save';;
+        bookmarkBtn.classList.remove('bookmarked');
+      }
+    }).catch(error => alert(error.message));
+  });
+}
+
+const followBtn = document.getElementById('follow-creator-btn');
+if (followBtn) {
+  followBtn.addEventListener('click', function() {
+    followBtn.disabled = true;
+    postJson('{% url "toggle_follow" %}', {username: followBtn.dataset.username}).then(data => {
+      followBtn.disabled = false;
+      if (data.following) {
+        followBtn.textContent = 'Following';
+        followBtn.classList.remove('btn-outline-primary');
+        followBtn.classList.add('following');
+        window.RSToast && RSToast.show('Now following @' + followBtn.dataset.username, 'success');
+      } else {
+        followBtn.textContent = 'Follow Creator';
+        followBtn.classList.add('btn-outline-primary');
+        followBtn.classList.remove('following');
+        window.RSToast && RSToast.show('Unfollowed @' + followBtn.dataset.username, 'info');
+      }
+    }).catch(error => { followBtn.disabled = false; alert(error.message); });
+  });
+}
+
+// ── Asset share grid ──────────────────────────────────────────
+(function() {
+  const pageUrl = '{{ public_url|escapejs }}';
+  const mediaUrl = {% if asset_type == 'video' %}'{{ asset.playback_url|default:asset.source_media_url|escapejs }}'{% else %}'{{ asset.media_url|escapejs }}'{% endif %};
+  const mediaType = '{{ asset_type }}';
+  const grid = document.getElementById('assetShareGrid');
+  if (!grid || !pageUrl) return;
+
+  const svgs = {
+    facebook: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>',
+    instagram: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>',
+    pinterest: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>',
+    twitter: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+    flickr: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M0 12c0 3.074 2.494 5.568 5.568 5.568 3.075 0 5.569-2.494 5.569-5.568 0-3.075-2.494-5.569-5.569-5.569C2.494 6.431 0 8.925 0 12zm12.863 0c0 3.074 2.494 5.568 5.568 5.568C21.505 17.568 24 15.074 24 12c0-3.075-2.495-5.569-5.569-5.569-3.074 0-5.568 2.494-5.568 5.569z"/></svg>',
+  };
+
+  function openAssetShareModal(platform, bodyHtml) {
+    document.getElementById('assetShareModalPlatform').textContent = platform;
+    document.getElementById('assetShareModalBody').innerHTML = bodyHtml;
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('assetShareModal')).show();
+  }
+
+  const networks = [
+    { id:'facebook', label:'Facebook', cls:'facebook', fn(u,m){
+        openAssetShareModal('Facebook', `<div style="background:#f0f4ff;border-radius:12px;padding:14px;margin-bottom:12px;"><strong style="font-size:.82rem;display:block;margin-bottom:8px;">Option 1 — Share page link</strong><p style="font-size:.78rem;color:#555;margin:0 0 10px;">Opens Facebook with a rich preview of this ${mediaType}.</p><a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(u)}" target="_blank" rel="noopener" class="btn btn-primary rounded-pill px-4 w-100" style="font-size:.82rem;">Open in Facebook</a></div><div style="background:#f9f9fb;border-radius:12px;padding:14px;"><strong style="font-size:.82rem;display:block;margin-bottom:6px;">Option 2 — Download & upload media</strong><p style="font-size:.78rem;color:#555;margin:0 0 10px;">Download this ${mediaType} and post it directly to your Facebook feed or Story.</p><a href="${m||u}" download class="btn btn-outline-secondary rounded-pill px-4 w-100" style="font-size:.82rem;">Download ${mediaType}</a></div>`);
+    }},
+    { id:'instagram', label:'Instagram', cls:'instagram', fn(u,m){
+        openAssetShareModal('Instagram', `<div style="background:#fdf0f5;border-radius:12px;padding:14px;margin-bottom:12px;"><strong style="font-size:.82rem;display:block;margin-bottom:6px;">Step 1 — Download the ${mediaType}</strong><a href="${m||u}" download class="btn btn-outline-secondary rounded-pill px-4 w-100" style="font-size:.82rem;">Download ${mediaType}</a></div><div style="background:#f9f9fb;border-radius:12px;padding:14px;"><strong style="font-size:.82rem;display:block;margin-bottom:6px;">Step 2 — Post on Instagram</strong><p style="font-size:.78rem;color:#555;margin:0 0 8px;">Open Instagram, create a post/Reel with your downloaded file, and link back to this page in your caption.</p><div class="d-flex gap-2 mb-2"><input type="text" value="${u}" readonly class="form-control form-control-sm rounded-3" style="font-size:.75rem;"><button onclick="navigator.clipboard.writeText('${u}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1400);" class="btn btn-sm btn-outline-secondary rounded-3 px-3" style="font-size:.72rem;white-space:nowrap;">Copy</button></div><a href="https://www.instagram.com" target="_blank" rel="noopener" class="btn btn-outline-secondary rounded-pill px-4 w-100" style="font-size:.82rem;">Open Instagram</a></div>`);
+    }},
+    { id:'pinterest', label:'Pinterest', cls:'pinterest', fn(u,m){
+        if (mediaType === 'image' && m) {
+          window.open('https://pinterest.com/pin/create/button/?url='+encodeURIComponent(u)+'&media='+encodeURIComponent(m)+'&description=AI-generated+product+image+on+ReelStock', '_blank', 'width=750,height=550');
+        } else {
+          window.open('https://pinterest.com/pin/create/button/?url='+encodeURIComponent(u)+'&description=AI-generated+product+on+ReelStock', '_blank', 'width=750,height=550');
+        }
+    }},
+    { id:'twitter', label:'X (Twitter)', cls:'twitter', fn(u){
+        window.open('https://x.com/intent/tweet?text='+encodeURIComponent('Check out this AI-generated product '+mediaType+' on ReelStock! ')+'&url='+encodeURIComponent(u), '_blank', 'width=600,height=450');
+    }},
+    { id:'flickr', label:'Flickr', cls:'', fn(u,m){
+        openAssetShareModal('Flickr', `<p style="font-size:.85rem;color:#555;margin-bottom:14px;">Share your ${mediaType} on Flickr for portfolio exposure.</p><a href="${m||u}" download class="btn btn-outline-secondary rounded-pill px-4 w-100 mb-2" style="font-size:.82rem;">Download ${mediaType}</a><a href="https://www.flickr.com/photos/upload" target="_blank" rel="noopener" class="btn btn-primary rounded-pill px-4 w-100" style="font-size:.82rem;">Open Flickr Upload</a>`);
+    }},
+  ];
+
+  networks.forEach(n => {
+    const btn = document.createElement('button');
+    btn.type='button'; btn.className='share-network-btn '+n.cls;
+    btn.innerHTML = (svgs[n.id]||'') + '<span>'+n.label+'</span>';
+    btn.addEventListener('click', () => n.fn(pageUrl, mediaUrl));
+    grid.appendChild(btn);
+  });
+})();
+
+
+function showCollectionFeedback(message) {
+  const feedback = document.getElementById('col-feedback');
+  if (!feedback) return;
+  feedback.textContent = message;
+  feedback.style.display = 'block';
+  setTimeout(() => { feedback.style.display = 'none'; }, 2500);
+}
+
+function bindCollectionButtons(root) {
+  (root || document).querySelectorAll('.collection-pick-btn').forEach(button => {
+    if (button.dataset.bound === '1') return;
+    button.dataset.bound = '1';
+    button.addEventListener('click', function() {
+      if (this.disabled) return;
+      this.disabled = true;
+      postJson('{% url "add_to_collection" %}', {
+        collection_id: Number(this.dataset.colId),
+        asset_type: ASSET_TYPE,
+        asset_id: ASSET_ID
+      }).then(data => {
+        this.disabled = false;
+        showCollectionFeedback(data.added ? `✓ Added to "${data.collection}"` : `Already in "${data.collection}"`);
+      }).catch(error => {
+        this.disabled = false;
+        alert(error.message);
+      });
+    });
+  });
+}
+bindCollectionButtons(document);
+
+const newCollectionBtn = document.getElementById('new-col-create-btn');
+if (newCollectionBtn) {
+  newCollectionBtn.addEventListener('click', function() {
+    if (newCollectionBtn.disabled) return;
+    const input = document.getElementById('new-col-name');
+    const name = input.value.trim();
+    if (!name) return;
+    newCollectionBtn.disabled = true;
+    postJson('{% url "create_collection" %}', {name}).then(collection => {
+      return postJson('{% url "add_to_collection" %}', {
+        collection_id: collection.id,
+        asset_type: ASSET_TYPE,
+        asset_id: ASSET_ID
+      }).then(() => collection);
+    }).then(collection => {
+      showCollectionFeedback(`✓ Created "${collection.name}" and added.`);
+      input.value = '';
+      let list = document.getElementById('collection-list');
+      if (!list) {
+        list = document.createElement('div');
+        list.id = 'collection-list';
+        list.className = 'd-flex flex-column gap-2';
+        document.getElementById('new-col-name').closest('.modal-body').prepend(list);
+      }
+      const button = document.createElement('button');
+      button.className = 'btn btn-outline-secondary rounded-3 text-start collection-pick-btn';
+      button.dataset.colId = collection.id;
+      button.type = 'button';
+      button.textContent = collection.name;
+      list.appendChild(button);
+      bindCollectionButtons(button.parentElement);
+    }).catch(error => alert(error.message))
+      .finally(() => { newCollectionBtn.disabled = false; });
+  });
+}
+</script>
+
+<!-- Asset Share Modal -->
+<div class="modal fade rs-share-modal" id="assetShareModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">Share to <span id="assetShareModalPlatform"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 pb-4" id="assetShareModalBody"></div>
+    </div>
+  </div>
+</div>
 {% endblock %}

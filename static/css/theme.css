@@ -1,0 +1,230 @@
+/* ReelStock theme system. Toggle by setting data-theme on <html>. */
+[data-theme="light"] {
+  --rs-bg: #f5f7fa;
+  --rs-bg-card: #ffffff;
+  --rs-bg-nav: rgba(255, 255, 255, .85);
+  --rs-bg-input: #ffffff;
+  --rs-bg-modal: #ffffff;
+  --rs-text: #1a1a2e;
+  --rs-text-muted: #6c757d;
+  --rs-text-heading: #0f0f23;
+  --rs-border: rgba(0, 0, 0, .08);
+  --rs-border-input: #dee2e6;
+  --rs-shadow-card: 0 2px 12px rgba(0, 0, 0, .06);
+}
+
+[data-theme="dark"] {
+  --rs-bg: #0d0d1a;
+  --rs-bg-card: #1a1a2e;
+  --rs-bg-nav: rgba(13, 13, 26, .92);
+  --rs-bg-input: #1e1e35;
+  --rs-bg-modal: #1a1a2e;
+  --rs-text: #e8e8f0;
+  --rs-text-muted: #9b9bb8;
+  --rs-text-heading: #f4f4ff;
+  --rs-border: rgba(255, 255, 255, .09);
+  --rs-border-input: rgba(255, 255, 255, .14);
+  --rs-shadow-card: 0 2px 16px rgba(0, 0, 0, .34);
+}
+
+body {
+  background-color: var(--rs-bg) !important;
+  color: var(--rs-text) !important;
+  transition: background-color .25s ease, color .25s ease;
+}
+
+.glass-nav {
+  background: var(--rs-bg-nav) !important;
+  border-bottom: 1px solid var(--rs-border) !important;
+}
+
+[data-theme="dark"] .navbar-brand,
+[data-theme="dark"] .nav-link,
+[data-theme="dark"] .text-dark {
+  color: var(--rs-text) !important;
+}
+
+[data-theme="dark"] .nav-pills-inner,
+[data-theme="dark"] .dropdown-menu {
+  background: #1e1e35 !important;
+  border-color: var(--rs-border) !important;
+}
+
+[data-theme="dark"] .dropdown-item {
+  color: var(--rs-text) !important;
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+  background: rgba(255, 255, 255, .07) !important;
+}
+
+.wallet-section,
+.wallet-hero,
+.wallet-stat-card,
+.lib-card,
+.admin-card,
+.glass-card,
+.card {
+  transition: background .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+
+[data-theme="dark"] .wallet-section,
+[data-theme="dark"] .wallet-stat-card,
+[data-theme="dark"] .lib-card,
+[data-theme="dark"] .admin-card,
+[data-theme="dark"] .glass-card,
+[data-theme="dark"] .card,
+[data-theme="dark"] .gen-canvas,
+[data-theme="dark"] .reel-canvas {
+  background: var(--rs-bg-card) !important;
+  border-color: var(--rs-border) !important;
+  box-shadow: var(--rs-shadow-card) !important;
+}
+
+[data-theme="dark"] .wallet-hero {
+  background: linear-gradient(135deg, #3a3080 0%, #1a5a40 100%) !important;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+  color: var(--rs-text-heading) !important;
+}
+
+[data-theme="dark"] p,
+[data-theme="dark"] .lib-card-title,
+[data-theme="dark"] .wallet-stat-card-num,
+[data-theme="dark"] .coin-price-coins {
+  color: var(--rs-text) !important;
+}
+
+[data-theme="dark"] .text-muted,
+[data-theme="dark"] .lib-card-meta,
+[data-theme="dark"] .coin-price-usd,
+[data-theme="dark"] .payment-method-name {
+  color: var(--rs-text-muted) !important;
+}
+
+[data-theme="dark"] .form-control,
+[data-theme="dark"] .form-select,
+[data-theme="dark"] .input-group-text {
+  background-color: var(--rs-bg-input) !important;
+  border-color: var(--rs-border-input) !important;
+  color: var(--rs-text) !important;
+}
+
+[data-theme="dark"] .form-control::placeholder {
+  color: var(--rs-text-muted) !important;
+}
+
+[data-theme="dark"] .modal-content {
+  background: var(--rs-bg-modal) !important;
+  color: var(--rs-text) !important;
+  border-color: var(--rs-border) !important;
+}
+
+/* Bootstrap modal safety stack.
+   Keep this in the last-loaded stylesheet so every modal stays clickable:
+   auth, wallet payment, basket, share, collection, and request dialogs. */
+.modal-backdrop {
+  z-index: 1090 !important;
+}
+
+.modal {
+  z-index: 1100 !important;
+}
+
+.modal.show {
+  pointer-events: auto !important;
+}
+
+.modal.show .modal-dialog,
+.modal.show .modal-content {
+  pointer-events: auto !important;
+}
+
+[data-theme="dark"] .btn-close {
+  filter: invert(1) !important;
+}
+
+[data-theme="dark"] .txn-table td,
+[data-theme="dark"] .txn-table th,
+[data-theme="dark"] .table {
+  color: var(--rs-text) !important;
+  border-color: var(--rs-border) !important;
+}
+
+[data-theme="dark"] .txn-kind-badge,
+[data-theme="dark"] .lib-badge,
+[data-theme="dark"] .coin-req-row,
+[data-theme="dark"] .coin-price-option,
+[data-theme="dark"] .payment-method-card,
+[data-theme="dark"] .payment-summary-box {
+  background: #1e1e35 !important;
+  border-color: var(--rs-border) !important;
+  color: var(--rs-text) !important;
+}
+
+[data-theme="dark"] .coin-price-option.selected,
+[data-theme="dark"] .payment-method-card.selected {
+  background: rgba(108, 99, 255, .2) !important;
+  border-color: #6c63ff !important;
+}
+
+[data-theme="dark"] .pricing-banner {
+  background: rgba(108, 99, 255, .12) !important;
+  border-color: rgba(108, 99, 255, .24) !important;
+  color: #c8c1ff !important;
+}
+
+[data-theme="dark"] .coin-pill {
+  background: rgba(255, 200, 50, .12) !important;
+  color: #ffd060 !important;
+  border-color: rgba(255, 200, 50, .22) !important;
+}
+
+[data-theme="dark"] .basket-btn,
+[data-theme="dark"] .btn-outline-secondary {
+  background: rgba(255, 255, 255, .04) !important;
+  border-color: var(--rs-border) !important;
+  color: var(--rs-text-muted) !important;
+}
+
+[data-theme="dark"] code {
+  background: rgba(255, 255, 255, .08) !important;
+  color: #b5abff !important;
+}
+
+.theme-toggle-btn {
+  background: none;
+  border: 1.5px solid var(--rs-border, rgba(0, 0, 0, .1));
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.05rem;
+  padding: 0;
+  transition: border-color .2s, background .2s, transform .2s;
+  flex-shrink: 0;
+}
+
+.theme-toggle-btn:hover {
+  background: rgba(108, 99, 255, .1);
+  border-color: #6c63ff;
+  transform: scale(1.08);
+}
+
+.theme-toggle-spin {
+  animation: rsThemeSpin .4s ease;
+}
+
+@keyframes rsThemeSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

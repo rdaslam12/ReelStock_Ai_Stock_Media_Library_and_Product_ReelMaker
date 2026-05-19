@@ -1,33 +1,287 @@
 {% extends 'base.html' %}
-{% load static %}
-
+{% block title %}{{ creator.get_full_name|default:creator.username }} – ReelStock{% endblock %}
 {% block content %}
-  {% if creator %}
-    <div class="row align-items-center mb-4">
-      <div class="col-auto">
-        {% if creator.avatar %}
-          <img src="{% static creator.avatar %}" alt="{{ creator.username }} avatar" class="rounded-circle" width="80" height="80" />
-        {% else %}
-          <div class="rounded-circle bg-secondary" style="width:80px;height:80px;"></div>
+<div class="container py-4" style="max-width:1100px;">
+
+  <!-- Creator Header — Instagram/Flickr inspired -->
+  <div class="creator-profile-header reveal-up">
+    <div class="d-flex flex-column flex-md-row align-items-md-center gap-4">
+      <div class="creator-avatar-wrap flex-shrink-0">
+        <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ creator.username }}"
+             class="rounded-circle" width="96" height="96" alt="{{ creator.username }}"
+             style="border:3px solid rgba(255,255,255,.9);box-shadow:0 8px 24px rgba(15,23,42,.12);">
+        <div class="creator-verified-badge">✓</div>
+      </div>
+
+      <div class="flex-grow-1 min-w-0">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+          <h2 class="creator-name mb-0">{{ creator.get_full_name|default:creator.username }}</h2>
+        </div>
+        <div class="creator-handle mb-2">@{{ creator.username }}</div>
+        {% if profile.bio %}<p class="mb-2" style="font-size:.9rem;max-width:460px;">{{ profile.bio }}</p>{% endif %}
+        <div class="d-flex gap-3 flex-wrap" style="font-size:.8rem;color:rgba(15,23,42,.5);">
+          {% if profile.location %}
+            <span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16" style="margin-right:3px;"><path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/></svg>
+              {{ profile.location }}
+            </span>
+          {% endif %}
+          {% if profile.website %}
+            <a href="{{ profile.website }}" target="_blank" style="color:var(--primary);text-decoration:none;font-weight:700;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" viewBox="0 0 16 16" style="margin-right:3px;"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm7.5-6.923c-.67.204-1.335.82-1.887 1.855A7.97 7.97 0 0 0 5.145 4H7.5V1.077zM4.09 4a9.267 9.267 0 0 1 .64-1.539 6.7 6.7 0 0 1 .597-.933A7.025 7.025 0 0 0 2.255 4H4.09zm-.582 3.5c.03-.877.138-1.718.312-2.5H1.674a6.958 6.958 0 0 0-.656 2.5h2.49zM4.847 5a12.5 12.5 0 0 0-.338 2.5H7.5V5H4.847zM8.5 5v2.5h2.99a12.495 12.495 0 0 0-.337-2.5H8.5zM4.51 8.5a12.5 12.5 0 0 0 .337 2.5H7.5V8.5H4.51zm3.99 0V11h2.653c.187-.765.306-1.608.338-2.5H8.5zM5.145 12c.138.386.295.744.468 1.068.552 1.035 1.218 1.65 1.887 1.855V12H5.145zm.182 2.472a6.696 6.696 0 0 1-.597-.933A9.268 9.268 0 0 1 4.09 12H2.255a7.024 7.024 0 0 0 3.072 2.472zM3.82 11a13.652 13.652 0 0 1-.312-2.5h-2.49c.062.89.291 1.733.656 2.5H3.82zm6.853 3.472A7.024 7.024 0 0 0 13.745 12H11.91a9.27 9.27 0 0 1-.64 1.539 6.688 6.688 0 0 1-.597.933zM8.5 12v2.923c.67-.204 1.335-.82 1.887-1.855.173-.324.33-.682.468-1.068H8.5zm3.68-1h2.146c.365-.767.594-1.61.656-2.5h-2.49a13.65 13.65 0 0 1-.312 2.5zm2.802-3.5a6.959 6.959 0 0 0-.656-2.5H12.18c.174.782.282 1.623.312 2.5h2.49zM11.27 2.461c.247.464.462.98.64 1.539h1.835a7.024 7.024 0 0 0-3.072-2.472c.218.284.418.598.597.933zM10.855 4a7.966 7.966 0 0 0-.468-1.068C9.835 1.897 9.17 1.282 8.5 1.077V4h2.355z"/></svg>
+              Website
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="d-flex flex-column align-items-start align-items-md-end gap-3 flex-shrink-0">
+        <!-- Stats -->
+        <div class="creator-stat-box">
+          <div class="creator-stat-item">
+            <div class="creator-stat-num" id="follower-count-display">{{ follower_count }}</div>
+            <div class="creator-stat-label">Followers</div>
+          </div>
+          <div class="creator-stat-item" style="border-left:1px solid rgba(15,23,42,.08);padding-left:20px;">
+            <div class="creator-stat-num">{{ following_count }}</div>
+            <div class="creator-stat-label">Following</div>
+          </div>
+          <div class="creator-stat-item" style="border-left:1px solid rgba(15,23,42,.08);padding-left:20px;">
+            <div class="creator-stat-num">{{ images.count|add:videos.count }}</div>
+            <div class="creator-stat-label">Assets</div>
+          </div>
+        </div>
+
+        <!-- Follow / Unfollow with dropdown -->
+        {% if user.is_authenticated and user != creator %}
+          <div class="position-relative" id="follow-widget">
+            {% if is_following %}
+              <div class="d-flex gap-2">
+                <button class="btn btn-follow following rounded-pill px-4" id="follow-btn" data-username="{{ creator.username }}">
+                  Following
+                </button>
+                <button class="btn btn-outline-secondary rounded-pill px-3" id="follow-options-btn" title="More options" style="padding:0 10px!important;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"/></svg>
+                </button>
+              </div>
+              <div class="follow-dropdown-menu" id="follow-dropdown" style="position:absolute;top:calc(100%+8px);right:0;z-index:200;display:none;">
+                <button class="follow-dropdown-item" id="notif-toggle-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/></svg>
+                  Turn off notifications
+                </button>
+                <div class="follow-dropdown-sep"></div>
+                <button class="follow-dropdown-item danger" id="unfollow-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/><path fill-rule="evenodd" d="M13.5 5a.5.5 0 0 1 .5.5V7h1.5a.5.5 0 0 1 0 1H14v1.5a.5.5 0 0 1-1 0V8h-1.5a.5.5 0 0 1 0-1H13V5.5a.5.5 0 0 1 .5-.5z"/></svg>
+                  Unfollow @{{ creator.username }}
+                </button>
+              </div>
+            {% else %}
+              <button class="btn btn-follow btn-primary rounded-pill px-4" id="follow-btn" data-username="{{ creator.username }}">
+                Follow
+              </button>
+            {% endif %}
+          </div>
         {% endif %}
       </div>
-      <div class="col">
-        <h2 class="h4 mb-1">{{ creator.display_name|default:creator.username }}</h2>
-        <p class="mb-0 text-muted small">@{{ creator.username }}</p>
-        {% if creator.bio %}<p class="mt-2">{{ creator.bio }}</p>{% endif %}
-      </div>
     </div>
-    <h3 class="h5 mb-3">Published Assets</h3>
-    <div class="row">
-      {% for asset in assets %}
-        <div class="col-md-3 mb-4">
-          {% include 'libraryapp/_asset_card.html' with asset=asset %}
+  </div>
+
+  <!-- Images -->
+  {% if images %}
+  <div class="page-section-header reveal-up">
+    <h2>Images</h2>
+    <span class="text-muted small">{{ images.count }} asset{{ images.count|pluralize }}</span>
+  </div>
+  <div class="library-grid library-grid-sm mb-5">
+    {% for img in images %}
+      <div class="lib-card reveal-up">
+        <a href="{% url 'asset_detail' 'image' img.pk %}" class="text-decoration-none">
+          <div class="lib-card-media">
+            <img src="{{ img.media_url }}" alt="{{ img.display_title }}" loading="lazy">
+          </div>
+        </a>
+        <div class="lib-card-info">
+          <a href="{% url 'asset_detail' 'image' img.pk %}" class="text-decoration-none text-dark">
+            <div class="lib-card-title">{{ img.display_title }}</div>
+          </a>
+          <div class="lib-card-meta">
+            {% if img.style %}<span class="lib-badge">{{ img.style }}</span>{% endif %}
+            <span class="lib-price-chip ms-auto">{{ img.coin_price }} RC</span>
+          </div>
+          <div class="lib-card-bottom">
+            <span class="asset-views-chip">{{ img.view_count }} views</span>
+            {% if user.is_authenticated and user.id == img.user_id %}
+              <button class="btn-basket is-in-basket" disabled>Yours</button>
+            {% elif img.pk in basket_image_ids %}
+              <button class="btn-basket is-in-basket" disabled>In Basket</button>
+            {% else %}
+              <button type="button" class="btn-basket" data-asset-type="image" data-asset-id="{{ img.pk }}">Add to Basket</button>
+            {% endif %}
+          </div>
         </div>
-      {% empty %}
-        <div class="col-12"><p>No assets published yet.</p></div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <p>Creator not found.</p>
+      </div>
+    {% endfor %}
+  </div>
   {% endif %}
+
+  <!-- Videos -->
+  {% if videos %}
+  <div class="page-section-header reveal-up">
+    <h2>Product Reels</h2>
+    <span class="text-muted small">{{ videos.count }} reel{{ videos.count|pluralize }}</span>
+  </div>
+  <div class="library-grid library-grid-sm mb-5">
+    {% for vid in videos %}
+      <div class="lib-card reveal-up">
+        <a href="{% url 'asset_detail' 'video' vid.pk %}" class="text-decoration-none">
+          <div class="lib-card-media lib-card-video">
+            {% if vid.playback_url %}
+              <video src="{{ vid.playback_url }}" muted loop playsinline preload="metadata"
+                     {% if vid.source_media_url %}poster="{{ vid.source_media_url }}"{% endif %}
+                     onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>
+            {% elif vid.source_media_url %}
+              <img src="{{ vid.source_media_url }}" alt="{{ vid.display_title }}" loading="lazy">
+            {% endif %}
+            <div class="lib-play-icon">▶</div>
+          </div>
+        </a>
+        <div class="lib-card-info">
+          <a href="{% url 'asset_detail' 'video' vid.pk %}" class="text-decoration-none text-dark">
+            <div class="lib-card-title">{{ vid.display_title }}</div>
+          </a>
+          <div class="lib-card-meta">
+            {% if vid.category %}<span class="lib-badge">{{ vid.category }}</span>{% endif %}
+            <span class="lib-price-chip ms-auto">{{ vid.coin_price }} RC</span>
+          </div>
+          <div class="lib-card-bottom">
+            <span class="asset-views-chip">{{ vid.view_count }} views</span>
+            {% if user.is_authenticated and user.id == vid.user_id %}
+              <button class="btn-basket is-in-basket" disabled>Yours</button>
+            {% elif vid.pk in basket_video_ids %}
+              <button class="btn-basket is-in-basket" disabled>In Basket</button>
+            {% else %}
+              <button type="button" class="btn-basket" data-asset-type="video" data-asset-id="{{ vid.pk }}">Add to Basket</button>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if not images and not videos %}
+    <div class="text-center py-5 text-muted">
+      <div class="empty-state-icon">🎨</div>
+      <p class="mt-3 fw-semibold">No published assets yet.</p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+{% block scripts %}{{ block.super }}
+{% if user.is_authenticated %}
+<script>
+(function() {
+  const followBtn   = document.getElementById('follow-btn');
+  const unfollowBtn = document.getElementById('unfollow-btn');
+  const optionsBtn  = document.getElementById('follow-options-btn');
+  const dropdown    = document.getElementById('follow-dropdown');
+  const followerNum = document.getElementById('follower-count-display');
+
+  let currentCount = parseInt(followerNum?.textContent || '0', 10);
+
+  function getCookie(name) {
+    const match = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+    return match ? match[2] : null;
+  }
+
+  async function toggleFollow(username) {
+    const res = await fetch('{% url "toggle_follow" %}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+      body: JSON.stringify({username})
+    });
+    if (!res.ok) throw new Error('Request failed');
+    return res.json();
+  }
+
+  // Follow button click
+  if (followBtn) {
+    followBtn.addEventListener('click', async function() {
+      const username = this.dataset.username;
+      const wasFollowing = this.classList.contains('following');
+      this.disabled = true;
+
+      try {
+        const data = await toggleFollow(username);
+        if (data.following) {
+          // Just followed — update without reload for immediate feedback
+          this.textContent = 'Following';
+          this.classList.remove('btn-primary');
+          this.classList.add('following');
+          if (followerNum) {
+            currentCount++;
+            followerNum.textContent = currentCount;
+          }
+          window.RSToast && RSToast.show('You are now following @' + username, 'success');
+        } else {
+          this.textContent = 'Follow';
+          this.classList.add('btn-primary');
+          this.classList.remove('following');
+          if (followerNum) {
+            currentCount = Math.max(0, currentCount - 1);
+            followerNum.textContent = currentCount;
+          }
+          window.RSToast && RSToast.show('Unfollowed @' + username, 'info');
+          if (dropdown) dropdown.style.display = 'none';
+        }
+      } catch(e) {
+        window.RSToast && RSToast.show('Something went wrong. Try again.', 'error');
+      } finally {
+        this.disabled = false;
+      }
+    });
+  }
+
+  // Unfollow from dropdown
+  if (unfollowBtn) {
+    unfollowBtn.addEventListener('click', async function() {
+      const username = followBtn?.dataset.username;
+      if (!username) return;
+      if (!confirm('Unfollow @' + username + '?')) return;
+      dropdown.style.display = 'none';
+      try {
+        await toggleFollow(username);
+        window.RSToast && RSToast.show('Unfollowed @' + username, 'info');
+        setTimeout(() => location.reload(), 800);
+      } catch(e) {
+        window.RSToast && RSToast.show('Something went wrong.', 'error');
+      }
+    });
+  }
+
+  // Options dropdown toggle
+  if (optionsBtn && dropdown) {
+    optionsBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+    });
+    document.addEventListener('click', () => { dropdown.style.display = 'none'; });
+    dropdown.addEventListener('click', e => e.stopPropagation());
+  }
+
+  // Notification toggle (UI only — real implementation would call a toggle API)
+  const notifToggle = document.getElementById('notif-toggle-btn');
+  if (notifToggle) {
+    let notifsOn = true;
+    notifToggle.addEventListener('click', function() {
+      notifsOn = !notifsOn;
+      this.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 16 16"><path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zM8 1.918l-.797.161A4.002 4.002 0 0 0 4 6c0 .628-.134 2.197-.459 3.742-.16.767-.376 1.566-.663 2.258h10.244c-.287-.692-.502-1.49-.663-2.258C12.134 8.197 12 6.628 12 6a4.002 4.002 0 0 0-3.203-3.92L8 1.917zM14.22 12c.223.447.481.801.78 1H1c.299-.199.557-.553.78-1C2.68 10.2 3 6.88 3 6c0-2.42 1.72-4.44 4.005-4.901a1 1 0 1 1 1.99 0A5.002 5.002 0 0 1 13 6c0 .88.32 4.2 1.22 6z"/></svg> ${notifsOn ? 'Turn off notifications' : 'Turn on notifications'}`;
+      dropdown.style.display = 'none';
+      window.RSToast && RSToast.show(notifsOn ? 'Notifications on for this creator' : 'Notifications off for this creator', 'info');
+    });
+  }
+})();
+</script>
+{% endif %}
 {% endblock %}

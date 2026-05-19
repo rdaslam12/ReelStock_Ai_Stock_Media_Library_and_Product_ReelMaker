@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Following Feed – ReelStock{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:1280px;">
+
+  <div class="d-flex align-items-center gap-3 mb-2 reveal-up">
+    <h2 class="fw-bold mb-0">Following Feed</h2>
+  </div>
+  <p class="text-muted mb-5 reveal-up">Latest assets from creators you follow.</p>
+
+  {% if followed_count == 0 %}
+    <div class="text-center py-5 text-muted reveal-up">
+      <div style="font-size:3.5rem;">👥</div>
+      <h5 class="mt-3 fw-semibold">You're not following anyone yet</h5>
+      <p>Explore the <a href="{% url 'library' %}">library</a> and follow creators you love to build your feed.</p>
+    </div>
+  {% elif not feed %}
+    <div class="text-center py-5 text-muted reveal-up">
+      <div style="font-size:3.5rem;">📭</div>
+      <h5 class="mt-3 fw-semibold">Nothing new yet</h5>
+      <p>The creators you follow haven't published anything recently.</p>
+    </div>
+  {% else %}
+    <div class="library-grid">
+      {% for item in feed %}
+        {% if item.type == 'image' %}
+          <a href="{% url 'asset_detail' 'image' item.obj.pk %}" class="lib-card text-decoration-none reveal-up">
+            <div class="lib-card-media">
+              <img src="{{ item.obj.media_url }}" alt="{{ item.obj.display_title }}" loading="lazy">
+            </div>
+            <div class="lib-card-info">
+              <div class="lib-card-title">{{ item.obj.display_title }}</div>
+              <div class="lib-card-meta">
+                <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ item.obj.user.username }}"
+                     class="lib-avatar" alt="{{ item.obj.user.username }}">
+                <span>{{ item.obj.user.get_full_name|default:item.obj.user.username }}</span>
+                {% if item.obj.style %}<span class="lib-badge">{{ item.obj.style }}</span>{% endif %}
+                <span class="asset-views-chip">👁 {{ item.obj.view_count }}</span>
+                <span class="lib-price-chip ms-auto"><span class="coin-icon">🪙</span>{{ item.obj.coin_price }} RC</span>
+              </div>
+            </div>
+          </a>
+        {% else %}
+          <a href="{% url 'asset_detail' 'video' item.obj.pk %}" class="lib-card text-decoration-none reveal-up">
+            <div class="lib-card-media lib-card-video">
+              {% if item.obj.playback_url %}
+                <video src="{{ item.obj.playback_url }}" muted loop playsinline preload="metadata"
+                       {% if item.obj.source_media_url %}poster="{{ item.obj.source_media_url }}"{% endif %}
+                       onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>
+              {% elif item.obj.source_media_url %}
+                <img src="{{ item.obj.source_media_url }}" alt="{{ item.obj.display_title }}" loading="lazy">
+              {% endif %}
+              <div class="lib-play-icon">▶</div>
+            </div>
+            <div class="lib-card-info">
+              <div class="lib-card-title">{{ item.obj.display_title }}</div>
+              <div class="lib-card-meta">
+                <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ item.obj.user.username }}"
+                     class="lib-avatar" alt="{{ item.obj.user.username }}">
+                <span>{{ item.obj.user.get_full_name|default:item.obj.user.username }}</span>
+                {% if item.obj.category %}<span class="lib-badge">{{ item.obj.category }}</span>{% endif %}
+                <span class="asset-views-chip">👁 {{ item.obj.view_count }}</span>
+                <span class="lib-price-chip ms-auto"><span class="coin-icon">🪙</span>{{ item.obj.coin_price }} RC</span>
+              </div>
+            </div>
+          </a>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

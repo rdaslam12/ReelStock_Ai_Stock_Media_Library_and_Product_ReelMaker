@@ -1,0 +1,148 @@
+{% extends 'admin_base.html' %}
+{% block page_title %}{{ asset.display_title }}{% endblock %}
+{% block page_subtitle %}{{ asset_type|title }} #{{ asset.pk }} · owned by @{{ owner.username }}{% endblock %}
+{% block page_actions %}
+  <a class="btn btn-outline-secondary" href="{% url 'admin_assets' %}">Back to Assets</a>
+  <a class="btn btn-outline-primary" href="{% url 'asset_detail' asset_type asset.pk %}" target="_blank">Open Public Page</a>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-xl-7">
+    <section class="admin-card mb-4">
+      <div class="admin-preview">
+        {% if asset_type == 'image' %}
+          {% if asset.media_url %}<img src="{{ asset.media_url }}" alt="{{ asset.display_title }}">{% endif %}
+        {% else %}
+          {% if asset.playback_url %}
+            <video src="{{ asset.playback_url }}" controls playsinline {% if asset.source_media_url %}poster="{{ asset.source_media_url }}"{% endif %}></video>
+          {% elif asset.source_media_url %}
+            <img src="{{ asset.source_media_url }}" alt="{{ asset.display_title }}">
+          {% else %}
+            <div class="text-muted">No preview media available.</div>
+          {% endif %}
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <div class="admin-card-header"><h2>Performance</h2></div>
+      <div class="admin-kpi-grid compact">
+        <div class="admin-kpi-card"><span>Views</span><strong>{{ view_count }}</strong><small>Recorded visits</small></div>
+        <div class="admin-kpi-card"><span>Rating</span><strong>{{ avg_rating|floatformat:1 }}</strong><small>{{ rating_count }} ratings</small></div>
+        <div class="admin-kpi-card"><span>Comments</span><strong>{{ comment_count }}</strong><small>Threads and replies</small></div>
+        <div class="admin-kpi-card"><span>Saves</span><strong>{{ bookmark_count }}</strong><small>{{ collection_count }} collection adds</small></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="col-xl-5">
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Edit Asset</h2></div>
+      <form method="post" action="{% url 'admin_asset_update' asset_type asset.pk %}" class="vstack gap-3">
+        {% csrf_token %}
+        <div>
+          <label class="form-label">Title</label>
+          <input class="form-control" name="title" value="{{ asset.title }}">
+        </div>
+        <div>
+          <label class="form-label">Coin price</label>
+          <input class="form-control" type="number" min="0" name="coin_price" value="{{ asset.coin_price }}">
+        </div>
+        {% if asset_type == 'image' %}
+          <div>
+            <label class="form-label">Style</label>
+            <input class="form-control" name="style" value="{{ asset.style }}">
+          </div>
+          <div>
+            <label class="form-label">Prompt</label>
+            <textarea class="form-control" rows="4" readonly>{{ asset.prompt }}</textarea>
+          </div>
+        {% else %}
+          <div>
+            <label class="form-label">Product name</label>
+            <input class="form-control" name="product_name" value="{{ asset.product_name }}">
+          </div>
+          <div>
+            <label class="form-label">Category</label>
+            <input class="form-control" name="category" value="{{ asset.category }}">
+          </div>
+          <div>
+            <label class="form-label">Video style</label>
+            <input class="form-control" name="video_style" value="{{ asset.video_style }}">
+          </div>
+          <div>
+            <label class="form-label">Generation status</label>
+            <select class="form-select" name="status">
+              <option value="pending" {% if asset.status == 'pending' %}selected{% endif %}>Pending</option>
+              <option value="processing" {% if asset.status == 'processing' %}selected{% endif %}>Processing</option>
+              <option value="done" {% if asset.status == 'done' %}selected{% endif %}>Done</option>
+              <option value="failed" {% if asset.status == 'failed' %}selected{% endif %}>Failed</option>
+            </select>
+          </div>
+          {% if asset.error_message %}
+            <div class="alert alert-danger small mb-0">{{ asset.error_message }}</div>
+          {% endif %}
+        {% endif %}
+        <button class="btn btn-primary" type="submit">Save Changes</button>
+      </form>
+    </section>
+
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Moderation Actions</h2></div>
+      <div class="d-grid gap-2">
+        {% if asset.is_published %}
+          <form method="post" action="{% url 'admin_asset_action' asset_type asset.pk 'unpublish' %}" class="vstack gap-2">
+            {% csrf_token %}
+            <textarea class="form-control" name="admin_note" rows="2" required placeholder="Required reason for unpublishing"></textarea>
+            <button class="btn btn-outline-warning w-100" type="submit">Unpublish</button>
+          </form>
+        {% else %}
+          <form method="post" action="{% url 'admin_asset_action' asset_type asset.pk 'publish' %}">{% csrf_token %}<button class="btn btn-outline-success w-100" type="submit">Publish</button></form>
+        {% endif %}
+        {% if asset_type == 'video' %}
+          <form method="post" action="{% url 'admin_asset_action' asset_type asset.pk 'mark-done' %}">{% csrf_token %}<button class="btn btn-outline-primary w-100" type="submit">Mark Done</button></form>
+          <form method="post" action="{% url 'admin_asset_action' asset_type asset.pk 'mark-failed' %}" class="vstack gap-2">
+            {% csrf_token %}
+            <textarea class="form-control" name="admin_note" rows="2" required placeholder="Required reason for marking failed"></textarea>
+            <button class="btn btn-outline-danger w-100" type="submit">Mark Failed</button>
+          </form>
+        {% endif %}
+        <form method="post" action="{% url 'admin_asset_action' asset_type asset.pk 'delete' %}" onsubmit="return confirm('Delete this asset permanently?');">
+          {% csrf_token %}
+          <textarea class="form-control mb-2" name="admin_note" rows="2" required placeholder="Required reason for permanent deletion"></textarea>
+          <button class="btn btn-danger w-100" type="submit">Delete Asset</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <div class="admin-card-header"><h2>Owner</h2></div>
+      <a class="admin-stack-item text-decoration-none" href="{% url 'admin_user_detail' owner.pk %}">
+        <div>
+          <strong>@{{ owner.username }}</strong>
+          <small>{{ owner.email|default:"no email" }}</small>
+        </div>
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    </section>
+
+    <section class="admin-card mt-4">
+      <div class="admin-card-header"><h2>Moderation Log</h2></div>
+      <div class="admin-stack-list">
+        {% for log in admin_logs %}
+          <div class="admin-stack-item">
+            <div>
+              <strong>{{ log.get_action_display }}</strong>
+              <small>{{ log.note|truncatechars:100 }}</small>
+            </div>
+            <span class="text-muted small">{{ log.created_at|date:"M d, H:i" }}</span>
+          </div>
+        {% empty %}
+          <p class="text-muted mb-0">No admin actions logged for this asset.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

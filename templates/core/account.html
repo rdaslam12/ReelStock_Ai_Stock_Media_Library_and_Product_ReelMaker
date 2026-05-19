@@ -1,111 +1,147 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% block title %}My Profile – ReelStock{% endblock %}
 {% block content %}
+<div class="container py-5" style="max-width:1100px;">
 
-<div class="container mt-5" style="max-width: 800px;">
-    
-  <h2 class="text-center fw-bold mb-5">Profile settings</h2>
-
-  <div class="d-flex align-items-center mb-5">
-      <div class="rounded-circle d-flex align-items-center justify-content-center text-white me-4" 
-           style="width: 80px; height: 80px; background-color: #7b52c4; font-size: 2rem;">
-           {{ request.session.username.0|default:"r"|lower }}
+  {% if messages %}
+    {% for msg in messages %}
+      <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}success{% endif %} alert-dismissible fade show rounded-3">
+        {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
       </div>
-      <button class="btn text-white px-4 fw-bold" style="background-color: #50c878; border-radius: 20px;">Change image</button>
+    {% endfor %}
+  {% endif %}
+
+  <!-- Profile header -->
+  <div class="profile-header-card reveal-up">
+    <div class="d-flex flex-column flex-md-row align-items-md-center gap-4">
+      <div class="profile-avatar-circle">{{ user.first_name.0|default:user.username.0|upper }}</div>
+      <div class="flex-grow-1">
+        <h2 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h2>
+        <p class="text-muted mb-2">@{{ user.username }}</p>
+        {% if profile.bio %}<p class="mb-0" style="max-width:500px;">{{ profile.bio }}</p>{% endif %}
+        <div class="d-flex gap-3 flex-wrap mt-2 text-muted small">
+          {% if profile.location %}📍 {{ profile.location }}{% endif %}
+          {% if profile.website %}<a href="{{ profile.website }}" target="_blank" class="text-muted">🔗 Website</a>{% endif %}
+        </div>
+      </div>
+      <a href="{% url 'edit_profile' %}" class="btn btn-outline-dark rounded-pill px-4">✏️ Edit Profile</a>
+    </div>
   </div>
 
-  <form>
-      <div class="row mb-3">
-          <div class="col-md-6">
-              <label class="form-label fw-semibold">First name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" value="{{ request.session.username|default:'Guest' }}">
-              <div class="form-text" style="font-size: 0.75rem;">We'd like people to use real names in a community, so people would know who's who.</div>
-          </div>
-          <div class="col-md-6">
-              <label class="form-label fw-semibold">Last name <span class="text-danger">*</span></label>
-              <input type="text" class="form-control" value="rock">
-          </div>
-      </div>
+  <!-- Clickable stat cards -->
+  <div class="row g-3 mb-4 reveal-up">
+    <div class="col-md-4">
+      <a href="{% url 'my_assets' %}" class="text-decoration-none">
+        <div class="stat-card stat-card-hover">
+          <div class="stat-number">{{ total_assets }}</div>
+          <div class="stat-label">Total Creations</div>
+          <div class="stat-arrow">→</div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4">
+      <a href="{% url 'my_assets' %}?tab=images" class="text-decoration-none">
+        <div class="stat-card stat-card-hover">
+          <div class="stat-number">{{ total_images }}</div>
+          <div class="stat-label">Generated Images</div>
+          <div class="stat-arrow">→</div>
+        </div>
+      </a>
+    </div>
+    <div class="col-md-4">
+      <a href="{% url 'my_assets' %}?tab=videos" class="text-decoration-none">
+        <div class="stat-card stat-card-hover">
+          <div class="stat-number">{{ total_videos }}</div>
+          <div class="stat-label">Product Reels</div>
+          <div class="stat-arrow">→</div>
+        </div>
+      </a>
+    </div>
+  </div>
 
-      <div class="mb-4">
-          <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
-          <input type="email" class="form-control" value="demo@email.com">
+  <!-- Recent creations -->
+  <div class="bg-white rounded-4 shadow-sm border p-4 reveal-up">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+      <h4 class="fw-bold mb-0">Recent Creations</h4>
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="?tab=all"    class="btn btn-sm {% if active_tab == 'all' %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill">All</a>
+        <a href="?tab=images" class="btn btn-sm {% if active_tab == 'images' %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill">Images</a>
+        <a href="?tab=videos" class="btn btn-sm {% if active_tab == 'videos' %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill">Reels</a>
+        <a href="{% url 'my_assets' %}" class="btn btn-sm btn-outline-dark rounded-pill">View all →</a>
       </div>
+    </div>
 
-      <div class="mb-5">
-          <label class="form-label fw-semibold">Password</label><br>
-          
-          <button type="button" class="btn btn-light btn-sm fw-semibold border" data-bs-toggle="collapse" data-bs-target="#passwordCollapseForm">
-              Change password
-          </button>
-          
-          <div class="collapse mt-3" id="passwordCollapseForm">
-              <div class="card card-body bg-light border-0">
-                  <div class="mb-3">
-                      <label class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">Old Password</label>
-                      <input type="password" class="form-control form-control-sm">
-                  </div>
-                  <div class="mb-3">
-                      <label class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">New Password</label>
-                      <input type="password" class="form-control form-control-sm">
-                  </div>
-                  <div class="mb-3">
-                      <label class="form-label fw-semibold text-secondary" style="font-size: 0.85rem;">Retype New Password</label>
-                      <input type="password" class="form-control form-control-sm">
-                  </div>
-                  <div>
-                      <button type="button" class="btn btn-dark btn-sm fw-bold">Update Password</button>
-                  </div>
+    {% if recent_images or recent_videos %}
+      <div class="row g-3">
+        {% for img in recent_images %}
+          <div class="col-6 col-md-4 col-lg-3">
+            <a href="{% if img.is_published %}{% url 'asset_detail' 'image' img.pk %}{% else %}{% url 'my_assets' %}{% endif %}" class="text-decoration-none">
+              <div class="asset-mini-card">
+                <div class="asset-mini-thumb">
+                  <img src="{{ img.media_url }}" alt="{{ img.display_title }}" loading="lazy">
+                  {% if img.is_published %}<span class="asset-badge-pub">Published</span>{% else %}<span class="asset-badge-draft">Draft</span>{% endif %}
+                </div>
+                <div class="asset-mini-info">
+                  <div class="asset-mini-title">{{ img.display_title }}</div>
+                  <div class="asset-mini-meta">Image · {{ img.created_at|date:"M d" }} · 👁 {{ img.view_count }}</div>
+                </div>
               </div>
+            </a>
           </div>
+        {% endfor %}
+        {% for vid in recent_videos %}
+          <div class="col-6 col-md-4 col-lg-3">
+            <a href="{% if vid.is_published %}{% url 'asset_detail' 'video' vid.pk %}{% else %}{% url 'my_assets' %}{% endif %}" class="text-decoration-none">
+              <div class="asset-mini-card">
+                <div class="asset-mini-thumb asset-mini-video">
+                  {% if vid.playback_url %}
+                    <video src="{{ vid.playback_url }}" muted loop playsinline preload="metadata"
+                           {% if vid.source_media_url %}poster="{{ vid.source_media_url }}"{% endif %}
+                           onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>
+                  {% elif vid.source_media_url %}
+                    <img src="{{ vid.source_media_url }}" alt="{{ vid.display_title }}" loading="lazy" style="opacity:.55;">
+                  {% endif %}
+                  <div class="asset-mini-play">▶</div>
+                  {% if vid.is_published %}<span class="asset-badge-pub">Published</span>{% else %}<span class="asset-badge-draft">Draft</span>{% endif %}
+                </div>
+                <div class="asset-mini-info">
+                  <div class="asset-mini-title">{{ vid.display_title }}</div>
+                  <div class="asset-mini-meta">Reel · {{ vid.category }} · {{ vid.created_at|date:"M d" }} · 👁 {{ vid.view_count }}</div>
+                </div>
+              </div>
+            </a>
           </div>
-
-      <h3 class="fw-bold mb-4">About you</h3>
-
-      <div class="mb-4">
-          <div class="d-flex justify-content-between">
-              <label class="form-label fw-semibold">Short bio</label>
-              <span class="text-muted" style="font-size: 0.75rem;">0 of 130</span>
-          </div>
-          <textarea class="form-control" rows="4"></textarea>
-          <div class="form-text" style="font-size: 0.75rem;">Brief description for your profile.</div>
+        {% endfor %}
       </div>
-
-      <div class="row mb-4">
-          <div class="col-md-6">
-              <label class="form-label fw-semibold">Location</label>
-              <input type="text" class="form-control">
-              <div class="form-text" style="font-size: 0.75rem;">By sharing your location you help us to make your profile more discoverable.</div>
-          </div>
-          <div class="col-md-6">
-              <label class="form-label fw-semibold">Website</label>
-              <input type="text" class="form-control">
-              <div class="form-text" style="font-size: 0.75rem;">Your portfolio or blog.</div>
-          </div>
+    {% else %}
+      <div class="text-center py-5">
+        <div style="font-size:3rem;">🎨</div>
+        <h5 class="mt-3 mb-2">No creations yet</h5>
+        <p class="text-muted mb-4">Generate images or product reels to build your portfolio.</p>
+        <div class="d-flex justify-content-center gap-3">
+          <a href="{% url 'prompt_to_image' %}" class="btn btn-primary rounded-pill px-4">Generate Image</a>
+          <a href="{% url 'create' %}" class="btn btn-outline-primary rounded-pill px-4">Make a Reel</a>
+        </div>
       </div>
+    {% endif %}
+  </div>
 
-      <div class="row mb-3">
-          <div class="col-md-6">
-              <label class="form-label fw-semibold">X</label>
-              <input type="text" class="form-control">
-          </div>
-          <div class="col-md-6">
-              <label class="form-label fw-semibold">Instagram</label>
-              <input type="text" class="form-control">
-          </div>
+  <!-- Account info -->
+  <div class="bg-white rounded-4 shadow-sm border p-4 mt-4 reveal-up">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="fw-bold mb-0">Account Info</h5>
+      <a href="{% url 'edit_profile' %}" class="btn btn-sm btn-outline-secondary rounded-pill">Edit</a>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-4"><div class="text-muted small">Email</div><div class="fw-semibold">{{ user.email|default:"—" }}</div></div>
+      <div class="col-md-4"><div class="text-muted small">Location</div><div class="fw-semibold">{{ profile.location|default:"—" }}</div></div>
+      <div class="col-md-4"><div class="text-muted small">Website</div>
+        <div class="fw-semibold">{% if profile.website %}<a href="{{ profile.website }}" target="_blank" class="text-dark">{{ profile.website|truncatechars:30 }}</a>{% else %}—{% endif %}</div>
       </div>
+      {% if profile.instagram %}<div class="col-md-4"><div class="text-muted small">Instagram</div><div class="fw-semibold">@{{ profile.instagram }}</div></div>{% endif %}
+      {% if profile.x_handle %}<div class="col-md-4"><div class="text-muted small">X / Twitter</div><div class="fw-semibold">@{{ profile.x_handle }}</div></div>{% endif %}
+    </div>
+  </div>
 
-      <div class="row mb-5">
-          <div class="col-md-6">
-              <label class="form-label fw-semibold">Youtube</label>
-              <input type="text" class="form-control">
-          </div>
-          <div class="col-md-6">
-              <label class="form-label fw-semibold">TikTok</label>
-              <input type="text" class="form-control">
-          </div>
-      </div>
-
-  </form>
 </div>
-
 {% endblock %}

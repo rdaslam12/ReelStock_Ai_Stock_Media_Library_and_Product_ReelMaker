@@ -1,0 +1,299 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>{% block title %}ReelStock{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}"/>
+  <link rel="stylesheet" href="{% static 'css/wallet.css' %}"/>
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+<!-- Auth overlay animations -->
+<div id="auth-overlay" class="auth-overlay" style="display:none;">
+  <div class="auth-overlay-inner">
+    <div class="auth-spinner"></div>
+    <p id="auth-overlay-msg">Signing in…</p>
+  </div>
+</div>
+
+<!-- Floating toast container used by basket actions -->
+<div id="rs-toast-container" aria-live="polite" aria-atomic="true"></div>
+
+<nav class="navbar fixed-top glass-nav">
+  <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
+    <a class="navbar-brand fs-4 mb-0 text-dark text-decoration-none" href="{% url 'home' %}" style="letter-spacing:-0.5px;">
+      <span class="text-primary">Reel</span>Stock
+    </a>
+    <div class="nav-pills-wrap nav-desktop">
+      <ul class="navbar-nav flex-row align-items-center gap-1 m-0 p-1 nav-pills-inner">
+        <li class="nav-item">
+          {% url 'library' as url_lib %}
+          <a class="nav-link custom-link {% if request.path == url_lib or '/library/asset/' in request.path or '/library/creator/' in request.path %}active{% endif %}" href="{{ url_lib }}">Library</a>
+        </li>
+        <li class="nav-item">
+          {% url 'trending' as url_trend %}
+          <a class="nav-link custom-link {% if request.path == url_trend %}active{% endif %}" href="{{ url_trend }}">🔥 Trending</a>
+        </li>
+        <li class="nav-item">
+          {% url 'create' as url_create %}
+          <a class="nav-link custom-link {% if request.path == url_create %}active{% endif %}" href="{{ url_create }}">Reel Maker</a>
+        </li>
+        <li class="nav-item">
+          {% url 'prompt_to_image' as url_gen %}
+          <a class="nav-link custom-link {% if request.path == url_gen %}active{% endif %}" href="{{ url_gen }}">Generate</a>
+        </li>
+      </ul>
+    </div>
+    <div class="d-flex align-items-center gap-2 nav-actions-desktop">
+      {% if user.is_authenticated %}
+        <a href="{% url 'notifications' %}" class="btn btn-outline-secondary rounded-circle position-relative notif-bell-btn" title="Notifications" style="width:38px;height:38px;padding:0;display:flex;align-items:center;justify-content:center;">
+          🔔
+          <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+        </a>
+
+        <a href="{% url 'wallet_page' %}" class="coin-pill" title="Your Reel Coin balance">
+          <span class="coin-pill-icon">🪙</span>
+          <span class="coin-pill-amount" id="navCoinBalance">{{ wallet_balance }}</span>
+          <span class="coin-pill-label">RC</span>
+        </a>
+
+        <a href="{% url 'basket_page' %}" class="basket-btn" title="Download Basket">
+          <span class="basket-icon">🧺</span>
+          <span class="basket-badge {% if not basket_count %}is-empty{% endif %}" id="navBasketCount">{{ basket_count }}</span>
+        </a>
+
+        <div class="dropdown">
+          <button class="btn btn-primary px-3 rounded-pill shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            {{ user.first_name|default:user.username }}
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3">
+            <li><a class="dropdown-item py-2" href="{% url 'account' %}">👤 My Profile</a></li>
+            <li><a class="dropdown-item py-2" href="{% url 'my_assets' %}">🎨 My Assets</a></li>
+            <li><a class="dropdown-item py-2" href="{% url 'following_feed' %}">📡 Following Feed</a></li>
+            <li><a class="dropdown-item py-2" href="{% url 'my_bookmarks' %}">🔖 My Bookmarks</a></li>
+            <li><a class="dropdown-item py-2" href="{% url 'my_collections' %}">📁 My Collections</a></li>
+            <li><a class="dropdown-item py-2" href="{% url 'wallet_page' %}">🪙 My Wallet</a></li>
+            <li><a class="dropdown-item py-2" href="{% url 'basket_page' %}">🧺 Download Basket</a></li>
+            <li><hr class="dropdown-divider my-1"></li>
+            <li>
+              <a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}"
+                 onclick="showAuthOverlay('Signing out…')">🚪 Logout</a>
+            </li>
+          </ul>
+        </div>
+      {% else %}
+        <button class="btn btn-outline-primary px-4 rounded-pill" data-bs-toggle="modal" data-bs-target="#registerModal">Register</button>
+        <button class="btn btn-primary px-4 rounded-pill" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</button>
+      {% endif %}
+    </div>
+    <div class="dropdown nav-more-dropdown">
+      <button class="btn btn-outline-primary rounded-circle nav-more-btn" type="button" data-bs-toggle="dropdown" aria-label="Open navigation menu">
+        ⋯
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3">
+        <li><a class="dropdown-item py-2" href="{% url 'library' %}">Library</a></li>
+        <li><a class="dropdown-item py-2" href="{% url 'trending' %}">Trending</a></li>
+        <li><a class="dropdown-item py-2" href="{% url 'create' %}">Reel Maker</a></li>
+        <li><a class="dropdown-item py-2" href="{% url 'prompt_to_image' %}">Generate</a></li>
+        <li><hr class="dropdown-divider my-1"></li>
+        {% if user.is_authenticated %}
+          <li><a class="dropdown-item py-2" href="{% url 'notifications' %}">Notifications</a></li>
+          <li><a class="dropdown-item py-2" href="{% url 'wallet_page' %}">Wallet · {{ wallet_balance }} RC</a></li>
+          <li><a class="dropdown-item py-2" href="{% url 'basket_page' %}">Download Basket · {{ basket_count }}</a></li>
+          <li><a class="dropdown-item py-2" href="{% url 'account' %}">My Profile</a></li>
+          <li><a class="dropdown-item py-2" href="{% url 'my_assets' %}">My Assets</a></li>
+          <li><a class="dropdown-item py-2" href="{% url 'my_bookmarks' %}">Bookmarks</a></li>
+          <li><a class="dropdown-item py-2 text-danger" href="{% url 'logout' %}" onclick="showAuthOverlay('Signing out…')">Logout</a></li>
+        {% else %}
+          <li><button class="dropdown-item py-2" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</button></li>
+          <li><button class="dropdown-item py-2" data-bs-toggle="modal" data-bs-target="#registerModal">Register</button></li>
+          <li><a class="dropdown-item py-2 google-menu-auth" href="{% url 'social_login_start' 'google' %}" onclick="showAuthOverlay('Opening Google…')">Continue with Google</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<main class="container-fluid flex-grow-1" style="padding-top:6rem;padding-left:1.5rem;padding-right:1.5rem;">
+  {% if messages %}
+    <div style="max-width:640px;margin:0 auto 1rem;">
+      {% for msg in messages %}
+        <div class="alert alert-{% if msg.tags == 'error' %}danger{% else %}{{ msg.tags|default:'info' }}{% endif %} alert-dismissible fade show rounded-3 shadow-sm" role="alert">
+          {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+
+<!-- Login Modal -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">Welcome back</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 pb-4">
+        <p class="text-muted small mb-4">Log in with your email or username</p>
+        <form method="post" action="{% url 'login' %}" onsubmit="showAuthOverlay('Signing in…')">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.path }}">
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Email or Username</label>
+            <input class="form-control rounded-3" type="text" name="email" placeholder="you@email.com" required autofocus>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold small">Password</label>
+            <input class="form-control rounded-3" type="password" name="password" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-bold rounded-3">Log in</button>
+          <p class="text-muted small text-center mt-3 mb-0">
+            No account? <a href="#" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#registerModal">Register</a>
+          </p>
+        </form>
+        {% include 'core/_social_auth_buttons.html' %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Register Modal -->
+<div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">Create account</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 pb-4">
+        <div class="alert alert-info small rounded-3 d-flex align-items-center gap-2">
+          <span style="font-size:1.2rem;">🪙</span>
+          <span>Sign up and get <strong>100 free Reel Coins</strong> to download assets.</span>
+        </div>
+        <form method="post" action="{% url 'register' %}" onsubmit="showAuthOverlay('Creating your account…')">
+          {% csrf_token %}
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label fw-semibold small">First Name</label>
+              <input class="form-control rounded-3" type="text" name="first_name" placeholder="First" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label fw-semibold small">Last Name</label>
+              <input class="form-control rounded-3" type="text" name="last_name" placeholder="Last">
+            </div>
+          </div>
+          <div class="mb-2">
+            <label class="form-label fw-semibold small">Email</label>
+            <input class="form-control rounded-3" type="email" name="email" placeholder="you@email.com" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label fw-semibold small">Password</label>
+            <input class="form-control rounded-3" type="password" name="password" placeholder="Min 8 characters" required>
+          </div>
+          <div class="mb-4">
+            <label class="form-label fw-semibold small">Confirm Password</label>
+            <input class="form-control rounded-3" type="password" name="password2" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-bold rounded-3">Create account</button>
+          <p class="text-muted small text-center mt-3 mb-0">
+            Have an account? <a href="#" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#loginModal">Log in</a>
+          </p>
+        </form>
+        {% include 'core/_social_auth_buttons.html' %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="text-center mt-5 py-4" style="border-top:1px solid rgba(0,0,0,0.06);">
+  <div class="container">
+    <small class="text-muted">&copy; {% now 'Y' %} ReelStock — AI-powered product media platform.</small>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  window.RS = {
+    isAuthenticated: {% if user.is_authenticated %}true{% else %}false{% endif %},
+    csrfToken: "{{ csrf_token }}",
+    urls: {
+      basketAdd: "{% url 'basket_add' %}",
+      basketCount: "{% url 'basket_count' %}",
+      basketPage: "{% url 'basket_page' %}",
+      walletPage: "{% url 'wallet_page' %}",
+      login: "{% url 'login' %}"
+    }
+  };
+</script>
+<script src="{% static 'js/wallet.js' %}"></script>
+<script>
+function showAuthOverlay(msg) {
+  const el = document.getElementById('auth-overlay');
+  const msgEl = document.getElementById('auth-overlay-msg');
+  if (el) { el.style.display='flex'; if(msgEl) msgEl.textContent = msg || 'Please wait…'; }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  // Magic pill nav
+  const navContainer = document.querySelector('.nav-pills-inner');
+  if (navContainer) {
+    const links = document.querySelectorAll('.custom-link');
+    const pill = document.createElement('div');
+    pill.classList.add('magic-pill');
+    navContainer.appendChild(pill);
+    let activeLink = document.querySelector('.custom-link.active');
+    function movePill(t) {
+      if (!t) { pill.style.opacity='0'; return; }
+      pill.style.opacity='1';
+      const lr=t.getBoundingClientRect(), cr=navContainer.getBoundingClientRect();
+      pill.style.width=`${lr.width}px`; pill.style.height=`${lr.height}px`;
+      pill.style.left=`${lr.left-cr.left}px`; pill.style.top=`${lr.top-cr.top}px`;
+    }
+    movePill(activeLink);
+    links.forEach(l => l.addEventListener('mouseenter', () => movePill(l)));
+    navContainer.addEventListener('mouseleave', () => movePill(activeLink));
+  }
+  // Scroll reveal
+  const items = document.querySelectorAll('.reveal-up');
+  if ('IntersectionObserver' in window) {
+    const obs = new IntersectionObserver((entries, o) => {
+      entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('is-visible'); o.unobserve(e.target); } });
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    items.forEach(el => obs.observe(el));
+  } else {
+    items.forEach(el => el.classList.add('is-visible'));
+  }
+});
+</script>
+{% if user.is_authenticated %}
+<script>
+(function() {
+  const badge = document.getElementById('notif-badge');
+  if (!badge) return;
+
+  function fetchNotificationCount() {
+    fetch('{% url "notifications_count" %}')
+      .then(response => response.json())
+      .then(data => {
+        if (data.count > 0) {
+          badge.textContent = data.count > 99 ? '99+' : data.count;
+          badge.style.display = 'flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      })
+      .catch(() => {});
+  }
+
+  fetchNotificationCount();
+  setInterval(fetchNotificationCount, 60000);
+})();
+</script>
+{% endif %}
+{% block scripts %}{% endblock %}
+</body>
+</html>

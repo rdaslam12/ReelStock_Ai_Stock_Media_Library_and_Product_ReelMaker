@@ -1,0 +1,77 @@
+{% extends 'admin_base.html' %}
+{% block page_title %}ReelMaker Oversight{% endblock %}
+{% block page_subtitle %}Inspect generated reels, failed jobs, ownership, publishing, and playback readiness{% endblock %}
+
+{% block content %}
+<div class="admin-kpi-grid compact mb-4">
+  <a class="admin-kpi-card" href="{% url 'admin_reels' %}?status=pending"><span>Pending</span><strong>{{ status_counts.pending|default:0 }}</strong><small>Queued</small></a>
+  <a class="admin-kpi-card" href="{% url 'admin_reels' %}?status=processing"><span>Processing</span><strong>{{ status_counts.processing|default:0 }}</strong><small>Running</small></a>
+  <a class="admin-kpi-card" href="{% url 'admin_reels' %}?status=done"><span>Done</span><strong>{{ status_counts.done|default:0 }}</strong><small>Generated</small></a>
+  <a class="admin-kpi-card" href="{% url 'admin_reels' %}?status=failed"><span>Failed</span><strong>{{ status_counts.failed|default:0 }}</strong><small>Needs review</small></a>
+</div>
+
+<section class="admin-card mb-4">
+  <form class="row g-3 align-items-end" method="get">
+    <div class="col-lg-4">
+      <label class="form-label">Search</label>
+      <input class="form-control" name="q" value="{{ filters.q }}" placeholder="product, category, user, request id">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Generation status</label>
+      <select class="form-select" name="status">
+        <option value="">All</option>
+        {% for value,label in status_choices %}
+          <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Published</label>
+      <select class="form-select" name="published">
+        <option value="">All</option>
+        <option value="yes" {% if filters.published == 'yes' %}selected{% endif %}>Published</option>
+        <option value="no" {% if filters.published == 'no' %}selected{% endif %}>Not published</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button class="btn btn-primary w-100" type="submit">Filter</button>
+    </div>
+  </form>
+</section>
+
+<section class="admin-card">
+  <div class="table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Reel</th><th>Owner</th><th>Status</th><th>Published</th><th>Request</th><th>Updated</th><th></th></tr></thead>
+      <tbody>
+        {% for reel in reels %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <span class="admin-thumb">
+                  {% if reel.source_media_url %}<img src="{{ reel.source_media_url }}" alt="">{% else %}<i class="bi bi-camera-reels"></i>{% endif %}
+                </span>
+                <span>
+                  <strong class="d-block">{{ reel.display_title }}</strong>
+                  <small class="text-muted">{{ reel.category|default:"No category" }} · {{ reel.video_style }}</small>
+                  {% if reel.error_message %}<small class="d-block text-danger">{{ reel.error_message|truncatechars:80 }}</small>{% endif %}
+                </span>
+              </div>
+            </td>
+            <td><a href="{% url 'admin_user_detail' reel.user.pk %}">@{{ reel.user.username }}</a></td>
+            <td><span class="badge {% if reel.status == 'done' %}text-bg-success{% elif reel.status == 'failed' %}text-bg-danger{% else %}text-bg-warning{% endif %}">{{ reel.status|title }}</span></td>
+            <td>{% if reel.is_published %}Yes{% else %}No{% endif %}</td>
+            <td class="text-muted small">{{ reel.request_id|default:"none"|truncatechars:24 }}</td>
+            <td class="text-muted small">{{ reel.updated_at|date:"M d, H:i" }}</td>
+            <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'admin_asset_detail' 'video' reel.pk %}">Manage</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7" class="text-muted">No reels match those filters.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% include 'moderation/_admin_pagination.html' with page_obj=reels %}
+{% endblock %}

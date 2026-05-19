@@ -1,0 +1,19 @@
+{% if page_obj.paginator.num_pages > 1 %}
+  <nav class="admin-pagination">
+    <span class="text-muted small">
+      Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+    </span>
+    <div class="btn-group">
+      {% if page_obj.has_previous %}
+        <a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+      {% else %}
+        <button class="btn btn-sm btn-outline-secondary" disabled>Previous</button>
+      {% endif %}
+      {% if page_obj.has_next %}
+        <a class="btn btn-sm btn-outline-secondary" href="?page={{ page_obj.next_page_number }}">Next</a>
+      {% else %}
+        <button class="btn btn-sm btn-outline-secondary" disabled>Next</button>
+      {% endif %}
+    </div>
+  </nav>
+{% endif %}

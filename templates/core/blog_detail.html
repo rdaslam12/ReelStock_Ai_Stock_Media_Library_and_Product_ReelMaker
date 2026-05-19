@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}{{ post.title }} – ReelStock Blog{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:760px;">
+  <a href="{% url 'blog_list' %}" class="btn btn-outline-secondary btn-sm rounded-pill mb-4">← All Posts</a>
+
+  <article class="reveal-up">
+    <div class="mb-2">
+      <span class="badge rounded-pill" style="background:rgba(91,124,250,0.12);color:var(--primary);font-weight:600;">
+        {{ post.category }}
+      </span>
+    </div>
+    <h1 class="fw-bold mb-3" style="line-height:1.2;">{{ post.title }}</h1>
+    <div class="d-flex align-items-center gap-3 mb-4 text-muted small">
+      <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ post.author.username|default:'anon' }}"
+           class="rounded-circle" width="32" height="32" alt="">
+      <span>{{ post.author.get_full_name|default:post.author.username|default:"ReelStock Team" }}</span>
+      <span>·</span>
+      <span>{{ post.created_at|date:"F j, Y" }}</span>
+    </div>
+
+    {% if post.excerpt %}
+      <p class="lead text-muted mb-4">{{ post.excerpt }}</p>
+      <hr class="mb-4">
+    {% endif %}
+
+    <div class="blog-body">{{ post.body|linebreaks }}</div>
+  </article>
+
+  <div class="mt-5 pt-4 border-top text-center">
+    <a href="{% url 'blog_list' %}" class="btn btn-outline-secondary rounded-pill px-4">← Back to Blog</a>
+  </div>
+</div>
+{% endblock %}

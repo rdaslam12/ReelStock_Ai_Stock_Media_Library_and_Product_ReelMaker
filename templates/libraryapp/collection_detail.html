@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% block title %}{{ collection.name }} – ReelStock{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:1280px;">
+
+  <div class="d-flex align-items-center justify-content-between mb-2 reveal-up">
+    <div>
+      <a href="{% url 'my_collections' %}" class="text-muted small text-decoration-none">← Collections</a>
+      <h2 class="fw-bold mb-0 mt-1">📁 {{ collection.name }}</h2>
+      {% if collection.description %}<p class="text-muted mb-0">{{ collection.description }}</p>{% endif %}
+    </div>
+    {% if is_owner %}
+      <button class="btn btn-outline-danger rounded-pill" id="delete-collection-btn">🗑 Delete Collection</button>
+    {% endif %}
+  </div>
+  <p class="text-muted small mb-5 reveal-up">{{ resolved|length }} item{{ resolved|length|pluralize }} · by
+    <a href="{% url 'creator_profile' collection.user.username %}" class="text-decoration-none">
+      {{ collection.user.get_full_name|default:collection.user.username }}
+    </a>
+  </p>
+
+  {% if resolved %}
+    <div class="library-grid">
+      {% for item in resolved %}
+        {% if item.type == 'image' %}
+          <div class="lib-card reveal-up" style="position:relative;">
+            <a href="{% url 'asset_detail' 'image' item.obj.pk %}" class="text-decoration-none">
+              <div class="lib-card-media">
+                <img src="{{ item.obj.media_url }}" alt="{{ item.obj.display_title }}" loading="lazy">
+              </div>
+              <div class="lib-card-info">
+                <div class="lib-card-title">{{ item.obj.display_title }}</div>
+                <div class="lib-card-meta">
+                  <span class="lib-price-chip"><span class="coin-icon">🪙</span>{{ item.obj.coin_price }} RC</span>
+                  <span class="asset-views-chip ms-auto">👁 {{ item.obj.view_count }}</span>
+                </div>
+              </div>
+            </a>
+            {% if is_owner %}
+              <button class="btn btn-sm btn-outline-danger rounded-pill remove-item-btn"
+                      data-item-id="{{ item.item.pk }}"
+                      style="position:absolute;top:8px;right:8px;font-size:.7rem;">✕</button>
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="lib-card reveal-up" style="position:relative;">
+            <a href="{% url 'asset_detail' 'video' item.obj.pk %}" class="text-decoration-none">
+              <div class="lib-card-media lib-card-video">
+                {% if item.obj.playback_url %}
+                  <video src="{{ item.obj.playback_url }}" muted loop playsinline preload="metadata"
+                         {% if item.obj.source_media_url %}poster="{{ item.obj.source_media_url }}"{% endif %}
+                         onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>
+                {% elif item.obj.source_media_url %}
+                  <img src="{{ item.obj.source_media_url }}" alt="{{ item.obj.display_title }}" loading="lazy">
+                {% endif %}
+                <div class="lib-play-icon">▶</div>
+              </div>
+              <div class="lib-card-info">
+                <div class="lib-card-title">{{ item.obj.display_title }}</div>
+                <div class="lib-card-meta">
+                  <span class="lib-price-chip"><span class="coin-icon">🪙</span>{{ item.obj.coin_price }} RC</span>
+                  <span class="asset-views-chip ms-auto">👁 {{ item.obj.view_count }}</span>
+                </div>
+              </div>
+            </a>
+            {% if is_owner %}
+              <button class="btn btn-sm btn-outline-danger rounded-pill remove-item-btn"
+                      data-item-id="{{ item.item.pk }}"
+                      style="position:absolute;top:8px;right:8px;font-size:.7rem;">✕</button>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5 text-muted reveal-up">
+      <div style="font-size:3.5rem;">📭</div>
+      <h5 class="mt-3 fw-semibold">This collection is empty</h5>
+      <p>Browse the <a href="{% url 'library' %}">library</a> and add assets using the "Save to Collection" button.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function getCookie(n){const v=document.cookie.match('(^|;) ?'+n+'=([^;]*)(;|$)');return v?v[2]:null;}
+
+{% if is_owner %}
+document.querySelectorAll('.remove-item-btn').forEach(btn => {
+  btn.addEventListener('click', async function() {
+    const itemId = this.dataset.itemId;
+    const card = this.closest('.lib-card');
+    const res = await fetch(`/library/api/collection/item/${itemId}/remove/`, {
+      method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+      body: '{}'
+    });
+    if (res.ok) card.remove();
+  });
+});
+
+const delBtn = document.getElementById('delete-collection-btn');
+if (delBtn) {
+  delBtn.addEventListener('click', async function() {
+    if (!confirm('Delete this collection? Assets will not be removed.')) return;
+    const res = await fetch('/library/api/collection/{{ collection.pk }}/delete/', {
+      method:'POST', headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+      body: '{}'
+    });
+    if (res.ok) window.location.href = '{% url "my_collections" %}';
+  });
+}
+{% endif %}
+</script>
+{% endblock %}

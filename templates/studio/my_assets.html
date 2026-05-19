@@ -1,56 +1,135 @@
 {% extends 'base.html' %}
-{% load static %}
+{% block title %}My Assets – ReelStock{% endblock %}
 {% block content %}
-  <h1 class="h3 mb-4">My Assets</h1>
-  <p class="text-muted">Draft assets are visible only to you.  Published assets appear in the public library.</p>
-  <!-- Draft assets section -->
-  <h2 class="h5 mt-4">Drafts</h2>
-  <div class="row">
-    {% for asset in draft_assets %}
-      <div class="col-md-4 mb-4">
-        <div class="card h-100 shadow-sm position-relative">
-          <a href="/asset/{{ asset.id }}/" class="text-decoration-none">
-            <img src="{% static asset.thumbnail %}" class="card-img-top" alt="{{ asset.title }}" />
-          </a>
-          <div class="card-body">
-            <h5 class="card-title fs-6 fw-bold mb-1">{{ asset.title }}</h5>
-            <span class="badge bg-secondary">{{ asset.category }}</span>
-          </div>
-          <div class="card-footer bg-white border-top-0 d-flex gap-2">
-            <button class="btn btn-sm btn-success">Publish</button>
-            <button class="btn btn-sm btn-danger">Delete</button>
+<div class="container py-5" style="max-width:1200px;">
+
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+      <h2 class="fw-bold mb-1">My Assets</h2>
+      <p class="text-muted mb-0">{{ total_images }} image{{ total_images|pluralize }} · {{ total_videos }} reel{{ total_videos|pluralize }}</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{% url 'prompt_to_image' %}" class="btn btn-primary rounded-pill px-4">+ Generate Image</a>
+      <a href="{% url 'create' %}" class="btn btn-outline-primary rounded-pill px-4">+ Create Reel</a>
+    </div>
+  </div>
+
+  <!-- Tab filter -->
+  <div class="d-flex gap-2 mb-4">
+    <a href="{% url 'my_assets' %}?tab=all"    class="btn {% if tab == 'all' %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-4">All</a>
+    <a href="{% url 'my_assets' %}?tab=images" class="btn {% if tab == 'images' %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-4">🖼 Images ({{ total_images }})</a>
+    <a href="{% url 'my_assets' %}?tab=videos" class="btn {% if tab == 'videos' %}btn-dark{% else %}btn-outline-secondary{% endif %} rounded-pill px-4">🎬 Reels ({{ total_videos }})</a>
+  </div>
+
+  {% if images and tab != 'videos' %}
+  <h5 class="fw-semibold mb-3 text-muted">🖼 Generated Images</h5>
+  <div class="row g-3 mb-5">
+    {% for img in images %}
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="my-asset-card">
+        <div class="my-asset-thumb">
+          <img src="{{ img.media_url }}" alt="{{ img.display_title }}" loading="lazy">
+          {% if img.is_published %}
+            <span class="my-asset-badge-pub">Published</span>
+          {% else %}
+            <span class="my-asset-badge-draft">Draft</span>
+          {% endif %}
+        </div>
+        <div class="my-asset-info">
+          <div class="my-asset-title">{{ img.display_title }}</div>
+          <div class="my-asset-meta">{{ img.style }} · {{ img.aspect_ratio }} · {{ img.created_at|date:"M d, Y" }} · 👁 {{ img.view_count }}</div>
+          <div class="d-flex gap-1 mt-2">
+            <a href="{{ img.media_url }}" download class="btn btn-xs btn-outline-secondary rounded-pill flex-grow-1">Download</a>
+            {% if img.is_published %}
+              {% url 'asset_detail' 'image' img.pk as img_detail_url %}
+              <a href="{{ img_detail_url }}" class="btn btn-xs btn-outline-primary rounded-pill">View</a>
+              <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill copy-asset-link" data-url="{{ request.scheme }}://{{ request.get_host }}{{ img_detail_url }}">Copy</button>
+              <a href="https://www.facebook.com/sharer/sharer.php?u={% filter urlencode %}{{ request.scheme }}://{{ request.get_host }}{{ img_detail_url }}{% endfilter %}" target="_blank" rel="noopener" class="btn btn-xs btn-primary rounded-pill">Facebook</a>
+            {% endif %}
           </div>
         </div>
       </div>
-    {% empty %}
-      <div class="col-12">
-        <p>You have no draft assets.</p>
-      </div>
+    </div>
     {% endfor %}
   </div>
-  <!-- Published assets section -->
-  <h2 class="h5 mt-4">Published</h2>
-  <div class="row">
-    {% for asset in published_assets %}
-      <div class="col-md-4 mb-4">
-        <div class="card h-100 shadow-sm position-relative">
-          <a href="/asset/{{ asset.id }}/" class="text-decoration-none">
-            <img src="{% static asset.thumbnail %}" class="card-img-top" alt="{{ asset.title }}" />
-          </a>
-          <div class="card-body">
-            <h5 class="card-title fs-6 fw-bold mb-1">{{ asset.title }}</h5>
-            <span class="badge bg-secondary">{{ asset.category }}</span>
-          </div>
-          <div class="card-footer bg-white border-top-0 d-flex gap-2">
-            <button class="btn btn-sm btn-warning">Unpublish</button>
-            <button class="btn btn-sm btn-danger">Delete</button>
+  {% endif %}
+
+  {% if videos and tab != 'images' %}
+  <h5 class="fw-semibold mb-3 text-muted">🎬 Product Reels</h5>
+  <div class="row g-3 mb-5">
+    {% for vid in videos %}
+    <div class="col-6 col-md-4 col-lg-3">
+      <div class="my-asset-card">
+        <div class="my-asset-thumb my-asset-thumb-video">
+          {% if vid.playback_url %}
+            <video src="{{ vid.playback_url }}" muted loop playsinline preload="metadata"
+                   {% if vid.source_media_url %}poster="{{ vid.source_media_url }}"{% endif %}
+                   style="width:100%;height:100%;object-fit:cover;"
+                   onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>
+          {% elif vid.source_media_url %}
+            <img src="{{ vid.source_media_url }}" alt="{{ vid.display_title }}" loading="lazy" style="opacity:.5;">
+          {% endif %}
+          <div class="my-asset-play-icon">▶</div>
+          {% if vid.is_published %}
+            <span class="my-asset-badge-pub">Published</span>
+          {% else %}
+            <span class="my-asset-badge-draft">Draft</span>
+          {% endif %}
+        </div>
+        <div class="my-asset-info">
+          <div class="my-asset-title">{{ vid.display_title }}</div>
+          <div class="my-asset-meta">{{ vid.category }} · {{ vid.duration }}s · {{ vid.caption_style|default:"auto" }} captions · {{ vid.created_at|date:"M d, Y" }} · 👁 {{ vid.view_count }}</div>
+          <div class="d-flex gap-1 mt-2">
+            {% if vid.playback_url %}
+              <a href="{{ vid.playback_url }}" target="_blank" class="btn btn-xs btn-outline-secondary rounded-pill flex-grow-1">Download</a>
+            {% endif %}
+            {% if vid.is_published %}
+              {% url 'asset_detail' 'video' vid.pk as vid_detail_url %}
+              <a href="{{ vid_detail_url }}" class="btn btn-xs btn-outline-primary rounded-pill">View</a>
+              <button type="button" class="btn btn-xs btn-outline-secondary rounded-pill copy-asset-link" data-url="{{ request.scheme }}://{{ request.get_host }}{{ vid_detail_url }}">Copy</button>
+              <a href="https://www.facebook.com/sharer/sharer.php?u={% filter urlencode %}{{ request.scheme }}://{{ request.get_host }}{{ vid_detail_url }}{% endfilter %}" target="_blank" rel="noopener" class="btn btn-xs btn-primary rounded-pill">Facebook</a>
+            {% endif %}
           </div>
         </div>
       </div>
-    {% empty %}
-      <div class="col-12">
-        <p>You have no published assets.</p>
-      </div>
+    </div>
     {% endfor %}
   </div>
+  {% endif %}
+
+  {% if not images and not videos %}
+  <div class="text-center py-5 reveal-up">
+    <div style="font-size:4rem;">🎨</div>
+    <h4 class="mt-3 mb-2">Nothing saved yet</h4>
+    <p class="text-muted mb-4">Generate images or create product reels — they'll appear here.</p>
+    <div class="d-flex justify-content-center gap-3">
+      <a href="{% url 'prompt_to_image' %}" class="btn btn-primary rounded-pill px-5">Generate Image</a>
+      <a href="{% url 'create' %}" class="btn btn-outline-primary rounded-pill px-5">Create Reel</a>
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}{{ block.super }}
+<script>
+document.querySelectorAll('.copy-asset-link').forEach(button => {
+  button.addEventListener('click', async () => {
+    const label = button.textContent;
+    try {
+      await navigator.clipboard.writeText(button.dataset.url);
+    } catch (e) {
+      const tmp = document.createElement('input');
+      tmp.value = button.dataset.url;
+      document.body.appendChild(tmp);
+      tmp.select();
+      document.execCommand('copy');
+      tmp.remove();
+    }
+    button.textContent = 'Copied';
+    setTimeout(() => { button.textContent = label; }, 1400);
+  });
+});
+</script>
 {% endblock %}

@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Notifications – ReelStock{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:700px;">
+  <div class="d-flex align-items-center gap-3 mb-4 reveal-up">
+    <h2 class="fw-bold mb-0">Notifications</h2>
+    <span class="badge bg-secondary">{{ notifs|length }}</span>
+  </div>
+
+  {% if notifs %}
+    <div class="reveal-up">
+      {% for n in notifs %}
+        {% if n.notif_type == 'admin_action' %}
+          <div class="notif-item {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-icon">⚠️</div>
+            <div class="flex-grow-1">
+              <div class="notif-text">{{ n.get_message }}</div>
+              {% if n.admin_note %}
+                <div class="text-muted small mt-1">Admin note: {{ n.admin_note }}</div>
+              {% endif %}
+              <div class="notif-time">{{ n.created_at|timesince }} ago</div>
+            </div>
+          </div>
+        {% elif n.notif_type == 'follow' %}
+          <div class="notif-item {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-icon">👤</div>
+            <div class="flex-grow-1">
+              <div class="notif-text">
+                <strong>
+                  <a href="{% url 'creator_profile' n.actor.username %}" class="text-decoration-none text-dark">
+                    {{ n.actor.get_full_name|default:n.actor.username }}
+                  </a>
+                </strong> started following you
+              </div>
+              <div class="notif-time">{{ n.created_at|timesince }} ago</div>
+            </div>
+            <a href="{% url 'creator_profile' n.actor.username %}" class="btn btn-sm btn-outline-primary rounded-pill">View profile</a>
+          </div>
+        {% elif n.notif_type == 'comment' %}
+          <div class="notif-item {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-icon">💬</div>
+            <div class="flex-grow-1">
+              <div class="notif-text">
+                <strong>
+                  <a href="{% url 'creator_profile' n.actor.username %}" class="text-decoration-none text-dark">
+                    {{ n.actor.get_full_name|default:n.actor.username }}
+                  </a>
+                </strong> commented on your asset
+              </div>
+              <div class="notif-time">{{ n.created_at|timesince }} ago</div>
+            </div>
+            {% if n.asset_id %}
+              <a href="{% url 'asset_detail' n.asset_type n.asset_id %}" class="btn btn-sm btn-outline-primary rounded-pill">View</a>
+            {% endif %}
+          </div>
+        {% elif n.notif_type == 'reply' %}
+          <div class="notif-item {% if not n.is_read %}unread{% endif %}">
+            <div class="notif-icon">↩️</div>
+            <div class="flex-grow-1">
+              <div class="notif-text">
+                <strong>
+                  <a href="{% url 'creator_profile' n.actor.username %}" class="text-decoration-none text-dark">
+                    {{ n.actor.get_full_name|default:n.actor.username }}
+                  </a>
+                </strong> replied to your comment
+              </div>
+              <div class="notif-time">{{ n.created_at|timesince }} ago</div>
+            </div>
+            {% if n.asset_id %}
+              <a href="{% url 'asset_detail' n.asset_type n.asset_id %}" class="btn btn-sm btn-outline-primary rounded-pill">View</a>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5 text-muted reveal-up">
+      <div style="font-size:3.5rem;">🔔</div>
+      <h5 class="mt-3 fw-semibold">All caught up!</h5>
+      <p class="mb-0">Notifications about new followers, comments and replies will appear here.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

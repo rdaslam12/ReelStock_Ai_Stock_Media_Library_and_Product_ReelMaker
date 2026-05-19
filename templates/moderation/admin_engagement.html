@@ -1,0 +1,185 @@
+{% extends 'admin_base.html' %}
+{% block page_title %}Bookmarks, Collections, Baskets & Orders{% endblock %}
+{% block page_subtitle %}Visibility into saved assets, baskets, comments, ratings, follows, and download transactions{% endblock %}
+
+{% block content %}
+<div class="admin-kpi-grid compact mb-4">
+  <div class="admin-kpi-card"><span>Bookmarks</span><strong>{{ stats.bookmarks }}</strong><small>Saved assets</small></div>
+  <div class="admin-kpi-card"><span>Collections</span><strong>{{ stats.collections }}</strong><small>{{ stats.collection_items }} items</small></div>
+  <div class="admin-kpi-card"><span>Basket items</span><strong>{{ stats.basket_items }}</strong><small>Unpurchased items</small></div>
+  <div class="admin-kpi-card"><span>Comments</span><strong>{{ stats.comments }}</strong><small>{{ stats.ratings }} ratings</small></div>
+  <div class="admin-kpi-card"><span>Follows</span><strong>{{ stats.follows }}</strong><small>Creator graph</small></div>
+  <div class="admin-kpi-card"><span>Notifications</span><strong>{{ stats.notifications }}</strong><small>Generated alerts</small></div>
+</div>
+
+<div class="row g-4">
+  <div class="col-12">
+    <section class="admin-card mb-4">
+      <div class="admin-card-header">
+        <h2>Manual Trending Management</h2>
+        <span>Manual picks appear before computed trending</span>
+      </div>
+      <div class="table-responsive mb-4">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Asset</th><th>Order</th><th>Status</th><th>Note</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for item in manual_trending %}
+              {% with asset=item.get_asset %}
+              <tr>
+                <td>
+                  {% if asset %}
+                    <a href="{% url 'admin_asset_detail' item.asset_type asset.pk %}">{{ item.asset_type|title }} #{{ asset.pk }} · {{ asset.display_title|truncatechars:60 }}</a>
+                    <div class="text-muted small">@{{ asset.user.username }}</div>
+                  {% else %}
+                    Missing asset
+                  {% endif %}
+                </td>
+                <td>
+                  <form method="post" action="{% url 'admin_trending_action' %}" class="admin-inline-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" name="override_id" value="{{ item.pk }}">
+                    <input class="form-control form-control-sm" name="order" value="{{ item.order }}" style="width:90px;">
+                    <input class="form-control form-control-sm" name="note" value="{{ item.note }}" placeholder="Note">
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
+                  </form>
+                </td>
+                <td>{% if item.is_active %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-secondary">Hidden</span>{% endif %}</td>
+                <td class="text-muted small">{{ item.note|default:"No note" }}</td>
+                <td>
+                  <div class="d-flex gap-2">
+                    <form method="post" action="{% url 'admin_trending_action' %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="toggle">
+                      <input type="hidden" name="override_id" value="{{ item.pk }}">
+                      <button class="btn btn-sm btn-outline-secondary" type="submit">{% if item.is_active %}Hide{% else %}Show{% endif %}</button>
+                    </form>
+                    <form method="post" action="{% url 'admin_trending_action' %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="remove">
+                      <input type="hidden" name="override_id" value="{{ item.pk }}">
+                      <button class="btn btn-sm btn-outline-danger" type="submit">Remove</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% endwith %}
+            {% empty %}
+              <tr><td colspan="5" class="text-muted">No manual trending picks yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <h3 class="admin-section-title">Computed Top Images</h3>
+          <div class="admin-stack-list">
+            {% for row in computed_trending_images %}
+              <div class="admin-stack-item">
+                <div>
+                  <strong>{{ row.asset.display_title|truncatechars:58 }}</strong>
+                  <small>Score {{ row.score }} · {{ row.views }} views · {{ row.comments }} comments</small>
+                </div>
+                <form method="post" action="{% url 'admin_trending_action' %}" class="admin-inline-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="add">
+                  <input type="hidden" name="asset_type" value="image">
+                  <input type="hidden" name="asset_id" value="{{ row.asset.pk }}">
+                  <input class="form-control form-control-sm" type="number" name="order" value="{{ forloop.counter }}" style="width:72px;">
+                  <button class="btn btn-sm btn-primary" type="submit">Pin</button>
+                </form>
+              </div>
+            {% empty %}<p class="text-muted mb-0">No computed image trends yet.</p>{% endfor %}
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <h3 class="admin-section-title">Computed Top Videos</h3>
+          <div class="admin-stack-list">
+            {% for row in computed_trending_videos %}
+              <div class="admin-stack-item">
+                <div>
+                  <strong>{{ row.asset.display_title|truncatechars:58 }}</strong>
+                  <small>Score {{ row.score }} · {{ row.views }} views · {{ row.comments }} comments</small>
+                </div>
+                <form method="post" action="{% url 'admin_trending_action' %}" class="admin-inline-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="add">
+                  <input type="hidden" name="asset_type" value="video">
+                  <input type="hidden" name="asset_id" value="{{ row.asset.pk }}">
+                  <input class="form-control form-control-sm" type="number" name="order" value="{{ forloop.counter }}" style="width:72px;">
+                  <button class="btn btn-sm btn-primary" type="submit">Pin</button>
+                </form>
+              </div>
+            {% empty %}<p class="text-muted mb-0">No computed video trends yet.</p>{% endfor %}
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="col-xl-6">
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Recent Collections</h2></div>
+      <div class="admin-stack-list">
+        {% for collection in collections %}
+          <div class="admin-stack-item">
+            <div>
+              <strong>{{ collection.name }}</strong>
+              <small>@{{ collection.user.username }} · {{ collection.item_count }} items</small>
+            </div>
+            <span class="text-muted small">{{ collection.created_at|date:"M d" }}</span>
+          </div>
+        {% empty %}<p class="text-muted mb-0">No collections.</p>{% endfor %}
+      </div>
+    </section>
+
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Current Basket Items</h2></div>
+      <div class="admin-stack-list">
+        {% for item in basket_items %}
+          <div class="admin-stack-item">
+            <div>
+              <strong>@{{ item.user.username }}</strong>
+              <small>{{ item.asset_type|title }} · {{ item.title|truncatechars:60 }}</small>
+            </div>
+            <span>{{ item.coin_price_snapshot }} RC</span>
+          </div>
+        {% empty %}<p class="text-muted mb-0">No basket items.</p>{% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <div class="col-xl-6">
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Download Transactions</h2></div>
+      <div class="admin-stack-list">
+        {% for txn in download_transactions %}
+          <div class="admin-stack-item">
+            <div>
+              <strong>@{{ txn.wallet.user.username }}</strong>
+              <small>{{ txn.note|default:"Download purchase" }}</small>
+            </div>
+            <span class="text-danger fw-bold">{{ txn.delta }} RC</span>
+          </div>
+        {% empty %}<p class="text-muted mb-0">No downloads yet.</p>{% endfor %}
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <div class="admin-card-header"><h2>Recent Comments</h2></div>
+      <div class="admin-stack-list">
+        {% for comment in comments %}
+          <div class="admin-stack-item">
+            <div>
+              <strong>@{{ comment.user.username }}</strong>
+              <small>{{ comment.asset_type|title }} #{{ comment.asset_id }} · {{ comment.body|truncatechars:90 }}</small>
+            </div>
+            <span class="text-muted small">{{ comment.created_at|date:"M d" }}</span>
+          </div>
+        {% empty %}<p class="text-muted mb-0">No comments.</p>{% endfor %}
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

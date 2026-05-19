@@ -1,31 +1,34 @@
 #!/usr/bin/env python
-"""
-Management utility for the ReelStock project.
-
-This script is the command‑line interface for administrative tasks such
-as starting a development server or running migrations.  It simply
-configures the environment and delegates to Django’s built‑in
-management functions.  See Django’s documentation on ``manage.py`` for
-more details【140022745920203†L131-L167】.
-"""
+"""Django's command-line utility for administrative tasks."""
 import os
 import sys
+from pathlib import Path
 
 
-def main() -> None:
-    """Run administrative tasks."""
-    # Set the default settings module for the 'django' program.
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "reelstock.settings")
+def load_dotenv():
+    """Load .env file if present (no python-dotenv required)."""
+    env_path = Path(__file__).resolve().parent / '.env'
+    if env_path.exists():
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, _, value = line.partition('=')
+                    os.environ.setdefault(key.strip(), value.strip())
+
+
+def main():
+    load_dotenv()
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'reelstock.settings')
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
         raise ImportError(
-            "Couldn't import Django. Are you sure it's installed and available "
-            "on your PYTHONPATH environment variable? Did you forget to activate "
-            "a virtual environment?"
+            "Couldn't import Django. Are you sure it's installed? "
+            "Try: pip install -r requirements.txt"
         ) from exc
     execute_from_command_line(sys.argv)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

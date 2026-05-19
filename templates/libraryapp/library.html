@@ -1,76 +1,171 @@
 {% extends 'base.html' %}
-
+{% block title %}Library – ReelStock{% endblock %}
 {% block content %}
-  <h1 class="h3 mb-4">Asset Library</h1>
-  <!-- Search and filter controls -->
-  <form method="get" class="row g-3 align-items-center mb-3" id="searchForm">
-    <div class="col-md-4">
-      <input
-        type="text"
-        class="form-control"
-        name="search"
-        id="searchInput"
-        placeholder="Search by title or tag"
-        value="{{ search_query }}"
-      />
+<div class="container py-4" style="max-width:1280px;">
+
+  <!-- Header -->
+<div class="mb-4">
+  <!-- Top row: title + type toggle -->
+  <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-3 mb-3">
+    <div>
+      <h2 class="fw-bold mb-1">Asset Library</h2>
+      <p class="text-muted mb-0">
+        Explore published images and product reels — pay with Reel Coins to download.
+      </p>
     </div>
-    <div class="col-md-4">
-      <select name="category" class="form-select" id="categorySelect">
-        <option value="" {% if not current_category %}selected{% endif %}>All Categories</option>
+
+    <div class="btn-group shadow-sm align-self-start" role="group">
+      <a href="?type=images{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if current_category %}&category={{ current_category|urlencode }}{% endif %}"
+         class="btn {% if media_type == 'images' %}btn-primary{% else %}btn-outline-primary{% endif %} px-4 py-2">
+        🖼 Photos
+      </a>
+      <a href="?type=videos{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if current_category %}&category={{ current_category|urlencode }}{% endif %}"
+         class="btn {% if media_type == 'videos' %}btn-primary{% else %}btn-outline-primary{% endif %} px-4 py-2">
+        🎬 Videos
+      </a>
+    </div>
+  </div>
+
+  <!-- Middle row: library chips -->
+  <div class="d-flex flex-wrap gap-2 mb-3">
+    <a href="{% url 'trending' %}" class="btn btn-outline-secondary rounded-pill px-3">🔥 Trending</a>
+    {% if user.is_authenticated %}
+      <a href="{% url 'following_feed' %}" class="btn btn-outline-secondary rounded-pill px-3">📡 Following</a>
+      <a href="{% url 'my_bookmarks' %}" class="btn btn-outline-secondary rounded-pill px-3">🔖 Bookmarks</a>
+      <a href="{% url 'my_collections' %}" class="btn btn-outline-secondary rounded-pill px-3">📁 Collections</a>
+    {% endif %}
+  </div>
+
+  <!-- Bottom row: search and filters -->
+  <form method="get" class="row g-2 align-items-center mb-5">
+    <input type="hidden" name="type" value="{{ media_type }}">
+
+    <div class="col-12 col-lg-5">
+      <input type="text"
+             class="form-control rounded-3 shadow-sm"
+             name="search"
+             placeholder="Search..."
+             value="{{ search_query }}">
+    </div>
+
+    {% if categories %}
+    <div class="col-12 col-md-5 col-lg-3">
+      <select name="category" class="form-select rounded-3 shadow-sm">
+        <option value="">All {% if media_type == 'videos' %}categories{% else %}styles{% endif %}</option>
         {% for cat in categories %}
           <option value="{{ cat }}" {% if cat == current_category %}selected{% endif %}>{{ cat }}</option>
         {% endfor %}
       </select>
     </div>
-    <div class="col-md-2">
-      <button type="submit" class="btn btn-primary w-100">Filter</button>
+    {% endif %}
+
+    <div class="col-auto">
+      <button type="submit" class="btn btn-primary rounded-3 px-4 shadow-sm">Filter</button>
     </div>
-    <div class="col-md-2">
-      <a href="{% url 'library' %}" class="btn btn-outline-secondary w-100">Reset</a>
+
+    <div class="col-auto">
+      <a href="?type={{ media_type }}" class="btn btn-outline-secondary rounded-3">Reset</a>
     </div>
   </form>
-  <!-- Asset grid -->
-  <div class="row" id="assetGrid">
-    {% for asset in assets %}
-      <div class="col-md-4 mb-4 asset-card" data-title="{{ asset.title|lower }}" data-tags="{{ asset.tags|join:' '|lower }}" data-category="{{ asset.category|lower }}">
-        {% include 'libraryapp/_asset_card.html' with asset=asset %}
-      </div>
-    {% empty %}
-      <div class="col-12"><p>No assets found.</p></div>
-    {% endfor %}
-  </div>
-  <!-- Pagination -->
-  {% if total_pages > 1 %}
-    {% include 'libraryapp/_pagination.html' %}
+</div>
+  <!-- Grid -->
+  {% if assets %}
+    <div class="library-grid">
+      {% for asset in assets %}
+        {% if media_type == 'images' %}
+          <div class="lib-card reveal-up">
+            <a href="{% url 'asset_detail' 'image' asset.pk %}" class="text-decoration-none">
+              <div class="lib-card-media">
+                <img src="{{ asset.media_url }}" alt="{{ asset.display_title }}" loading="lazy">
+              </div>
+            </a>
+            <div class="lib-card-info">
+              <a href="{% url 'asset_detail' 'image' asset.pk %}" class="text-decoration-none text-dark">
+                <div class="lib-card-title">{{ asset.display_title }}</div>
+              </a>
+              <div class="lib-card-meta">
+                <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ asset.user.username }}"
+                     class="lib-avatar" alt="{{ asset.user.username }}">
+                <span>{{ asset.user.get_full_name|default:asset.user.username }}</span>
+                {% if asset.style %}<span class="lib-badge">{{ asset.style }}</span>{% endif %}
+                <span class="lib-price-chip ms-auto">
+                  <span class="coin-icon">🪙</span>{{ asset.coin_price }} RC
+                </span>
+              </div>
+              <div class="lib-card-bottom">
+                <span class="asset-views-chip">👁 {{ asset.view_count }}</span>
+                {% if user.is_authenticated and user.id == asset.user_id %}
+                  <button class="btn-basket is-in-basket" disabled title="Your own asset">✓ Yours</button>
+                {% elif asset.pk in basket_image_ids %}
+                  <button class="btn-basket is-in-basket"
+                          data-asset-type="image"
+                          data-asset-id="{{ asset.pk }}"
+                          disabled>✓ In Basket</button>
+                {% else %}
+                  <button type="button" class="btn-basket"
+                          data-asset-type="image"
+                          data-asset-id="{{ asset.pk }}">🧺 Add to Basket</button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div class="lib-card reveal-up">
+            <a href="{% url 'asset_detail' 'video' asset.pk %}" class="text-decoration-none">
+              <div class="lib-card-media lib-card-video">
+                {% if asset.playback_url %}
+                  <video src="{{ asset.playback_url }}" muted loop playsinline preload="metadata"
+                         {% if asset.source_media_url %}poster="{{ asset.source_media_url }}"{% endif %}
+                         style="width:100%;height:100%;object-fit:cover;"
+                         onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>
+                {% elif asset.source_media_url %}
+                  <img src="{{ asset.source_media_url }}" alt="{{ asset.display_title }}" loading="lazy">
+                {% endif %}
+                <div class="lib-play-icon">▶</div>
+              </div>
+            </a>
+            <div class="lib-card-info">
+              <a href="{% url 'asset_detail' 'video' asset.pk %}" class="text-decoration-none text-dark">
+                <div class="lib-card-title">{{ asset.display_title }}</div>
+              </a>
+              <div class="lib-card-meta">
+                <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ asset.user.username }}"
+                     class="lib-avatar" alt="{{ asset.user.username }}">
+                <span>{{ asset.user.get_full_name|default:asset.user.username }}</span>
+                {% if asset.category %}<span class="lib-badge">{{ asset.category }}</span>{% endif %}
+                <span class="lib-price-chip ms-auto">
+                  <span class="coin-icon">🪙</span>{{ asset.coin_price }} RC
+                </span>
+              </div>
+              <div class="lib-card-bottom">
+                <span class="asset-views-chip">👁 {{ asset.view_count }}</span>
+                {% if user.is_authenticated and user.id == asset.user_id %}
+                  <button class="btn-basket is-in-basket" disabled title="Your own asset">✓ Yours</button>
+                {% elif asset.pk in basket_video_ids %}
+                  <button class="btn-basket is-in-basket"
+                          data-asset-type="video"
+                          data-asset-id="{{ asset.pk }}"
+                          disabled>✓ In Basket</button>
+                {% else %}
+                  <button type="button" class="btn-basket"
+                          data-asset-type="video"
+                          data-asset-id="{{ asset.pk }}">🧺 Add to Basket</button>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5 reveal-up">
+      <div style="font-size:3.5rem;">{% if media_type == 'videos' %}🎬{% else %}🖼{% endif %}</div>
+      <h4 class="mt-3 mb-2">No {{ media_type }} published yet</h4>
+      <p class="text-muted mb-4">Be the first — generate and publish your creation.</p>
+      <a href="{% if media_type == 'videos' %}{% url 'create' %}{% else %}{% url 'prompt_to_image' %}{% endif %}"
+         class="btn btn-primary rounded-pill px-5">Create Now</a>
+    </div>
   {% endif %}
-{% endblock %}
 
-{% block scripts %}
-  {{ block.super }}
-  <!-- Optional client‑side filtering script (works when all assets are passed in ``all_assets``) -->
-  <script>
-    // When the search form is submitted, the server handles filtering via query parameters.
-    // The following script demonstrates client‑side filtering but is disabled because the
-    // server already implements filtering.  If you wish to use client‑side filtering,
-    // uncomment the code below and remove the form's submission.
-    /*
-    const searchInput = document.getElementById('searchInput');
-    const categorySelect = document.getElementById('categorySelect');
-    const cards = document.querySelectorAll('.asset-card');
-    function filter() {
-      const searchValue = searchInput.value.toLowerCase();
-      const categoryValue = categorySelect.value.toLowerCase();
-      cards.forEach(card => {
-        const title = card.dataset.title;
-        const tags = card.dataset.tags;
-        const cat = card.dataset.category;
-        const matchesSearch = !searchValue || title.includes(searchValue) || tags.includes(searchValue);
-        const matchesCategory = !categoryValue || cat === categoryValue;
-        card.style.display = matchesSearch && matchesCategory ? '' : 'none';
-      });
-    }
-    searchInput.addEventListener('input', filter);
-    categorySelect.addEventListener('change', filter);
-    */
-  </script>
+</div>
 {% endblock %}

@@ -1,0 +1,1049 @@
+/* ═══════════════════════════════════════════════════════════════
+   REELSTOCK — POLISH IMPROVEMENTS v2
+   All additions are scoped to avoid breaking existing styles.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 1. GLOBAL PAGE TRANSITIONS ─────────────────────────────── */
+* { box-sizing: border-box; }
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes spinCW {
+  to { transform: rotate(360deg); }
+}
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(91,124,250,0.3); }
+  50%       { box-shadow: 0 0 0 6px rgba(91,124,250,0); }
+}
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes popIn {
+  0%   { opacity: 0; transform: scale(.88); }
+  70%  { transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+main.container-fluid { animation: fadeSlideUp .4s ease both; }
+
+/* ── 2. NAVBAR — clean up emojis & tighten ──────────────────── */
+.nav-pills-inner {
+  gap: 2px;
+}
+.custom-link {
+  font-size: .85rem;
+  letter-spacing: .01em;
+  padding: 8px 14px !important;
+}
+
+/* Notification bell — no emoji, icon only via SVG via CSS */
+.notif-bell-btn {
+  border: 1.5px solid rgba(15,23,42,.13) !important;
+  background: rgba(255,255,255,.62) !important;
+  transition: background .2s, border-color .2s, transform .18s !important;
+  font-size: .95rem !important;
+}
+.notif-bell-btn:hover {
+  background: #fff !important;
+  border-color: var(--primary) !important;
+  transform: scale(1.07) !important;
+}
+
+/* Coin pill refinement */
+.coin-pill {
+  border: 1.5px solid rgba(91,124,250,.22);
+  transition: border-color .2s, box-shadow .2s;
+}
+.coin-pill:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 14px rgba(91,124,250,.18);
+}
+
+/* ── 3. REEL MAKER LAYOUT — proportional fix ─────────────────── */
+.reel-maker-wrapper {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px 40px;
+}
+.header-section {
+  padding: 20px 0 24px;
+  border-bottom: 1px solid rgba(0,0,0,.07);
+  margin-bottom: 28px;
+}
+.header-section .page-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+.header-section .text-muted {
+  font-size: .88rem;
+  max-width: 520px;
+}
+
+/* Controls column — less cramped */
+.reel-maker-layout {
+  grid-template-columns: 380px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.glass-card {
+  padding: 18px 20px;
+  margin-bottom: 16px;
+  border-radius: 18px;
+}
+.glass-card h3 {
+  font-size: .72rem !important;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: rgba(15,23,42,.55);
+  margin: 0;
+}
+.card-header-flex {
+  margin-bottom: 12px;
+}
+.icon-small {
+  font-size: .9rem;
+  opacity: .45;
+}
+
+/* Preview card — tighter, not oversized */
+.preview-card-premium {
+  min-height: 0 !important;
+  position: sticky;
+  top: 96px;
+}
+.reel-canvas,
+.gen-canvas {
+  min-height: 320px !important;
+  max-height: 420px;
+}
+
+.reel-canvas.has-generated-media,
+.gen-canvas.has-generated-media {
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 12px;
+  overflow: visible;
+}
+
+.generated-preview-media {
+  display: none;
+  max-width: 100%;
+  max-height: clamp(260px, 68vh, 680px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 16px;
+  cursor: zoom-in;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, .12);
+}
+
+.generated-preview-media.is-wide {
+  width: 100%;
+  height: auto;
+}
+
+.generated-preview-media.is-square,
+.generated-preview-media.is-tall {
+  width: auto;
+  height: auto;
+}
+
+.rs-floating-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 2100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  background: rgba(15, 23, 42, .46);
+  backdrop-filter: blur(8px);
+}
+
+.rs-floating-preview.is-open {
+  display: flex;
+}
+
+.rs-floating-preview-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: min(92vw, 1180px);
+  max-height: 86vh;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, .55);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, .72);
+  box-shadow: 0 28px 90px rgba(15, 23, 42, .28);
+  animation: rsPreviewFloat .18s ease-out both;
+}
+
+.rs-floating-preview img,
+.rs-floating-preview video {
+  display: none;
+  max-width: min(88vw, 1120px);
+  max-height: 82vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 16px;
+  background: #05070c;
+}
+
+.rs-floating-preview-close {
+  position: fixed;
+  top: 22px;
+  right: 24px;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .88);
+  color: rgba(15, 23, 42, .72);
+  font-size: 1.75rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .18);
+}
+
+@keyframes rsPreviewFloat {
+  from { opacity: 0; transform: translateY(18px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── 4. CATEGORY ITEMS ───────────────────────────────────────── */
+.category-item {
+  padding: 12px 5px;
+  border-radius: 10px;
+  transition: all .22s cubic-bezier(.25,1,.5,1);
+}
+.category-item .icon { font-size: 1.4rem; }
+.category-item p { font-size: .72rem; font-weight: 700; margin: 4px 0 0; }
+.category-item:hover {
+  background: rgba(255,255,255,.65);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(91,124,250,.13);
+}
+.category-item.active {
+  animation: popIn .25s ease both;
+}
+
+/* ── 5. DURATION GRID ────────────────────────────────────────── */
+.duration-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.duration-item {
+  background: rgba(255,255,255,.4);
+  border: 1.5px solid rgba(255,255,255,.7);
+  border-radius: 10px;
+  padding: 10px 8px;
+  text-align: center;
+  font-size: .82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all .22s ease;
+  color: rgba(15,23,42,.7);
+}
+.duration-item:hover {
+  background: rgba(255,255,255,.7);
+  transform: translateY(-2px);
+}
+.duration-item.active {
+  background: white;
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 4px 14px rgba(91,124,250,.2);
+}
+
+/* ── 6. UPLOAD ZONE ──────────────────────────────────────────── */
+.upload-zone {
+  padding: 28px 16px;
+  transition: border-color .2s, background .2s;
+}
+.upload-zone:hover {
+  background: rgba(91,124,250,.04);
+  border-color: var(--primary2);
+}
+.btn-upload {
+  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary), var(--primary2));
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  padding: 8px 22px;
+  font-size: .8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: filter .2s, transform .18s;
+}
+.btn-upload:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+/* ── 7. GENERATE BUTTON ──────────────────────────────────────── */
+.btn-generate-premium {
+  background: linear-gradient(135deg, var(--primary), var(--primary2)) !important;
+  border: none;
+  color: #fff;
+  font-weight: 800;
+  font-size: .88rem;
+  letter-spacing: .03em;
+  padding: 12px 20px;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: filter .2s, transform .18s, box-shadow .2s;
+  box-shadow: 0 8px 24px rgba(91,124,250,.28);
+  position: relative;
+  overflow: hidden;
+}
+.btn-generate-premium::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+  transition: left .5s ease;
+}
+.btn-generate-premium:hover::before { left: 160%; }
+.btn-generate-premium:hover {
+  filter: brightness(1.07);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px rgba(91,124,250,.34);
+}
+.btn-generate-premium:disabled {
+  opacity: .72;
+  transform: none;
+  cursor: default;
+}
+
+/* ── 8. ACTION BUTTONS — reel/gen pages ─────────────────────── */
+#reel-actions .btn,
+#gen-actions .btn {
+  font-size: .8rem;
+  font-weight: 700;
+  padding: 8px 18px;
+  transition: transform .18s, box-shadow .2s;
+}
+#reel-actions .btn:hover,
+#gen-actions .btn:hover {
+  transform: translateY(-2px);
+}
+
+/* ── 9. PIPELINE STEPS ───────────────────────────────────────── */
+.pipeline-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  background: rgba(255,255,255,.5);
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.8);
+}
+.pipe-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: .76rem;
+  color: rgba(15,23,42,.6);
+  transition: color .2s;
+}
+.pipe-dot {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: .65rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.pipe-dot.pipe-done {
+  background: var(--accent);
+  color: #fff;
+}
+.pipe-dot.pipe-active {
+  background: var(--primary);
+  color: #fff;
+  animation: pulseGlow .8s infinite;
+}
+.pipe-dot.pipe-pending {
+  background: rgba(15,23,42,.08);
+  color: rgba(15,23,42,.4);
+}
+
+/* ── 10. PROGRESS BAR ────────────────────────────────────────── */
+.premium-progress-track {
+  height: 5px;
+  background: rgba(15,23,42,.08);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.premium-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--primary2), var(--hot));
+  background-size: 200% 100%;
+  border-radius: 99px;
+  transition: width .4s ease;
+  animation: shimmer 2.5s linear infinite;
+}
+.status-footer-premium { padding: 6px 0 0; }
+.status-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: .68rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  color: rgba(15,23,42,.5);
+  margin-bottom: 5px;
+}
+
+/* ── 11. REEL FEATURE LIST ───────────────────────────────────── */
+.reel-feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.reel-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: .78rem;
+  color: rgba(15,23,42,.7);
+  padding: 4px 0;
+}
+.reel-feature span { flex: 1; line-height: 1.45; }
+
+/* ── 12. SHARE PANEL — enhanced ──────────────────────────────── */
+.share-panel {
+  padding: 14px 16px;
+  background: rgba(255,255,255,.7);
+  border-radius: 14px;
+}
+.share-panel-title {
+  font-size: .7rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: rgba(15,23,42,.45);
+}
+
+/* Share button grid */
+.share-btn-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+}
+.share-network-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 8px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(255,255,255,.8);
+  background: rgba(255,255,255,.55);
+  cursor: pointer;
+  transition: all .2s ease;
+  font-size: .68rem;
+  font-weight: 700;
+  color: rgba(15,23,42,.75);
+  text-decoration: none;
+}
+.share-network-btn:hover {
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(15,23,42,.1);
+  transform: translateY(-2px);
+  color: var(--ink);
+}
+.share-network-btn svg {
+  width: 22px; height: 22px;
+}
+.share-network-btn.facebook { color: #1877f2; border-color: rgba(24,119,242,.2); }
+.share-network-btn.facebook:hover { background: #1877f2; color: #fff; border-color: #1877f2; }
+.share-network-btn.instagram { color: #e1306c; border-color: rgba(225,48,108,.2); }
+.share-network-btn.instagram:hover { background: linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); color:#fff; }
+.share-network-btn.twitter { color: #000; border-color: rgba(0,0,0,.12); }
+.share-network-btn.twitter:hover { background: #000; color: #fff; }
+.share-network-btn.pinterest { color: #e60023; border-color: rgba(230,0,35,.2); }
+.share-network-btn.pinterest:hover { background: #e60023; color:#fff; }
+.share-network-btn.copy-link { color: rgba(15,23,42,.6); }
+.share-network-btn.copy-link:hover { background: rgba(15,23,42,.06); }
+
+/* ── 13. FOLLOW BUTTON — Instagram/Threads style ─────────────── */
+.btn-follow {
+  position: relative;
+  overflow: hidden;
+  font-weight: 700;
+  font-size: .82rem;
+  transition: all .2s ease;
+  min-width: 120px;
+}
+.btn-follow:not(.following) {
+  background: linear-gradient(135deg, var(--primary), var(--primary2));
+  border: none;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(91,124,250,.3);
+}
+.btn-follow:not(.following):hover {
+  filter: brightness(1.07);
+  box-shadow: 0 10px 26px rgba(91,124,250,.36);
+  transform: translateY(-1px);
+}
+.btn-follow.following {
+  background: rgba(255,255,255,.6);
+  border: 1.5px solid rgba(15,23,42,.15);
+  color: rgba(15,23,42,.7);
+  backdrop-filter: blur(8px);
+}
+.btn-follow.following:hover {
+  background: #fff0f0;
+  border-color: #f5a5a5;
+  color: #c0392b;
+}
+
+/* ── 14. FOLLOWER STATS ON CREATOR PROFILE ───────────────────── */
+.creator-stat-box {
+  display: flex;
+  gap: 20px;
+  background: rgba(255,255,255,.55);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,.8);
+  border-radius: 16px;
+  padding: 14px 18px;
+  width: fit-content;
+}
+.creator-stat-item {
+  text-align: center;
+}
+.creator-stat-num {
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.creator-stat-label {
+  font-size: .68rem;
+  font-weight: 600;
+  color: rgba(15,23,42,.45);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+/* ── 15. CREATOR PROFILE HEADER ──────────────────────────────── */
+.creator-profile-header {
+  background: rgba(255,255,255,.55);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,.8);
+  border-radius: 24px;
+  padding: 28px 32px;
+  box-shadow: 0 8px 32px rgba(15,23,42,.07);
+  margin-bottom: 32px;
+  animation: fadeSlideUp .4s ease both;
+}
+.creator-avatar-wrap {
+  position: relative;
+  display: inline-block;
+}
+.creator-avatar-wrap img {
+  border: 3px solid rgba(255,255,255,.9);
+  box-shadow: 0 8px 24px rgba(15,23,42,.12);
+}
+.creator-verified-badge {
+  position: absolute;
+  bottom: 2px; right: 2px;
+  width: 22px; height: 22px;
+  background: var(--primary);
+  border-radius: 50%;
+  border: 2px solid #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .6rem;
+  color: #fff;
+  font-weight: 900;
+}
+.creator-name {
+  font-size: 1.4rem;
+  font-weight: 800;
+  margin: 0;
+}
+.creator-handle {
+  font-size: .82rem;
+  color: rgba(15,23,42,.45);
+  font-weight: 600;
+}
+
+/* ── 16. TOAST/POPUP SYSTEM ──────────────────────────────────── */
+#rs-toast-container {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+.rs-toast {
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,.9);
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-size: .82rem;
+  font-weight: 700;
+  box-shadow: 0 12px 36px rgba(15,23,42,.16);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 320px;
+  pointer-events: auto;
+  animation: slideInDown .25s ease both;
+  transition: opacity .3s, transform .3s;
+  min-width: 220px;
+}
+.rs-toast.toast-error {
+  border-left: 3px solid #ef4444;
+}
+.rs-toast.toast-success {
+  border-left: 3px solid var(--accent);
+}
+.rs-toast.toast-info {
+  border-left: 3px solid var(--primary);
+}
+.rs-toast.toast-warning {
+  border-left: 3px solid #f59e0b;
+}
+.rs-toast-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.rs-toast-msg { flex: 1; color: var(--ink); }
+.rs-toast-close {
+  cursor: pointer;
+  opacity: .4;
+  font-size: .9rem;
+  padding: 0 2px;
+  background: none;
+  border: none;
+  line-height: 1;
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.rs-toast-close:hover { opacity: .8; }
+.rs-toast.hiding {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+/* ── 17. MODAL ENHANCEMENTS ──────────────────────────────────── */
+.modal-content {
+  animation: popIn .22s ease both;
+}
+
+/* ── 18. SCENE PLAN BOX ──────────────────────────────────────── */
+.scene-plan-box {
+  font-size: .72rem;
+  color: rgba(15,23,42,.55);
+  background: rgba(255,255,255,.4);
+  border-radius: 10px;
+  padding: 10px 12px;
+  white-space: pre-line;
+  line-height: 1.7;
+  border: 1px solid rgba(255,255,255,.7);
+}
+.plan-heading {
+  display: block;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: .65rem;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+/* ── 19. GLASS INPUT REFINEMENTS ─────────────────────────────── */
+.glass-input, .glass-select {
+  background: rgba(255,255,255,.5) !important;
+  border: 1.5px solid rgba(255,255,255,.8) !important;
+  border-radius: 10px !important;
+  font-size: .84rem;
+  transition: border-color .2s, box-shadow .2s;
+}
+.glass-input:focus, .glass-select:focus {
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 3px rgba(91,124,250,.12) !important;
+  background: rgba(255,255,255,.75) !important;
+}
+
+/* ── 20. LIBRARY CARD ANIMATION STAGGERING ───────────────────── */
+.reveal-up {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity .45s ease, transform .45s ease;
+}
+.reveal-up.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── 21. LIB PRICE CHIP ──────────────────────────────────────── */
+.lib-price-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: rgba(34,197,94,.1);
+  color: #16a34a;
+  border-radius: 99px;
+  padding: 2px 7px;
+  font-size: .7rem;
+  font-weight: 800;
+}
+
+/* ── 22. DROPDOWN MENU ───────────────────────────────────────── */
+.dropdown-menu {
+  animation: slideInDown .18s ease both;
+}
+.dropdown-item {
+  font-size: .84rem;
+  font-weight: 600;
+  border-radius: 8px;
+  margin: 1px 4px;
+  padding: 8px 12px !important;
+  transition: background .15s;
+}
+.dropdown-item:hover { background: rgba(91,124,250,.07); }
+
+/* ── 23. SHARE MODAL (full-featured) ─────────────────────────── */
+.rs-share-modal .modal-content {
+  border-radius: 22px;
+}
+.share-preview-thumb {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 14px;
+  margin-bottom: 12px;
+}
+
+/* ── 24. EMPTY STATE ICONS ───────────────────────────────────── */
+.empty-state-icon {
+  font-size: 3rem;
+  opacity: .4;
+}
+
+/* ── 25. PAGE HEADERS ────────────────────────────────────────── */
+.page-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+}
+.page-section-header h2 { margin: 0; font-size: 1.3rem; font-weight: 800; }
+
+/* ── 26. TRENDING BADGE ──────────────────────────────────────── */
+.trending-badge {
+  background: linear-gradient(135deg,#ff6b35,#f7c948);
+  color: #fff;
+  border-radius: 99px;
+  padding: 2px 8px;
+  font-size: .68rem;
+  font-weight: 800;
+}
+
+/* ── 27. ANIMATED NOTIFICATION BELL ─────────────────────────── */
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(10deg); }
+  30% { transform: rotate(-10deg); }
+  45% { transform: rotate(6deg); }
+  60% { transform: rotate(-4deg); }
+}
+.notif-bell-btn.has-notifs {
+  animation: bellRing 1.8s ease 1s both;
+}
+
+/* ── 28. CAPTION PREVIEW STRIP ───────────────────────────────── */
+.caption-preview-strip {
+  background: rgba(15,23,42,.03);
+  border-radius: 10px;
+  padding: 8px 10px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-height: 36px;
+  align-items: center;
+  border: 1px solid rgba(15,23,42,.06);
+}
+
+/* ── 29. ASSET DETAIL STAR RATING ────────────────────────────── */
+.star-icon { color: #e5e7eb; font-size: 1.1rem; transition: color .15s; }
+.star-icon.filled { color: #f59e0b; }
+.star-btn { background:none; border:none; font-size: 1.25rem; color: #d1d5db; cursor:pointer; padding:0 2px; transition: color .15s, transform .15s; }
+.star-btn.active, .star-btn.hover { color: #f59e0b; transform: scale(1.15); }
+
+/* ── 30. FOLLOW DROPDOWN (Flickr-inspired) ───────────────────── */
+.follow-dropdown-menu {
+  background: rgba(255,255,255,.96);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,.9);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(15,23,42,.18);
+  padding: 8px;
+  min-width: 180px;
+  animation: popIn .2s ease both;
+}
+.follow-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: .82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s;
+  color: var(--ink);
+  text-decoration: none;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.follow-dropdown-item:hover { background: rgba(91,124,250,.07); }
+.follow-dropdown-item.danger:hover { background: rgba(239,68,68,.07); color: #ef4444; }
+.follow-dropdown-sep { height: 1px; background: rgba(0,0,0,.06); margin: 4px 0; }
+
+/* ── 31. CREATOR HEADER — subscriber count animation ─────────── */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.creator-stat-num { animation: countUp .5s ease both; }
+
+/* ── 32. IMPROVED LOADER OVERLAY ─────────────────────────────── */
+.loader-overlay {
+  background: rgba(249,249,251,.85) !important;
+  backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.loader-msg-text {
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  color: rgba(15,23,42,.55);
+  margin: 0;
+}
+
+/* ── 33. RESPONSIVE: tighten mobile ──────────────────────────── */
+@media (max-width: 900px) {
+  .reel-maker-layout { grid-template-columns: 1fr; gap: 16px; }
+  .preview-card-premium { position: static; }
+}
+@media (max-width: 640px) {
+  .reel-maker-wrapper { padding: 0 12px 32px; }
+  .reel-canvas, .gen-canvas { max-height: 300px; }
+  .reel-canvas.has-generated-media,
+  .gen-canvas.has-generated-media { max-height: none; }
+  .generated-preview-media { max-height: 62vh; }
+  .rs-floating-preview { padding: 14px; }
+  .rs-floating-preview-stage { padding: 8px; border-radius: 16px; }
+  .rs-floating-preview-close { top: 12px; right: 12px; }
+  .creator-profile-header { padding: 20px; }
+  .share-btn-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ── 34. PUBLISH BUTTON STATES ───────────────────────────────── */
+#publishReelBtn:disabled,
+#publishBtn:disabled {
+  opacity: .6;
+  cursor: not-allowed;
+}
+
+/* ── 35. LIBRARY / HOME — card hover with glow ───────────────── */
+.lib-card:hover {
+  box-shadow: 0 16px 40px rgba(15,23,42,.14), 0 0 0 1px rgba(91,124,250,.08);
+}
+
+/* ── 36. GRADIENT SPINNER for loader ─────────────────────────── */
+.spinner-premium {
+  width: 40px; height: 40px;
+  border: 3px solid rgba(91,124,250,.15);
+  border-top-color: var(--primary);
+  border-right-color: var(--primary2);
+  border-radius: 50%;
+  animation: spinCW .8s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ── 37. SKELETON PULSE on generate ─────────────────────────── */
+.skeleton-pulse {
+  width: 100%; height: 100%; min-height: 240px;
+  background: linear-gradient(90deg, #f0f0f5 25%, #e4e4ef 50%, #f0f0f5 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.6s linear infinite;
+  border-radius: 12px;
+}
+
+/* ── 38. NAV: remove emoji from trending ─────────────────────── */
+.custom-link[href*="trending"]::before { content: ''; }
+
+
+/* ── Drop zone shake on validation ──────────────────────────── */
+@keyframes zoneShake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+.drop-zone-shake {
+  animation: zoneShake .5s ease;
+  border-color: #ef4444 !important;
+}
+
+/* ── Btn-basket refinements ──────────────────────────────────── */
+.btn-basket {
+  background: rgba(91,124,250,.08);
+  border: 1.5px solid rgba(91,124,250,.2);
+  color: var(--primary);
+  border-radius: 99px;
+  padding: 5px 12px;
+  font-size: .72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s ease;
+  white-space: nowrap;
+}
+.btn-basket:hover:not(:disabled) {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.btn-basket.is-in-basket {
+  background: rgba(34,197,94,.08);
+  border-color: rgba(34,197,94,.3);
+  color: #16a34a;
+  cursor: default;
+}
+.btn-basket-large {
+  padding: 10px 22px;
+  font-size: .84rem;
+  border-radius: 30px;
+}
+
+/* ── Asset stat row ──────────────────────────────────────────── */
+.asset-stat-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: .8rem;
+}
+
+/* ── Asset price box ─────────────────────────────────────────── */
+.asset-price-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(255,255,255,.6);
+  border: 1px solid rgba(255,255,255,.85);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  backdrop-filter: blur(8px);
+}
+.asset-price-label {
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: rgba(15,23,42,.45);
+  margin-bottom: 3px;
+}
+.asset-price-value {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--primary);
+}
+
+/* ── Comment section ─────────────────────────────────────────── */
+.comment-card {
+  background: rgba(255,255,255,.6);
+  border: 1px solid rgba(255,255,255,.85);
+  border-radius: 14px;
+  padding: 12px 14px;
+  backdrop-filter: blur(8px);
+  transition: box-shadow .2s;
+}
+.comment-card:hover { box-shadow: 0 4px 18px rgba(15,23,42,.07); }
+.comment-avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.comment-username { font-weight: 700; font-size: .84rem; }
+.comment-date { font-size: .72rem; color: rgba(15,23,42,.45); }
+.comment-body { font-size: .85rem; margin-top: 4px; line-height: 1.55; color: var(--ink); }
+.reply-link, .delete-link { font-size: .72rem; font-weight: 700; color: var(--primary); cursor: pointer; text-decoration: none; }
+.reply-link:hover { text-decoration: underline; }
+.delete-link { color: #ef4444; }
+
+/* ── Page title larger alignment fix ────────────────────────── */
+.page-title {
+  font-size: 1.7rem;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  margin: 0;
+}
+
+/* ── Coin pill responsive ────────────────────────────────────── */
+@media (max-width: 480px) {
+  .coin-pill-label { display: none; }
+}
+
+/* ── Reel section header in create page ─────────────────────── */
+.card-header-flex h3 {
+  font-size: .7rem !important;
+  font-weight: 800;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: rgba(15,23,42,.48);
+  margin: 0;
+}
+
+/* ── Upload zone file chosen state ──────────────────────────── */
+#upload-preview {
+  padding: 14px;
+}
+#upload-thumb {
+  border: 2px solid rgba(255,255,255,.8);
+  box-shadow: 0 8px 24px rgba(15,23,42,.12);
+}
+
+/* ── Smooth page in animation ────────────────────────────────── */
+.controls-column > .glass-card {
+  animation: fadeSlideUp .4s ease both;
+}
+.controls-column > .glass-card:nth-child(2) { animation-delay: .05s; }
+.controls-column > .glass-card:nth-child(3) { animation-delay: .1s; }
+.controls-column > .glass-card:nth-child(4) { animation-delay: .15s; }
+.controls-column > .glass-card:nth-child(5) { animation-delay: .2s; }
+.preview-column { animation: fadeSlideUp .4s .1s ease both; }

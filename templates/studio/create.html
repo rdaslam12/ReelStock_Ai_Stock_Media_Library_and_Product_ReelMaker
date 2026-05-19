@@ -1,197 +1,940 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block title %}Reel Maker – ReelStock{% endblock %}
 
 {% block content %}
 <div class="reel-maker-wrapper">
-    <div class="header-section">
-        <h1 class="page-title">Create Asset</h1>
-        <p class="text-muted">Generate professional reels using AI-powered studio tools.</p>
-    </div>
+  <div class="header-section">
+    <h1 class="page-title">Reel Maker</h1>
+    <p class="text-muted">Upload a product photo. AI removes the background, generates cinematic scenes, adds animated captions, and assembles an exact-length commercial reel.</p>
+  </div>
 
-    <div class="reel-maker-layout">
-        
-        <div class="controls-column">
-            
-            <div class="glass-card">
-                <div class="card-header-flex">
-                    <h3>1. SELECT CATEGORY</h3>
-                    <span class="icon-small">⋮≡</span>
-                </div>
-                <div class="category-grid">
-                    <div class="category-item active" data-category="Shoe">
-                        <span class="icon">👟</span>
-                        <p>Shoe</p>
-                    </div>
-                    <div class="category-item" data-category="Watch">
-                        <span class="icon">⌚</span>
-                        <p>Watch</p>
-                    </div>
-                    <div class="category-item" data-category="Bag">
-                        <span class="icon">🎒</span>
-                        <p>Bag</p>
-                    </div>
-                    <div class="category-item" data-category="Other">
-                        <span class="icon">📦</span>
-                        <p>Other</p>
-                    </div>
-                </div>
+  <div class="reel-maker-layout">
 
-                <div id="other-input-container" class="mt-3" style="display: none;">
-                    <label class="fw-bold mb-1" style="font-size: 0.8rem; color: var(--primary2);">Product Name</label>
-                    <input type="text" id="other-product-name" class="form-control glass-input" placeholder="e.g. Sunglasses, Perfume">
-                </div>
-                <input type="hidden" id="selected-category" value="Shoe">
-            </div>
+    <!-- ── LEFT: Controls ── -->
+    <div class="controls-column">
 
-            <div class="glass-card">
-                <div class="card-header-flex">
-                    <h3>2. UPLOAD IMAGE</h3>
-                    <span class="icon-small">📤</span>
-                </div>
-                <div class="upload-zone" id="drop-zone">
-                    <div class="upload-content">
-                        <p><strong>DRAG & DROP</strong></p>
-                        <p class="sub-text">YOUR PRODUCT IMAGE</p>
-                        <button type="button" class="btn-upload">+ UPLOAD</button>
-                        <input type="file" id="imageInput" accept="image/*" hidden>
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass-card">
-                <div class="card-header-flex">
-                    <h3>3. CUSTOMIZE REEL</h3>
-                    <span class="icon-small">⚙</span>
-                </div>
-                <div class="customization-options">
-                    <div class="row">
-                        <div class="col-6 mb-3">
-                            <label class="small-label">Duration</label>
-                            <select class="form-select glass-select">
-                                <option>5 Sec</option>
-                                <option>10 Sec</option>
-                            </select>
-                        </div>
-                        <div class="col-6 mb-3">
-                            <label class="small-label">Video Style</label>
-                            <select class="form-select glass-select">
-                                <option>Cinematic</option>
-                                <option>Retro</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <button type="button" id="generateBtn" class="btn-generate-premium w-100">Generate Reel</button>
-            </div>
-
+      <!-- Step 1 -->
+      <div class="glass-card">
+        <div class="card-header-flex">
+          <h3>1. PRODUCT TYPE</h3>
+          
+        </div>
+        <p class="text-muted small mb-3">Sets the scene plan — watch, shoe, bag, or other.</p>
+        <div class="category-grid">
+          <div class="category-item active" data-category="Shoe"><span class="icon">👟</span><p>Shoe</p></div>
+          <div class="category-item" data-category="Watch"><span class="icon">⌚</span><p>Watch</p></div>
+          <div class="category-item" data-category="Bag"><span class="icon">🎒</span><p>Bag</p></div>
+          <div class="category-item" data-category="Other"><span class="icon">📦</span><p>Other</p></div>
+        </div>
+        <input type="hidden" id="selected-category" value="Shoe">
+        <div id="other-input-container" class="mt-3" style="display:none;">
+          <label class="small-label mb-1">Product Name</label>
+          <input type="text" id="other-product-name" class="form-control glass-input" placeholder="e.g. Sunglasses, Perfume…">
         </div>
 
-        <div class="preview-column">
-            <div class="glass-card preview-card-premium">
-                <div class="card-header-flex">
-                    <h3>PREVIEW & STATUS</h3>
-                    <span class="info-icon">ⓘ</span>
-                </div>
-                
-                <div class="video-display-area" id="video-preview-area">
-                    <div class="play-overlay" id="play-overlay" style="display: none;">
-                        <div class="play-btn-circle">▶</div>
-                    </div>
-                    <div class="loader-overlay" id="loader-overlay" style="display: none;">
-                        <div class="spinner-premium"></div>
-                    </div>
-                </div>
-                
-                <div class="status-footer-premium">
-                    <div class="status-labels">
-                        <span id="status-label">READY...</span>
-                        <span id="status-percent">0%</span>
-                    </div>
-                    <div class="premium-progress-track">
-                        <div class="premium-progress-fill" id="progress-bar"></div>
-                    </div>
-                </div>
-            </div>
+        <!-- Scene plan preview -->
+        <div class="scene-plan-box mt-3" id="scene-plan-box"></div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="glass-card">
+        <div class="card-header-flex">
+          <h3>2. UPLOAD PRODUCT IMAGE</h3>
+          
+        </div>
+        <div class="upload-zone" id="drop-zone">
+          <div class="upload-content" id="upload-content">
+            <span style="font-size:2.2rem;">📷</span>
+            <p><strong>Drag & drop</strong> or click to upload</p>
+            <p class="text-muted small mb-0">JPG, PNG, WEBP — max 15MB</p>
+            <button type="button" class="btn-upload mt-3" id="uploadBtn">+ Choose File</button>
+            <input type="file" id="imageInput" accept="image/*" hidden>
+          </div>
+          <div id="upload-preview" style="display:none;text-align:center;padding:16px;">
+            <img id="upload-thumb" style="max-height:150px;max-width:100%;border-radius:10px;object-fit:contain;" alt="">
+            <p id="upload-filename" class="text-muted mt-2 mb-1" style="font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;margin:0 auto;"></p>
+            <button type="button" id="changeImgBtn" class="btn btn-xs btn-outline-secondary rounded-pill mt-1">Change image</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="glass-card">
+        <div class="card-header-flex">
+          <h3>3. DURATION</h3>
+          
+        </div>
+        <p class="text-muted small mb-3">Choose the exact final reel length.</p>
+        <div class="duration-grid">
+          <div class="duration-item active" data-duration="4">4s</div>
+          <div class="duration-item" data-duration="6">6s</div>
+          <div class="duration-item" data-duration="9">9s</div>
+        </div>
+        <input type="hidden" id="selected-duration" value="4">
+      </div>
+
+      <!-- Step 4 -->
+      <div class="glass-card">
+        <div class="card-header-flex">
+          <h3>4. CAPTION MOTION</h3>
+          
+        </div>
+        <p class="text-muted small mb-3">Pick a short-form caption animation style. Auto mixes several clean presets.</p>
+        <select id="captionStyle" class="form-select glass-select">
+          <option value="auto">Auto mixed styles</option>
+          <option value="karaoke">Word-by-word / karaoke</option>
+          <option value="bounce">Pop / bounce emphasis</option>
+          <option value="slide_up">Slide up</option>
+          <option value="typewriter">Typewriter</option>
+          <option value="zoom">Zoom-in emphasis</option>
+          <option value="glitch">Glitch / flicker</option>
+          <option value="fade_motion">Fade + slight motion</option>
+          <option value="punch">Punch-in key words</option>
+        </select>
+        <div class="caption-preview-strip mt-3">
+          <span class="caption-preview-word">Fresh</span>
+          <span class="caption-preview-word">product</span>
+          <span class="caption-preview-word">energy</span>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="glass-card">
+        <div class="card-header-flex">
+          <h3>5. CREATE REEL</h3>
+          
+        </div>
+        <div class="reel-feature-list mb-3">
+          <div class="reel-feature">AI removes your product background</div>
+          <div class="reel-feature">5 cinematic scenes with rim light &amp; grading</div>
+          <div class="reel-feature">Ken Burns + zoom morph, whip-pan &amp; flash cuts</div>
+          <div class="reel-feature">Timed animated captions rendered into the MP4</div>
+          <div class="reel-feature">Scene-aware spotlight &amp; shadow compositing</div>
+          <div class="reel-feature">4s, 6s, or 9s exact export — fully local, no video API needed</div>
+        </div>
+        {% if user.is_authenticated %}
+          <button type="button" id="generateBtn" class="btn-generate-premium w-100">Generate Reel</button>
+        {% else %}
+          <button class="btn-generate-premium w-100" data-bs-toggle="modal" data-bs-target="#loginModal">Log in to Generate</button>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── RIGHT: Preview ── -->
+    <div class="preview-column">
+      <div class="glass-card preview-card-premium d-flex flex-column">
+        <div class="card-header-flex">
+          <h3>PREVIEW</h3>
+          <span class="info-icon" title="Your reel will appear here once generated">ⓘ</span>
         </div>
 
+        <!-- Canvas -->
+        <div class="reel-canvas" id="reel-canvas">
+          <div id="reel-placeholder" class="reel-placeholder">
+            <span style="font-size:3.2rem;">🎬</span>
+            <p>Your product reel<br>will appear here</p>
+          </div>
+          <div class="loader-overlay" id="loader-overlay" style="display:none;">
+            <div class="spinner-premium"></div>
+            <p id="loader-msg" class="loader-msg-text">PROCESSING…</p>
+          </div>
+          <video id="result-video"
+                 class="generated-preview-media"
+                 controls loop playsinline></video>
+        </div>
+
+        <!-- Pipeline step tracker -->
+        <div id="pipeline-steps" class="pipeline-steps mt-3" style="display:none;">
+          <div class="pipe-step" id="pipe-upload">
+            <span class="pipe-dot pipe-done">✓</span>
+            <span class="pipe-label">Image uploaded</span>
+          </div>
+          <div class="pipe-step" id="pipe-bg">
+            <span class="pipe-dot pipe-pending" id="dot-bg">◌</span>
+            <span class="pipe-label" id="lbl-bg">Removing background…</span>
+          </div>
+          <div class="pipe-step" id="pipe-scenes">
+            <span class="pipe-dot pipe-pending" id="dot-scenes">◌</span>
+            <span class="pipe-label" id="lbl-scenes">Generating 5 cinematic scenes…</span>
+          </div>
+          <div class="pipe-step" id="pipe-composite">
+            <span class="pipe-dot pipe-pending" id="dot-composite">◌</span>
+            <span class="pipe-label" id="lbl-composite">Compositing product into scenes…</span>
+          </div>
+          <div class="pipe-step" id="pipe-video">
+            <span class="pipe-dot pipe-pending" id="dot-video">◌</span>
+            <span class="pipe-label" id="lbl-video">Assembling reel with motion effects…</span>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="status-footer-premium mt-3">
+          <div class="status-labels">
+            <span id="status-label">READY</span>
+            <span id="status-percent">0%</span>
+          </div>
+          <div class="premium-progress-track">
+            <div class="premium-progress-fill" id="progress-bar"></div>
+          </div>
+        </div>
+
+        <!-- Action buttons (hidden until done) -->
+        <div id="reel-actions" class="mt-3 d-flex gap-2 justify-content-center flex-wrap"
+             style="display:none!important;">
+          <a id="download-reel-btn" href="#" target="_blank"
+             class="btn btn-outline-secondary rounded-pill px-4">Download MP4</a>
+          {% if user.is_authenticated %}
+            <button id="publishReelBtn" class="btn btn-primary rounded-pill px-4">Publish to Library</button>
+          {% else %}
+            <button class="btn btn-primary rounded-pill px-4"
+                    data-bs-toggle="modal" data-bs-target="#loginModal">Publish</button>
+          {% endif %}
+          <button id="newReelBtn" class="btn btn-outline-secondary rounded-pill px-4">New Reel</button>
+        </div>
+
+        <div id="publish-confirm" class="text-center text-success small mt-2" style="display:none;">
+          Published to Library!
+        </div>
+        <div id="reel-share-actions" class="share-panel mt-3" style="display:none;">
+          <div class="share-panel-title">Share your reel</div>
+          <div class="d-flex gap-2 mb-3 flex-wrap">
+            <a id="viewReelDetailBtn" href="#" class="btn btn-outline-primary rounded-pill px-3" style="font-size:.78rem;">View Page</a>
+            <button id="copyReelLinkBtn" type="button" class="btn btn-outline-secondary rounded-pill px-3" style="font-size:.78rem;">Copy Link</button>
+          </div>
+          <div class="share-btn-grid" id="reelShareGrid">
+            <!-- populated by JS -->
+          </div>
+          <div id="reel-share-manual" class="mt-3" style="display:none;">
+            <p class="text-muted" style="font-size:.72rem;margin-bottom:6px;">Copy this link to share on Instagram or other platforms:</p>
+            <div class="d-flex gap-2">
+              <input type="text" id="reel-share-url-input" class="form-control form-control-sm rounded-3" readonly style="font-size:.75rem;">
+              <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 px-3" id="reel-manual-copy" style="font-size:.72rem;white-space:nowrap;">Copy</button>
+            </div>
+          </div>
+        </div>
+        <div id="error-msg" class="alert alert-danger mt-3 rounded-3 small" style="display:none;"></div>
+      </div>
     </div>
+
+  </div><!-- /.reel-maker-layout -->
+</div><!-- /.reel-maker-wrapper -->
+
+<!-- Share Modal (for media upload workaround) -->
+<div class="modal fade rs-share-modal" id="reelShareModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">Share to <span id="shareModalPlatformName"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 pb-4">
+        <div id="shareModalBody"></div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
-{% block scripts %}
-  {{ block.super }}
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const categoryItems = document.querySelectorAll('.category-item');
-        const hiddenCategoryInput = document.getElementById('selected-category');
-        const otherInputContainer = document.getElementById('other-input-container');
-        const imageInput = document.getElementById('imageInput');
-        const uploadBtn = document.querySelector('.btn-upload');
-        const previewArea = document.getElementById('video-preview-area');
-        const subText = document.querySelector('.sub-text');
-        const generateBtn = document.getElementById('generateBtn');
-        const progressBar = document.getElementById('progress-bar');
-        const statusLabel = document.getElementById('status-label');
-        const statusPercent = document.getElementById('status-percent');
-        const playOverlay = document.getElementById('play-overlay');
-        const loaderOverlay = document.getElementById('loader-overlay');
+{% block scripts %}{{ block.super }}
+<style>
+/* ── Reel Maker extras ── */
+.scene-plan-box {
+  background: rgba(91,124,250,0.06);
+  border: 1px solid rgba(91,124,250,0.15);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: .78rem;
+  color: #444;
+  line-height: 1.9;
+  white-space: pre-line;
+}
+.scene-plan-box .plan-heading {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--primary);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: block;
+}
+.reel-feature-list { display:flex; flex-direction:column; gap:6px; }
+.reel-feature {
+  display:flex; align-items:center; gap:8px;
+  font-size:.82rem; color:#555;
+}
+/* Pipeline steps */
+.pipeline-steps { display:flex; flex-direction:column; gap:5px; padding:2px 0; }
+.pipe-step { display:flex; align-items:center; gap:10px; font-size:.8rem; color:#666; }
+.pipe-dot {
+  width:20px; height:20px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:.72rem; font-weight:700; flex-shrink:0;
+}
+.pipe-done    { background:#22c55e; color:#fff; }
+.pipe-active  { background:var(--primary); color:#fff; animation:pdot 1.1s ease-in-out infinite; }
+.pipe-pending { background:#e5e7eb; color:#999; }
+@keyframes pdot { 0%,100%{opacity:1} 50%{opacity:.45} }
+.loader-msg-text {
+  color:white; margin-top:12px; font-weight:700;
+  letter-spacing:1px; font-size:.82rem;
+}
 
-        // 1. Category logic
-        categoryItems.forEach(item => {
-            item.addEventListener('click', function() {
-                categoryItems.forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
-                const selected = this.getAttribute('data-category');
-                hiddenCategoryInput.value = selected;
-                otherInputContainer.style.display = (selected === 'Other') ? 'block' : 'none';
-            });
-        });
+/* Duration grid styling */
+.duration-grid {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.duration-item {
+  flex: 1;
+  text-align: center;
+  padding: 8px 0;
+  font-size: .85rem;
+  border: 1px solid rgba(91,124,250,0.25);
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color .2s, color .2s;
+}
+.duration-item.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.caption-preview-strip {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.caption-preview-word {
+  background: rgba(11,18,32,.86);
+  color: #fff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: .78rem;
+  font-weight: 800;
+  animation: captionPreviewPop 1.8s ease-in-out infinite;
+}
+.caption-preview-word:nth-child(2) { animation-delay: .18s; }
+.caption-preview-word:nth-child(3) { animation-delay: .36s; }
+@keyframes captionPreviewPop {
+  0%, 80%, 100% { transform: translateY(0) scale(1); opacity: .74; }
+  18% { transform: translateY(-3px) scale(1.06); opacity: 1; }
+}
+</style>
 
-        // 2. Upload & Preview
-        uploadBtn.addEventListener('click', () => imageInput.click());
-        imageInput.addEventListener('change', function() {
-            if (this.files && this.files.length > 0) {
-                const file = this.files[0];
-                subText.innerHTML = `<span style="color: var(--primary2); font-weight: bold;">✔ ${file.name}</span>`;
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    previewArea.style.backgroundImage = `url(${e.target.result})`;
-                    previewArea.style.backgroundSize = 'contain';
-                    previewArea.style.backgroundRepeat = 'no-repeat';
-                    previewArea.style.backgroundPosition = 'center';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+<script>
+const SUBMIT_URL   = "{% url 'submit_reel' %}";
+const STATUS_BASE  = "/reel/status/";
+const PUBLISH_BASE = "/reel/publish/";
+const CSRF = "{{ csrf_token }}";
 
-        // 3. Generate Logic
-        generateBtn.addEventListener('click', function() {
-            if (imageInput.files.length === 0) {
-                alert("Please upload a product image first!");
-                return;
-            }
-            this.disabled = true;
-            this.textContent = "Processing...";
-            loaderOverlay.style.display = 'flex';
-            statusLabel.textContent = "PROCESSING...";
+// Scene plan descriptions shown under category select
+const SCENE_PLANS = {
+  Shoe: `🎬 Scene plan (6 frames):
+① Original product on studio dark bg
+② Empty dark spotlight studio plate
+③ Empty textured floor studio plate
+④ Empty glossy black stage plate
+⑤ Empty minimal concrete studio plate
+⑥ Empty soft fog spotlight studio plate`,
 
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += Math.floor(Math.random() * 10) + 5;
-                if (progress >= 100) {
-                    progress = 100;
-                    clearInterval(interval);
-                    statusLabel.textContent = "COMPLETED!";
-                    this.textContent = "Download Reel";
-                    this.style.background = "#22c55e";
-                    this.disabled = false;
-                    loaderOverlay.style.display = 'none';
-                    playOverlay.style.display = 'flex';
-                }
-                statusPercent.textContent = progress + "%";
-                progressBar.style.width = progress + "%";
-            }, 600);
-        });
+  Watch: `🎬 Scene plan (6 frames):
+① Original product on studio dark bg
+② Empty dark spotlight studio plate
+③ Empty marble floor studio plate
+④ Empty glossy black stage plate
+⑤ Empty soft fog spotlight studio plate
+⑥ Empty warm minimal studio plate`,
+
+  Bag: `🎬 Scene plan (6 frames):
+① Original product on studio dark bg
+② Empty minimal white studio plate
+③ Empty warm boutique studio plate
+④ Empty marble floor studio plate
+⑤ Empty textured floor studio plate
+⑥ Empty dark editorial studio plate`,
+
+  Other: `🎬 Scene plan (6 frames):
+① Original product on studio dark bg
+② Empty dark spotlight studio plate
+③ Empty warm gradient studio plate
+④ Empty soft fog spotlight studio plate
+⑤ Empty textured floor studio plate
+⑥ Empty minimal white studio plate`,
+};
+
+document.addEventListener("DOMContentLoaded", function () {
+  /* ── DOM refs ── */
+  const catItems      = document.querySelectorAll(".category-item");
+  const hiddenCat     = document.getElementById("selected-category");
+  const durationItems = document.querySelectorAll(".duration-item");
+  const hiddenDuration = document.getElementById("selected-duration");
+  const captionStyle  = document.getElementById("captionStyle");
+  const otherContainer= document.getElementById("other-input-container");
+  const scenePlanBox  = document.getElementById("scene-plan-box");
+  const imageInput    = document.getElementById("imageInput");
+  const uploadBtn     = document.getElementById("uploadBtn");
+  const changeImgBtn  = document.getElementById("changeImgBtn");
+  const uploadContent = document.getElementById("upload-content");
+  const uploadPreview = document.getElementById("upload-preview");
+  const uploadThumb   = document.getElementById("upload-thumb");
+  const uploadFilename= document.getElementById("upload-filename");
+  const dropZone      = document.getElementById("drop-zone");
+  const generateBtn   = document.getElementById("generateBtn");
+  const progressBar   = document.getElementById("progress-bar");
+  const statusLabel   = document.getElementById("status-label");
+  const statusPercent = document.getElementById("status-percent");
+  const loaderOverlay = document.getElementById("loader-overlay");
+  const loaderMsg     = document.getElementById("loader-msg");
+  const resultVideo   = document.getElementById("result-video");
+  const reelActions   = document.getElementById("reel-actions");
+  const downloadBtn   = document.getElementById("download-reel-btn");
+  const publishBtn    = document.getElementById("publishReelBtn");
+  const newReelBtn    = document.getElementById("newReelBtn");
+  const errorMsg      = document.getElementById("error-msg");
+  const publishConfirm= document.getElementById("publish-confirm");
+  const reelShareActions = document.getElementById("reel-share-actions");
+  const reelPlaceholder = document.getElementById("reel-placeholder");
+  const pipelineSteps = document.getElementById("pipeline-steps");
+  const reelCanvas = document.getElementById("reel-canvas");
+
+  let pollInterval = null, progressTimer = null, currentVideoId = null;
+
+  function fitGeneratedPreview(media, canvas) {
+    if (!media || !canvas) return;
+    const width = media.naturalWidth || media.videoWidth || 1;
+    const height = media.naturalHeight || media.videoHeight || 1;
+    const ratio = width / height;
+    media.classList.remove("is-wide", "is-square", "is-tall");
+    if (ratio > 1.15) media.classList.add("is-wide");
+    else if (ratio < 0.85) media.classList.add("is-tall");
+    else media.classList.add("is-square");
+    canvas.classList.add("has-generated-media");
+  }
+
+  function ensureFloatingPreview() {
+    let overlay = document.getElementById("rsFloatingPreview");
+    if (overlay) return overlay;
+    overlay = document.createElement("div");
+    overlay.id = "rsFloatingPreview";
+    overlay.className = "rs-floating-preview";
+    overlay.setAttribute("aria-hidden", "true");
+    overlay.innerHTML = `
+      <button type="button" class="rs-floating-preview-close" aria-label="Close preview">&times;</button>
+      <div class="rs-floating-preview-stage">
+        <img id="rsFloatingPreviewImage" alt="Generated preview">
+        <video id="rsFloatingPreviewVideo" controls playsinline></video>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay || event.target.classList.contains("rs-floating-preview-close")) {
+        closeFloatingPreview();
+      }
     });
-  </script>
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeFloatingPreview();
+    });
+    return overlay;
+  }
+
+  function openFloatingPreview(type, src) {
+    if (!src) return;
+    const overlay = ensureFloatingPreview();
+    const image = document.getElementById("rsFloatingPreviewImage");
+    const video = document.getElementById("rsFloatingPreviewVideo");
+    image.style.display = "none";
+    video.style.display = "none";
+    video.pause();
+    video.removeAttribute("src");
+    image.removeAttribute("src");
+    if (type === "video") {
+      video.src = src;
+      video.style.display = "block";
+      video.load();
+    } else {
+      image.src = src;
+      image.style.display = "block";
+    }
+    overlay.classList.add("is-open");
+    overlay.setAttribute("aria-hidden", "false");
+  }
+
+  function closeFloatingPreview() {
+    const overlay = document.getElementById("rsFloatingPreview");
+    if (!overlay) return;
+    const video = document.getElementById("rsFloatingPreviewVideo");
+    if (video) {
+      video.pause();
+      video.removeAttribute("src");
+    }
+    overlay.classList.remove("is-open");
+    overlay.setAttribute("aria-hidden", "true");
+  }
+
+  /* ── Scene plan ── */
+  function renderScenePlan(cat) {
+    scenePlanBox.innerHTML =
+      `<span class="plan-heading">Shot plan</span>${SCENE_PLANS[cat] || SCENE_PLANS.Other}`;
+  }
+  renderScenePlan("Shoe");
+
+  /* ── Category select ── */
+  catItems.forEach(item => {
+    item.addEventListener("click", function () {
+      catItems.forEach(i => i.classList.remove("active"));
+      this.classList.add("active");
+      hiddenCat.value = this.dataset.category;
+      otherContainer.style.display = this.dataset.category === "Other" ? "block" : "none";
+      renderScenePlan(this.dataset.category);
+    });
+  });
+
+  /* ── Duration select ── */
+  durationItems.forEach(item => {
+    item.addEventListener("click", function () {
+      durationItems.forEach(i => i.classList.remove("active"));
+      this.classList.add("active");
+      if (hiddenDuration) hiddenDuration.value = this.dataset.duration;
+    });
+  });
+
+  /* ── Upload ── */
+  uploadBtn.addEventListener("click", () => imageInput.click());
+  if (changeImgBtn) changeImgBtn.addEventListener("click", () => imageInput.click());
+
+  dropZone.addEventListener("dragover",  e => { e.preventDefault(); dropZone.style.borderColor = "var(--primary2)"; });
+  dropZone.addEventListener("dragleave", () => { dropZone.style.borderColor = "var(--primary)"; });
+  dropZone.addEventListener("drop", e => {
+    e.preventDefault(); dropZone.style.borderColor = "var(--primary)";
+    if (e.dataTransfer.files.length) { imageInput.files = e.dataTransfer.files; handleFile(); }
+  });
+  imageInput.addEventListener("change", handleFile);
+
+  function handleFile() {
+    if (!imageInput.files || !imageInput.files.length) return;
+    const file = imageInput.files[0];
+    const reader = new FileReader();
+    reader.onload = e => {
+      uploadThumb.src = e.target.result;
+      const n = file.name;
+      uploadFilename.textContent = n.length > 30 ? n.slice(0, 14) + "…" + n.slice(-12) : n;
+      uploadContent.style.display = "none";
+      uploadPreview.style.display = "block";
+      // Hint in canvas
+      reelPlaceholder.style.backgroundImage = `url(${e.target.result})`;
+      reelPlaceholder.style.backgroundSize = "contain";
+      reelPlaceholder.style.backgroundRepeat = "no-repeat";
+      reelPlaceholder.style.backgroundPosition = "center";
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* ── Progress helpers ── */
+  function setProgress(pct, label) {
+    progressBar.style.width = pct + "%";
+    statusPercent.textContent = pct + "%";
+    if (label) statusLabel.textContent = label;
+  }
+
+  function dotDone(id) {
+    const el = document.getElementById(id);
+    if (el) { el.className = "pipe-dot pipe-done"; el.textContent = "✓"; }
+  }
+  function dotActive(id, labelId, txt) {
+    const el = document.getElementById(id);
+    if (el) { el.className = "pipe-dot pipe-active"; el.textContent = "◌"; }
+    const lbl = document.getElementById(labelId);
+    if (lbl && txt) lbl.textContent = txt;
+  }
+
+  /* ── Animated progress (mirrors real pipeline phases) ── */
+  function startAnimatedProgress() {
+    let p = 6;
+    setProgress(p, "REMOVING BACKGROUND…");
+    dotActive("dot-bg", "lbl-bg", "Removing background…");
+
+    // Milestones fired when progress bar crosses these thresholds.
+    // Chosen to roughly match pipeline timing:
+    //   0–22%  → bg removal  (~8–12s)
+    //   22–65% → scene gen   (~40–90s with HF, ~5s local)
+    //   65–87% → compositing (~5s)
+    //   87–96% → video assemble (~10s)
+    const milestones = [
+      { at: 22, fn: () => {
+        dotDone("dot-bg");
+        dotActive("dot-scenes","lbl-scenes","Generating 5 cinematic scenes…");
+        setProgress(22, "GENERATING SCENES…");
+      }},
+      { at: 65, fn: () => {
+        dotDone("dot-scenes");
+        dotActive("dot-composite","lbl-composite","Compositing with lighting & shadows…");
+        setProgress(65, "COMPOSITING…");
+      }},
+      { at: 87, fn: () => {
+        dotDone("dot-composite");
+        dotActive("dot-video","lbl-video","Assembling reel — zoom morph, whip-pan…");
+        setProgress(87, "ASSEMBLING REEL…");
+      }},
+    ];
+    let mi = 0;
+
+    return setInterval(() => {
+      if (p < 95) {
+        const speed = p < 22 ? 1.0 : p < 65 ? 0.45 : p < 87 ? 0.90 : 0.28;
+        p = Math.min(p + speed, 95);
+        setProgress(Math.round(p));
+      }
+      while (mi < milestones.length && p >= milestones[mi].at) {
+        milestones[mi].fn(); mi++;
+      }
+    }, 900);
+  }
+
+  /* ── Stage label from backend (shown in loader overlay) ── */
+  function updateStageLabel(stage) {
+    if (stage && loaderMsg) loaderMsg.textContent = stage.toUpperCase();
+  }
+
+  /* ── Error / Done ── */
+  function showError(msg) {
+    errorMsg.innerHTML = "<strong>⚠ Generation failed:</strong> " + msg +
+      "<br><small class='text-muted'>Check that your image is clear and try again.</small>";
+    errorMsg.style.display = "block";
+    loaderOverlay.style.display = "none";
+    if (pollInterval)  clearInterval(pollInterval);
+    if (progressTimer) clearInterval(progressTimer);
+    if (generateBtn) {
+      generateBtn.disabled = false;
+      generateBtn.textContent = "Generate Reel";
+    }
+    setProgress(0, "FAILED");
+  }
+
+  function showDone(videoUrl) {
+    if (pollInterval)  clearInterval(pollInterval);
+    if (progressTimer) clearInterval(progressTimer);
+    loaderOverlay.style.display = "none";
+    dotDone("dot-bg"); dotDone("dot-scenes"); dotDone("dot-composite"); dotDone("dot-video");
+    setProgress(100, "COMPLETED!");
+    errorMsg.style.display = "none";
+
+    // Show video player — hide the placeholder
+    reelPlaceholder.style.display = "none";
+
+    if (videoUrl) {
+        resultVideo.style.display = "block";
+        resultVideo.src = videoUrl;  // set src first
+        resultVideo.onloadedmetadata = () => {
+          fitGeneratedPreview(resultVideo, reelCanvas);
+          try {
+            if (resultVideo.duration && resultVideo.duration > 0.35) resultVideo.currentTime = 0.25;
+          } catch (e) {}
+        };
+        resultVideo.load();           // then call load() to refresh
+        downloadBtn.href = videoUrl;
+        downloadBtn.setAttribute("download", "product-reel.mp4");
+    }
+
+    // Unhide action row (it has display:none!important in inline style, remove that first)
+    reelActions.removeAttribute("style");
+    reelActions.style.display = "flex";
+
+    if (generateBtn) {
+      generateBtn.disabled = false;
+      generateBtn.textContent = "Generate Reel";
+    }
+  }
+
+  function startPolling(videoId) {
+    let failCount = 0;
+    return setInterval(async () => {
+      try {
+        const r = await fetch(`${STATUS_BASE}${videoId}/`);
+        if (!r.ok) { failCount++; if (failCount > 4) showError("Lost connection — please refresh."); return; }
+        failCount = 0;
+        const d = await r.json();
+        if (d.status === "done") {
+          showDone(d.playback_url || d.video_url || d.media_url);
+        } else if (d.status === "failed") {
+          showError(d.error || "Generation failed. Please try again.");
+        } else {
+          // pending / processing — update stage label if provided
+          if (d.stage) updateStageLabel(d.stage);
+        }
+      } catch (e) {
+        failCount++;
+        if (failCount > 4) showError("Lost connection. Please refresh and try again.");
+      }
+    }, 4000);  // poll every 4 s
+  }
+
+  /* ── Generate button ── */
+  if (generateBtn) {
+    generateBtn.addEventListener("click", async function () {
+      if (!imageInput.files || !imageInput.files.length) {
+        window.RSToast && RSToast.show("Please upload a product image first.", "warning");
+        document.getElementById("drop-zone")?.classList.add("drop-zone-shake");
+        setTimeout(() => document.getElementById("drop-zone")?.classList.remove("drop-zone-shake"), 600);
+        return;
+      }
+
+      // Reset UI fully
+      errorMsg.style.display = "none";
+      publishConfirm.style.display = "none";
+      reelShareActions.style.display = "none";
+      resultVideo.style.display = "none";
+      resultVideo.removeAttribute("src");
+      reelCanvas.classList.remove("has-generated-media");
+      reelActions.style.display = "none";
+      reelPlaceholder.style.display = "flex";
+      this.disabled = true;
+      this.textContent = "Uploading…";
+      loaderOverlay.style.display = "flex";
+      loaderMsg.textContent = "UPLOADING…";
+      pipelineSteps.style.display = "flex";
+
+      // Reset pipeline dots
+      ["dot-bg","dot-scenes","dot-composite","dot-video"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.className = "pipe-dot pipe-pending"; el.textContent = "◌"; }
+      });
+      setProgress(3, "UPLOADING…");
+
+      const fd = new FormData();
+      fd.append("product_image", imageInput.files[0]);
+      fd.append("category", hiddenCat.value);
+      // Include requested duration so the backend can adjust shot timing
+      if (hiddenDuration && hiddenDuration.value) {
+        fd.append("duration", hiddenDuration.value);
+      }
+      if (captionStyle && captionStyle.value) {
+        fd.append("caption_style", captionStyle.value);
+      }
+      const otherName = document.getElementById("other-product-name");
+      if (hiddenCat.value === "Other" && otherName && otherName.value.trim())
+        fd.append("product_name", otherName.value.trim());
+      fd.append("csrfmiddlewaretoken", CSRF);
+
+      try {
+        const r = await fetch(SUBMIT_URL, { method: "POST", body: fd });
+        const d = await r.json();
+        if (!d.success) { showError(d.error || "Submission failed."); return; }
+
+        currentVideoId = d.video_id;
+        this.textContent = "Generating…";
+        loaderMsg.textContent = "GENERATING…";
+        progressTimer = startAnimatedProgress();
+        pollInterval  = startPolling(d.video_id);
+
+      } catch (e) {
+        showError("Network error. Please check your connection and try again.");
+      }
+    });
+  }
+
+  /* ── Publish ── */
+  if (publishBtn) {
+    publishBtn.addEventListener("click", async function () {
+      // Interface handling: block publish if still generating
+      if (pollInterval || progressTimer) {
+        window.RSToast && RSToast.show("Please wait — your reel is still being generated.", "warning");
+        return;
+      }
+      if (!currentVideoId) {
+        window.RSToast && RSToast.show("No reel to publish yet. Generate a reel first.", "info");
+        return;
+      }
+      this.disabled = true; this.textContent = "Publishing…";
+      try {
+        const fd = new FormData();
+        fd.append("csrfmiddlewaretoken", CSRF);
+        const r = await fetch(`${PUBLISH_BASE}${currentVideoId}/`, { method: "POST", body: fd });
+        const d = await r.json();
+        if (d.success) {
+          this.style.display = "none";
+          publishConfirm.innerHTML = d.detail_url
+            ? `Published to Library! <a href="${d.detail_url}" class="text-success fw-semibold">View reel →</a>`
+            : "Published to Library!";
+          publishConfirm.style.display = "block";
+          window.RSToast && RSToast.show("Reel published to Library!", "success");
+          if (d.public_url) {
+            document.getElementById("viewReelDetailBtn").href = d.detail_url || '#';
+            document.getElementById("copyReelLinkBtn").dataset.url = d.public_url;
+            // Set up share grid
+            buildShareGrid('reelShareGrid', d.public_url, resultVideo.src, 'reel');
+            document.getElementById('reel-share-url-input') &&
+              (document.getElementById('reel-share-url-input').value = d.public_url);
+            reelShareActions.style.display = "block";
+          }
+        }
+        else throw new Error(d.error || "Publish failed.");
+      } catch (e) {
+        this.disabled = false;
+        this.textContent = "Publish to Library";
+        window.RSToast && RSToast.show(e.message || "Publish failed. Try again.", "error");
+      }
+    });
+  }
+
+  if (newReelBtn) newReelBtn.addEventListener("click", () => {
+    if (pollInterval || progressTimer) {
+      if (!confirm("A reel is currently being generated. Are you sure you want to cancel and start over?")) return;
+    }
+    location.reload();
+  });
+
+  resultVideo.addEventListener("click", function () {
+    openFloatingPreview("video", this.currentSrc || this.src);
+  });
+
+  const copyReelLinkBtn = document.getElementById("copyReelLinkBtn");
+  if (copyReelLinkBtn) {
+    copyReelLinkBtn.addEventListener("click", async function () {
+      if (!this.dataset.url) { window.RSToast && RSToast.show("Link not available yet.", "info"); return; }
+      try {
+        await navigator.clipboard.writeText(this.dataset.url);
+      } catch (e) {
+        const tmp = document.createElement("input");
+        tmp.value = this.dataset.url;
+        document.body.appendChild(tmp); tmp.select(); document.execCommand("copy"); tmp.remove();
+      }
+      const old = this.textContent;
+      this.textContent = "Copied!";
+      window.RSToast && RSToast.show("Link copied to clipboard.", "success", 2000);
+      setTimeout(() => { this.textContent = old; }, 1400);
+    });
+  }
+
+  const reelManualCopy = document.getElementById("reel-manual-copy");
+  if (reelManualCopy) {
+    reelManualCopy.addEventListener("click", function() {
+      const input = document.getElementById("reel-share-url-input");
+      if (!input) return;
+      input.select();
+      try { navigator.clipboard.writeText(input.value); } catch(e) { document.execCommand("copy"); }
+      this.textContent = "Copied!";
+      window.RSToast && RSToast.show("Link copied!", "success", 2000);
+      setTimeout(() => { this.textContent = "Copy"; }, 1400);
+    });
+  }
+});
+
+/* ── Share system ────────────────────────────────────────────── */
+function buildShareGrid(gridId, pageUrl, mediaUrl, mediaType) {
+  const grid = document.getElementById(gridId);
+  if (!grid) return;
+  const networks = [
+    {
+      id: 'facebook', label: 'Facebook', cls: 'facebook',
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>',
+      action(url, mUrl) {
+        // Facebook share — for media upload, we open a dialog explaining the process
+        openShareModal('Facebook', `
+          <p style="font-size:.85rem;color:#555;margin-bottom:12px;">
+            Facebook's API requires app approval to upload media directly. Here's the best workaround:
+          </p>
+          <div style="background:#f0f4ff;border-radius:12px;padding:14px;margin-bottom:14px;">
+            <strong style="font-size:.82rem;display:block;margin-bottom:8px;">Option 1 — Share link (instant)</strong>
+            <p style="font-size:.78rem;color:#555;margin:0 0 10px;">Opens Facebook with your reel page as a rich preview card.</p>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}" target="_blank" rel="noopener"
+               class="btn btn-primary rounded-pill px-4 w-100" style="font-size:.82rem;">Open in Facebook</a>
+          </div>
+          <div style="background:#f9f9fb;border-radius:12px;padding:14px;">
+            <strong style="font-size:.82rem;display:block;margin-bottom:8px;">Option 2 — Download & Upload manually</strong>
+            <p style="font-size:.78rem;color:#555;margin:0 0 10px;">Download the ${mediaType} and upload it directly to your Facebook post or Story.</p>
+            <a href="${mUrl || url}" download class="btn btn-outline-secondary rounded-pill px-4 w-100" style="font-size:.82rem;">Download ${mediaType}</a>
+          </div>
+        `);
+      }
+    },
+    {
+      id: 'instagram', label: 'Instagram', cls: 'instagram',
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>',
+      action(url, mUrl) {
+        openShareModal('Instagram', `
+          <p style="font-size:.85rem;color:#555;margin-bottom:12px;">
+            Instagram doesn't support direct web-based sharing. Here's how to post your ${mediaType}:
+          </p>
+          <div style="background:#fdf0f5;border-radius:12px;padding:14px;margin-bottom:12px;">
+            <strong style="font-size:.82rem;display:block;margin-bottom:6px;">Step 1 — Download your ${mediaType}</strong>
+            <a href="${mUrl || url}" download class="btn btn-outline-secondary rounded-pill px-4 w-100 mb-2" style="font-size:.82rem;">Download ${mediaType}</a>
+          </div>
+          <div style="background:#f9f9fb;border-radius:12px;padding:14px;margin-bottom:12px;">
+            <strong style="font-size:.82rem;display:block;margin-bottom:6px;">Step 2 — Copy your caption link</strong>
+            <div class="d-flex gap-2">
+              <input type="text" value="${url}" readonly class="form-control form-control-sm rounded-3" style="font-size:.75rem;" id="ig-share-url">
+              <button onclick="navigator.clipboard.writeText('${url}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1400);" class="btn btn-sm btn-outline-secondary rounded-3 px-3" style="font-size:.72rem;white-space:nowrap;">Copy</button>
+            </div>
+          </div>
+          <div style="background:#f9f9fb;border-radius:12px;padding:14px;">
+            <strong style="font-size:.82rem;display:block;margin-bottom:6px;">Step 3 — Post on Instagram</strong>
+            <p style="font-size:.78rem;color:#555;margin:0 0 8px;">Open the Instagram app, create a new post or Reel, upload your downloaded file, and paste the link in your caption.</p>
+            <a href="https://www.instagram.com" target="_blank" rel="noopener" class="btn btn-outline-secondary rounded-pill px-4 w-100" style="font-size:.82rem;">Open Instagram</a>
+          </div>
+        `);
+      }
+    },
+    {
+      id: 'pinterest', label: 'Pinterest', cls: 'pinterest',
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>',
+      action(url, mUrl) {
+        const pinterestUrl = 'https://pinterest.com/pin/create/button/?url=' + encodeURIComponent(url) + '&description=Check+out+this+AI-generated+product+' + mediaType + '+on+ReelStock!';
+        if (mUrl && mediaType === 'image') {
+          window.open('https://pinterest.com/pin/create/button/?url=' + encodeURIComponent(url) + '&media=' + encodeURIComponent(mUrl) + '&description=AI-generated+product+image+on+ReelStock', '_blank');
+        } else {
+          window.open(pinterestUrl, '_blank', 'width=750,height=550');
+        }
+      }
+    },
+    {
+      id: 'twitter', label: 'X (Twitter)', cls: 'twitter',
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+      action(url) {
+        const text = `Check out this AI-generated product ${mediaType} on ReelStock! `;
+        window.open('https://x.com/intent/tweet?text=' + encodeURIComponent(text) + '&url=' + encodeURIComponent(url), '_blank', 'width=600,height=450');
+      }
+    },
+    {
+      id: 'flickr', label: 'Flickr', cls: 'share-network-btn',
+      icon: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M0 12c0 3.074 2.494 5.568 5.568 5.568 3.075 0 5.569-2.494 5.569-5.568 0-3.075-2.494-5.569-5.569-5.569C2.494 6.431 0 8.925 0 12zm12.863 0c0 3.074 2.494 5.568 5.568 5.568C21.505 17.568 24 15.074 24 12c0-3.075-2.495-5.569-5.569-5.569-3.074 0-5.568 2.494-5.568 5.569z"/></svg>',
+      action(url, mUrl) {
+        openShareModal('Flickr', `
+          <p style="font-size:.85rem;color:#555;margin-bottom:14px;">
+            Share your ${mediaType} on Flickr for portfolio exposure.
+          </p>
+          <div style="background:#f9f9fb;border-radius:12px;padding:14px;margin-bottom:12px;">
+            <strong style="font-size:.82rem;display:block;margin-bottom:6px;">Download to upload to Flickr</strong>
+            <p style="font-size:.78rem;color:#555;margin:0 0 10px;">Download your ${mediaType} first, then upload directly to your Flickr album.</p>
+            <a href="${mUrl || url}" download class="btn btn-outline-secondary rounded-pill px-4 w-100 mb-2" style="font-size:.82rem;">Download ${mediaType}</a>
+            <a href="https://www.flickr.com/photos/upload" target="_blank" rel="noopener" class="btn btn-primary rounded-pill px-4 w-100" style="font-size:.82rem;">Open Flickr Upload</a>
+          </div>
+        `);
+      }
+    },
+  ];
+
+  grid.innerHTML = '';
+  networks.forEach(n => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'share-network-btn ' + n.cls;
+    btn.innerHTML = n.icon + '<span>' + n.label + '</span>';
+    btn.addEventListener('click', () => {
+      const shareUrl = document.getElementById(gridId === 'reelShareGrid' ? 'reel-share-url-input' : 'image-share-url-input')?.value || pageUrl;
+      n.action(shareUrl || pageUrl, mediaUrl);
+    });
+    grid.appendChild(btn);
+  });
+}
+
+function openShareModal(platform, bodyHtml) {
+  document.getElementById('shareModalPlatformName') && (document.getElementById('shareModalPlatformName').textContent = platform);
+  const bodyEl = document.getElementById('shareModalBody');
+  if (bodyEl) bodyEl.innerHTML = bodyHtml;
+  const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('reelShareModal') || document.getElementById('genShareModal'));
+  modal.show();
+}
+</script>
 {% endblock %}

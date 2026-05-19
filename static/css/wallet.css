@@ -1,0 +1,787 @@
+/* ==========================================================================
+   ReelStock — Wallet & Download Basket styles
+   Matches the existing glass-morphism / gradient theme.
+   ========================================================================== */
+
+/* ── Coin balance pill in navbar ─────────────────────────────────────────── */
+.coin-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px 6px 10px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #78350f;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(245, 158, 11, 0.18);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  white-space: nowrap;
+}
+.coin-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(245, 158, 11, 0.32);
+  color: #78350f;
+  filter: brightness(1.04);
+}
+.coin-pill-icon { font-size: 1.05rem; }
+.coin-pill-amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+.coin-pill-label { font-size: 0.7rem; opacity: 0.75; letter-spacing: 0.5px; }
+
+/* "Pulse" animation when balance changes */
+.coin-pill.coin-pill-bump { animation: coinBump 0.5s ease; }
+@keyframes coinBump {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+/* ── Basket button ────────────────────────────────────────────────────────── */
+.basket-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+.basket-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(91, 124, 250, 0.22);
+  background: rgba(255, 255, 255, 0.95);
+}
+.basket-icon { font-size: 1.3rem; }
+.basket-badge {
+  position: absolute;
+  top: -6px; right: -6px;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ef4444, #ec4899);
+  color: white;
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 6px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  font-variant-numeric: tabular-nums;
+}
+.basket-badge.is-empty { display: none; }
+.basket-btn.basket-bump { animation: basketBump 0.5s ease; }
+@keyframes basketBump {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.18) rotate(-6deg); }
+  70%  { transform: scale(0.96) rotate(3deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+/* ── Library card price chip + add-to-basket button ──────────────────────── */
+.lib-card-info { position: relative; }
+
+.lib-price-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #78350f;
+  font-size: 0.72rem;
+  font-weight: 800;
+  margin-left: auto;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  white-space: nowrap;
+}
+.lib-price-chip .coin-icon { font-size: 0.85rem; }
+
+.lib-card-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(0, 0, 0, 0.06);
+}
+
+.btn-basket {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 0;
+  background: linear-gradient(135deg, var(--primary), var(--primary2));
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+  white-space: nowrap;
+}
+.btn-basket:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.08);
+  box-shadow: 0 6px 18px rgba(91, 124, 250, 0.35);
+}
+.btn-basket[disabled],
+.btn-basket.is-in-basket {
+  background: linear-gradient(135deg, #10b981, #059669);
+  cursor: default;
+  pointer-events: none;
+}
+.btn-basket-loading { opacity: 0.7; pointer-events: none; }
+
+.btn-basket-large {
+  font-size: 1rem;
+  padding: 14px 28px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+/* ── Basket page ─────────────────────────────────────────────────────────── */
+.basket-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.basket-balance-card {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 18px;
+  padding: 1rem 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  box-shadow: 0 8px 28px rgba(245, 158, 11, 0.18);
+  text-decoration: none;
+  color: #78350f;
+}
+.basket-balance-card:hover { color: #78350f; filter: brightness(1.04); }
+.basket-balance-icon { font-size: 1.6rem; }
+.basket-balance-num {
+  font-size: 1.5rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+}
+.basket-balance-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.basket-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 1.5rem;
+}
+@media (max-width: 880px) {
+  .basket-grid { grid-template-columns: 1fr; }
+}
+
+.basket-list {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 22px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  overflow: hidden;
+}
+.basket-row {
+  display: grid;
+  grid-template-columns: 96px 1fr auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: background 0.18s;
+}
+.basket-row:last-child { border-bottom: 0; }
+.basket-row:hover { background: rgba(91, 124, 250, 0.04); }
+
+.basket-thumb {
+  width: 96px; height: 96px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f3f4f6;
+  position: relative;
+  flex-shrink: 0;
+}
+.basket-thumb img,
+.basket-thumb video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.basket-thumb-video::after {
+  content: "▶";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 1.3rem;
+  border-radius: 14px;
+}
+
+.basket-row-meta { min-width: 0; }
+.basket-row-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+}
+.basket-row-sub {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.basket-row-price {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #78350f;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  white-space: nowrap;
+}
+
+.basket-remove-btn {
+  background: transparent;
+  border: 0;
+  color: #ef4444;
+  font-size: 1.2rem;
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.basket-remove-btn:hover { background: rgba(239, 68, 68, 0.1); }
+
+.basket-summary {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  border-radius: 22px;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.10);
+  padding: 1.5rem;
+  position: sticky;
+  top: 6.5rem;
+}
+.basket-summary h5 {
+  font-weight: 800;
+  margin-bottom: 1rem;
+}
+.basket-summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 0.92rem;
+}
+.basket-summary-row.total {
+  font-size: 1.15rem;
+  font-weight: 800;
+  border-top: 2px dashed rgba(0, 0, 0, 0.08);
+  padding-top: 14px;
+  margin-top: 6px;
+}
+.basket-summary-row.warn { color: #b91c1c; font-weight: 700; }
+
+.basket-confirm-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 14px;
+  border: 0;
+  background: linear-gradient(135deg, #5b7cfa, #7c3aed);
+  color: white;
+  font-weight: 800;
+  font-size: 1.05rem;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+  margin-top: 1rem;
+}
+.basket-confirm-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(91, 124, 250, 0.4);
+  filter: brightness(1.05);
+}
+.basket-confirm-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  filter: none;
+}
+
+.basket-clear-btn {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: var(--muted);
+  padding: 8px 16px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-top: 0.6rem;
+  transition: background 0.15s;
+}
+.basket-clear-btn:hover { background: rgba(0, 0, 0, 0.04); }
+
+.basket-empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+.basket-empty-icon { font-size: 4rem; }
+
+/* ── Wallet page ─────────────────────────────────────────────────────────── */
+.wallet-hero {
+  position: relative;
+  background: linear-gradient(135deg, #5b7cfa 0%, #7c3aed 50%, #ec4899 100%);
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  color: #fff;
+  margin-bottom: 1.75rem;
+  box-shadow: 0 22px 60px rgba(91, 124, 250, 0.32);
+  overflow: hidden;
+}
+.wallet-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(600px 300px at 80% 0%, rgba(255, 255, 255, 0.25), transparent 60%);
+  pointer-events: none;
+}
+.wallet-hero-content { position: relative; }
+.wallet-hero-label {
+  font-size: 0.78rem;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  opacity: 0.85;
+  font-weight: 600;
+}
+.wallet-hero-balance {
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1;
+  margin-top: 0.4rem;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.wallet-hero-currency { font-size: 1.6rem; opacity: 0.85; }
+.wallet-hero-coin {
+  font-size: 2.8rem;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+}
+
+.wallet-stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+@media (max-width: 700px) {
+  .wallet-stat-row { grid-template-columns: 1fr; }
+}
+.wallet-stat-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+.wallet-stat-card-label {
+  font-size: 0.72rem;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+}
+.wallet-stat-card-num {
+  font-size: 2rem;
+  font-weight: 900;
+  margin-top: 0.4rem;
+  font-variant-numeric: tabular-nums;
+}
+.wallet-stat-card.green .wallet-stat-card-num { color: #059669; }
+.wallet-stat-card.red .wallet-stat-card-num { color: #dc2626; }
+.wallet-stat-card.blue .wallet-stat-card-num {
+  background: linear-gradient(135deg, var(--primary), var(--primary2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.wallet-section {
+  background: #fff;
+  border-radius: 22px;
+  padding: 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+  margin-bottom: 1.5rem;
+}
+.wallet-section h5 { font-weight: 800; margin-bottom: 1rem; }
+
+.txn-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.txn-table th, .txn-table td {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.88rem;
+}
+.txn-table th {
+  background: rgba(91, 124, 250, 0.06);
+  font-weight: 700;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+}
+.txn-table tbody tr { border-bottom: 1px solid rgba(0, 0, 0, 0.04); }
+.txn-table tbody tr:last-child { border-bottom: 0; }
+.txn-delta-pos { color: #059669; font-weight: 800; font-variant-numeric: tabular-nums; }
+.txn-delta-neg { color: #dc2626; font-weight: 800; font-variant-numeric: tabular-nums; }
+.txn-kind-badge {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(91, 124, 250, 0.1);
+  color: var(--primary2);
+}
+
+.coin-req-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  font-size: 0.9rem;
+}
+.coin-req-row:last-child { border-bottom: 0; }
+.coin-req-amount {
+  font-weight: 800;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #78350f;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+.coin-req-status {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.coin-req-status.pending  { background: rgba(245, 158, 11, 0.15); color: #b45309; }
+.coin-req-status.approved { background: rgba(16, 185, 129, 0.15); color: #059669; }
+.coin-req-status.rejected { background: rgba(239, 68, 68, 0.15);  color: #dc2626; }
+
+/* ── Asset detail price box ──────────────────────────────────────────────── */
+.asset-price-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 14px;
+  margin-bottom: 1.25rem;
+}
+.asset-price-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #92400e;
+  font-weight: 700;
+}
+.asset-price-value {
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: #78350f;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* ── Toast notification (used by JS) ─────────────────────────────────────── */
+#rs-toast-container {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+.rs-toast {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 14px;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.18);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 240px;
+  max-width: 360px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-left: 4px solid var(--primary);
+  animation: rsToastIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.rs-toast.success { border-left-color: #10b981; }
+.rs-toast.warning { border-left-color: #f59e0b; }
+.rs-toast.error   { border-left-color: #ef4444; }
+.rs-toast.fade-out { animation: rsToastOut 0.3s ease forwards; }
+.rs-toast-icon { font-size: 1.2rem; flex-shrink: 0; }
+.rs-toast-msg { flex: 1; min-width: 0; word-wrap: break-word; }
+
+@keyframes rsToastIn {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes rsToastOut {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(40px); }
+}
+
+/* ── Request Coins modal extras ──────────────────────────────────────────── */
+.coin-quick-amounts {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.coin-quick-amount {
+  background: rgba(91, 124, 250, 0.1);
+  border: 1px solid rgba(91, 124, 250, 0.3);
+  color: var(--primary);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.coin-quick-amount:hover {
+  background: var(--primary);
+  color: white;
+}
+
+/* ── Buy Coins payment request UI ─────────────────────────────────────── */
+.pricing-banner {
+  background: linear-gradient(135deg, rgba(108,99,255,0.08), rgba(72,199,116,0.08));
+  border: 1px solid rgba(108,99,255,0.15);
+  border-radius: 12px;
+  padding: .75rem 1.2rem;
+  margin-bottom: 1.5rem;
+  font-size: .9rem;
+}
+
+.pricing-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+}
+
+.pricing-banner-icon { font-size: 1.1rem; }
+
+.coin-pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: .75rem;
+}
+
+.coin-price-option,
+.payment-method-card {
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  transition: all .2s;
+  user-select: none;
+}
+
+.coin-price-option {
+  padding: .9rem .5rem;
+  text-align: center;
+  position: relative;
+}
+
+.coin-price-option:hover,
+.payment-method-card:hover {
+  border-color: #6c63ff;
+  background: rgba(108,99,255,0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108,99,255,0.15);
+}
+
+.coin-price-option.selected,
+.payment-method-card.selected {
+  border-color: #6c63ff;
+  background: rgba(108,99,255,0.08);
+  box-shadow: 0 0 0 3px rgba(108,99,255,0.2);
+}
+
+.coin-price-popular-label {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #6c63ff;
+  color: #fff;
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 1px 10px;
+  border-radius: 99px;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.coin-price-coins {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #1a1a2e;
+}
+
+.coin-price-usd {
+  font-size: .82rem;
+  color: #6c757d;
+  margin-top: 2px;
+}
+
+.payment-method-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .75rem;
+}
+
+.payment-method-card {
+  padding: .9rem .5rem .7rem;
+  text-align: center;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .4rem;
+}
+
+.payment-method-card.selected::after {
+  content: '✓';
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  color: #6c63ff;
+  font-weight: 800;
+  font-size: .75rem;
+}
+
+.payment-method-logo {
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.payment-method-name {
+  font-size: .78rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.usd-preview-badge {
+  background: linear-gradient(135deg, #6c63ff, #48c774);
+  color: #fff !important;
+  border-color: transparent !important;
+  font-weight: 700;
+  font-size: .85rem;
+  min-width: 72px;
+  text-align: center;
+}
+
+.payment-summary-box {
+  background: #f8f9ff;
+  border: 1px solid rgba(108,99,255,0.2);
+  border-radius: 10px;
+  padding: .9rem 1.1rem;
+}
+
+.payment-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: .88rem;
+  padding: .2rem 0;
+  border-bottom: 1px solid rgba(108,99,255,0.08);
+}
+
+.payment-summary-row:last-child { border-bottom: none; }
+
+.pay-method-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 99px;
+  font-size: .76rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+
+.paypal-badge {
+  background: #003087;
+  color: #fff;
+}
+
+.apple-badge {
+  background: #000;
+  color: #fff;
+}
+
+.google-badge {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  color: #333;
+}
+
+.payment-modal-note {
+  font-size: .74rem;
+  color: #999;
+  text-align: center;
+  margin: .75rem 0 0;
+}
+
+@media (max-width: 576px) {
+  .coin-pricing-grid { grid-template-columns: repeat(2, 1fr); }
+  .payment-method-grid { gap: .5rem; }
+}

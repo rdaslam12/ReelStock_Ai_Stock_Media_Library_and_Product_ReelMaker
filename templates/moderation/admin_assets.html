@@ -1,176 +1,80 @@
-{% extends "admin_base.html" %}
-{% load static %}
-
-{% block page_title %}Admin Dashboard - Assets{% endblock %}
-{% block page_subtitle %}Browse, filter and moderate uploaded assets{% endblock %}
+{% extends 'admin_base.html' %}
+{% block page_title %}Asset Management{% endblock %}
+{% block page_subtitle %}Review generated images and videos, publication status, pricing, and ownership{% endblock %}
 
 {% block content %}
-
-<!-- Filters row -->
-<div class="admin-card p-3 mb-3">
-  <div class="row g-3 align-items-end">
-    <div class="col-lg-4">
-      <label class="form-label mb-1">Search</label>
-      <input id="assetSearch" class="form-control" placeholder="Search assets...">
+<section class="admin-card mb-4">
+  <form class="row g-3 align-items-end" method="get">
+    <div class="col-lg-3">
+      <label class="form-label">Search</label>
+      <input class="form-control" name="q" value="{{ filters.q }}" placeholder="title, prompt, user">
     </div>
-
-    <div class="col-lg-2">
-      <label class="form-label mb-1">Type</label>
-      <select id="typeFilter" class="form-select">
+    <div class="col-md-2">
+      <label class="form-label">Type</label>
+      <select class="form-select" name="type">
+        <option value="all" {% if filters.type == 'all' or not filters.type %}selected{% endif %}>All</option>
+        <option value="image" {% if filters.type == 'image' %}selected{% endif %}>Images</option>
+        <option value="video" {% if filters.type == 'video' %}selected{% endif %}>Videos</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <label class="form-label">Status</label>
+      <select class="form-select" name="status">
         <option value="">All</option>
-        <option value="video">Video</option>
-        <option value="image">Image</option>
+        <option value="published" {% if filters.status == 'published' %}selected{% endif %}>Published</option>
+        <option value="draft" {% if filters.status == 'draft' %}selected{% endif %}>Draft</option>
+        <option value="done" {% if filters.status == 'done' %}selected{% endif %}>Video done</option>
+        <option value="failed" {% if filters.status == 'failed' %}selected{% endif %}>Video failed</option>
+        <option value="processing" {% if filters.status == 'processing' %}selected{% endif %}>Processing</option>
+        <option value="pending" {% if filters.status == 'pending' %}selected{% endif %}>Pending</option>
       </select>
     </div>
+    <div class="col-md-2">
+      <label class="form-label">Owner</label>
+      <input class="form-control" name="owner" value="{{ filters.owner }}" placeholder="@user">
+    </div>
+    <div class="col-md-3">
+      <button class="btn btn-primary" type="submit">Filter</button>
+      <a class="btn btn-outline-secondary" href="{% url 'admin_assets' %}">Reset</a>
+    </div>
+  </form>
+</section>
 
-    <div class="col-lg-2">
-      <label class="form-label mb-1">Status</label>
-      <select id="statusFilter" class="form-select">
-        <option value="">All</option>
-        <option value="published">Published</option>
-        <option value="draft">Draft</option>
-        <option value="removed">Removed</option>
-      </select>
-    </div>
-
-    <div class="col-lg-2">
-      <label class="form-label mb-1">Category</label>
-      <select id="categoryFilter" class="form-select">
-        <option value="">All categories</option>
-        <option value="shoe">Shoe</option>
-        <option value="watch">Watch</option>
-        <option value="bag">Bag</option>
-      </select>
-    </div>
-
-    <div class="col-lg-2">
-      <label class="form-label mb-1">Tag</label>
-      <select id="tagFilter" class="form-select">
-        <option value="">Tags</option>
-        <option value="promo">promo</option>
-        <option value="fashion">fashion</option>
-        <option value="luxury">luxury</option>
-      </select>
-    </div>
+<section class="admin-card">
+  <div class="admin-card-header">
+    <h2>Assets</h2>
+    <span>{{ image_count }} images · {{ video_count }} videos total</span>
   </div>
-</div>
-
-<!-- Table -->
-<div class="admin-card p-3">
   <div class="table-responsive">
-    <table class="table table-hover align-middle mb-0">
-      <thead>
-        <tr>
-          <th style="width:90px;">Preview</th>
-          <th>Title</th>
-          <th style="width:90px;">Type</th>
-          <th style="width:120px;">Creator</th>
-          <th style="width:120px;">Status</th>
-          <th style="width:140px;">Upload Date</th>
-          <th>Category/Tags</th>
-          <th style="width:80px;" class="text-end">Actions</th>
-        </tr>
-      </thead>
-      <tbody id="assetRows">
-        {% for a in assets %}
-        <tr class="asset-row"
-            data-title="{{ a.title|lower }}"
-            data-type="{{ a.type|lower }}"
-            data-owner="{{ a.owner|lower }}"
-            data-category="{{ a.category|lower }}"
-            data-tags="{{ a.tags|join:' '|lower }}"
-            data-status="{% if a.published %}published{% else %}draft{% endif %}">
-          <td>
-            <img src="{% static a.thumbnail %}" class="rounded-3 border" width="72" height="44" style="object-fit:cover;">
-          </td>
-          <td>
-            <div class="fw-semibold">{{ a.title }}</div>
-          </td>
-          <td class="text-muted text-capitalize">{{ a.type }}</td>
-          <td><a href="#" class="text-decoration-none">{{ a.owner }}</a></td>
-          <td>
-            {% if a.published %}
-              <span class="badge rounded-pill text-bg-success">Published</span>
-            {% else %}
-              <span class="badge rounded-pill text-bg-warning">Draft</span>
-            {% endif %}
-          </td>
-          <td class="text-muted">{{ a.created_at }}</td>
-          <td>
-            <span class="badge badge-soft me-1">{{ a.category }}</span>
-            {% for t in a.tags|slice:":2" %}
-              <span class="badge badge-soft me-1">{{ t }}</span>
-            {% endfor %}
-          </td>
-          <td class="text-end">
-            <div class="dropdown">
-              <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="dropdown">
-                <i class="bi bi-three-dots"></i>
-              </button>
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" href="/asset/{{ a.id }}/">View Details</a></li>
-                
-                <li><button class="dropdown-item">Feature</button></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><button class="dropdown-item text-danger">Remove</button></li>
-              </ul>
-            </div>
-          </td>
-        </tr>
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Asset</th><th>Type</th><th>Owner</th><th>Status</th><th>Published</th><th>Price</th><th>Date</th><th></th></tr></thead>
+      <tbody>
+        {% for row in assets %}
+          <tr>
+            <td>
+              <a class="d-flex align-items-center gap-3 text-decoration-none" href="{% url 'admin_asset_detail' row.type row.obj.pk %}">
+                <span class="admin-thumb">{% if row.thumb %}<img src="{{ row.thumb }}" alt="">{% else %}<i class="bi bi-file-earmark"></i>{% endif %}</span>
+                <span>
+                  <strong class="d-block text-dark">{{ row.title|truncatechars:58 }}</strong>
+                  <small class="text-muted">#{{ row.obj.pk }}</small>
+                </span>
+              </a>
+            </td>
+            <td>{{ row.type|title }}</td>
+            <td><a href="{% url 'admin_user_detail' row.owner.pk %}">@{{ row.owner.username }}</a></td>
+            <td>{{ row.status }}</td>
+            <td><span class="badge {% if row.published %}text-bg-success{% else %}text-bg-secondary{% endif %}">{% if row.published %}Yes{% else %}No{% endif %}</span></td>
+            <td>{{ row.price }} RC</td>
+            <td class="text-muted small">{{ row.created_at|date:"M d, Y" }}</td>
+            <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'admin_asset_detail' row.type row.obj.pk %}">Manage</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="8" class="text-muted">No assets match those filters.</td></tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
+</section>
 
-  <!-- Bottom bar (pagination UI only) -->
-  <div class="d-flex justify-content-between align-items-center pt-3">
-    <div class="text-muted small">Showing 1-{{ assets|length }} of {{ assets|length }} assets</div>
-    <div class="d-flex align-items-center gap-2">
-      <span class="text-muted small">Page</span>
-      <div class="btn-group">
-        <button class="btn btn-sm btn-outline-secondary" disabled>&laquo;</button>
-        <button class="btn btn-sm btn-primary">1</button>
-        <button class="btn btn-sm btn-outline-secondary">2</button>
-        <button class="btn btn-sm btn-outline-secondary">&raquo;</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-{% endblock %}
-
-{% block scripts %}
-<script>
-  const q = id => document.getElementById(id);
-  const rows = Array.from(document.querySelectorAll(".asset-row"));
-
-  function applyFilters(){
-    const s = q("assetSearch").value.toLowerCase().trim();
-    const type = q("typeFilter").value;
-    const status = q("statusFilter").value;
-    const cat = q("categoryFilter").value;
-    const tag = q("tagFilter").value;
-
-    rows.forEach(r => {
-      const title = r.dataset.title;
-      const tags = r.dataset.tags;
-      const owner = r.dataset.owner;
-      const rType = r.dataset.type;
-      const rStatus = r.dataset.status;
-      const rCat = r.dataset.category;
-
-      const matchSearch = !s || title.includes(s) || tags.includes(s) || owner.includes(s);
-      const matchType = !type || rType === type;
-      const matchStatus = !status || rStatus === status;
-      const matchCat = !cat || rCat === cat;
-      const matchTag = !tag || tags.includes(tag);
-
-      r.style.display = (matchSearch && matchType && matchStatus && matchCat && matchTag) ? "" : "none";
-    });
-  }
-
-  ["assetSearch","typeFilter","statusFilter","categoryFilter","tagFilter"].forEach(id => {
-    q(id).addEventListener(id==="assetSearch" ? "input" : "change", applyFilters);
-  });
-</script>
+{% include 'moderation/_admin_pagination.html' with page_obj=assets %}
 {% endblock %}

@@ -1,148 +1,356 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block title %}Generate – ReelStock{% endblock %}
 
 {% block content %}
 <div class="reel-maker-wrapper prompt-to-image-page">
-    <div class="header-section">
-        <h1 class="page-title">Generate AI Image</h1>
-        <p class="text-muted">Turn your textual description into photorealistic or cinematic images.</p>
+  <div class="header-section">
+    <h1 class="page-title">Generate with AI</h1>
+    <p class="text-muted">Create photorealistic images from your description.</p>
+  </div>
+
+  <div class="reel-maker-layout">
+    <!-- LEFT -->
+    <div class="controls-column">
+
+      <div class="glass-card">
+        <div class="card-header-flex">
+          <h3>1. YOUR PROMPT</h3>
+        </div>
+        <label class="small-label mb-2">Detailed Description</label>
+        <textarea id="promptInput" class="form-control glass-input" rows="5"
+          placeholder="e.g. A luxury watch on a marble surface, cinematic lighting, 8K…"></textarea>
+        <div class="style-tags-container mt-3">
+          <span class="tag-badge" data-tag="8K Resolution">8K</span>
+          <span class="tag-badge" data-tag="Photorealistic">Photorealistic</span>
+          <span class="tag-badge" data-tag="Cinematic Lighting">Cinematic</span>
+          <span class="tag-badge" data-tag="Cyberpunk style">Cyberpunk</span>
+          <span class="tag-badge" data-tag="Minimalist">Minimalist</span>
+          <span class="tag-badge" data-tag="Studio lighting">Studio</span>
+        </div>
+      </div>
+
+      <!-- Image settings -->
+      <div class="glass-card" id="imageSettings">
+        <div class="card-header-flex">
+          <h3>2. IMAGE SETTINGS</h3><span class="icon-small">⚙</span>
+        </div>
+        <div class="row">
+          <div class="col-6 mb-3">
+            <label class="small-label">Style</label>
+            <select id="imageStyle" class="form-select glass-select">
+              <option>Realistic</option><option>Anime</option>
+              <option>Oil Painting</option><option>Digital Art</option>
+            </select>
+          </div>
+          <div class="col-6 mb-3">
+            <label class="small-label">Aspect Ratio</label>
+            <select id="aspectRatio" class="form-select glass-select">
+              <option value="1:1">1:1 Square</option>
+              <option value="16:9">16:9 Cinematic</option>
+              <option value="9:16">9:16 Portrait</option>
+            </select>
+          </div>
+        </div>
+        <button type="button" id="generateImageBtn" class="btn-generate-premium w-100">Generate Photo</button>
+      </div>
+
     </div>
 
-    <div class="reel-maker-layout">
-        
-        <div class="controls-column">
-            
-            <div class="glass-card">
-                <div class="card-header-flex">
-                    <h3>1. YOUR PROMPT</h3>
-                    <span class="icon-small">✍</span>
-                </div>
-                <div class="form-group mb-3">
-                    <label class="small-label mb-2">Detailed Description</label>
-                    <textarea id="promptInput" class="form-control glass-input" rows="5" placeholder="e.g. A majestic white horse running on a beach during sunset, 8k, photorealistic, cinematic lighting..."></textarea>
-                </div>
-                <div class="style-tags-container">
-                    <span class="tag-badge" data-tag="8K Resolution">8K</span>
-                    <span class="tag-badge" data-tag="Photorealistic">Photorealistic</span>
-                    <span class="tag-badge" data-tag="Cinematic Lighting">Cinematic</span>
-                    <span class="tag-badge" data-tag="Cyberpunk style">Cyberpunk</span>
-                </div>
-            </div>
-
-            <div class="glass-card">
-                <div class="card-header-flex">
-                    <h3>2. SETTINGS</h3>
-                    <span class="icon-small">⚙</span>
-                </div>
-                <div class="row">
-                    <div class="col-6 mb-3">
-                        <label class="small-label">Image Style</label>
-                        <select id="imageStyle" class="form-select glass-select">
-                            <option>Realistic</option>
-                            <option>Anime</option>
-                            <option>Oil Painting</option>
-                            <option>Digital Art</option>
-                        </select>
-                    </div>
-                    <div class="col-6 mb-3">
-                        <label class="small-label">Aspect Ratio</label>
-                        <select id="aspectRatio" class="form-select glass-select">
-                            <option value="1:1">1:1 (Square)</option>
-                            <option value="16:9">16:9 (Cinematic)</option>
-                            <option value="9:16">9:16 (Portrait)</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="button" id="generateImageBtn" class="btn-generate-premium w-100">Generate Image</button>
-            </div>
-
+    <!-- RIGHT: Preview -->
+    <div class="preview-column">
+      <div class="glass-card preview-card-premium">
+        <div class="card-header-flex">
+          <h3>RESULT</h3><span class="info-icon">ⓘ</span>
         </div>
 
-        <div class="preview-column">
-            <div class="glass-card preview-card-premium">
-                <div class="card-header-flex">
-                    <h3>GENERATED RESULT</h3>
-                    <div class="action-icons-mock" style="display: none;" id="canvas-actions">
-                        <span class="icon-action">📥</span>
-                        <span class="icon-action">💾</span>
-                    </div>
-                </div>
-                
-                <div class="image-display-area" id="image-canvas">
-                    <div class="canvas-placeholder" id="placeholder-text">
-                        <span class="placeholder-icon">🖼</span>
-                        <p>GENERATED IMAGE<br>WILL APPEAR HERE</p>
-                    </div>
-                    <div class="loader-overlay" id="loader-overlay" style="display: none;">
-                        <div class="skeleton-pulse"></div>
-                        <p class="loader-text">AI is creating...</p>
-                    </div>
-                </div>
-            </div>
+        <div class="gen-canvas" id="gen-canvas">
+          <div id="gen-placeholder" class="gen-placeholder">
+            <span class="gen-placeholder-icon" id="placeholderIcon">🖼</span>
+            <p id="placeholderText">Your generated photo<br>will appear here</p>
+          </div>
+          <div class="loader-overlay" id="loader-overlay" style="display:none;">
+            <div class="skeleton-pulse"></div>
+            <p class="loader-text">AI is creating…</p>
+          </div>
+          <img id="result-img" src="" alt="Generated" class="generated-preview-media">
         </div>
 
+        <div id="status-msg" class="small text-center mt-2" style="min-height:1.4em;color:#888;"></div>
+
+        <div id="gen-actions" style="display:none;" class="mt-3 d-flex gap-2 justify-content-center flex-wrap">
+          <a id="downloadBtn" href="#" download class="btn btn-outline-secondary rounded-pill px-4">Download</a>
+          {% if user.is_authenticated %}
+            <button id="publishBtn" class="btn btn-primary rounded-pill px-4">Publish</button>
+          {% else %}
+            <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#loginModal">Log in to Publish</button>
+          {% endif %}
+        </div>
+        <div id="publish-confirm" class="text-center text-success small mt-2" style="display:none;">
+          Published to Library!
+        </div>
+        <div id="image-share-actions" class="share-panel mt-3" style="display:none;">
+          <div class="share-panel-title">Share your image</div>
+          <div class="d-flex gap-2 mb-3 flex-wrap">
+            <a id="viewImageDetailBtn" href="#" class="btn btn-outline-primary rounded-pill px-3" style="font-size:.78rem;">View Page</a>
+            <button id="copyImageLinkBtn" type="button" class="btn btn-outline-secondary rounded-pill px-3" style="font-size:.78rem;">Copy Link</button>
+          </div>
+          <div class="share-btn-grid" id="imageShareGrid"></div>
+          <div class="mt-3">
+            <input type="hidden" id="image-share-url-input">
+          </div>
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}
 
-{% block scripts %}
-  {{ block.super }}
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const promptInput = document.getElementById('promptInput');
-        const generateBtn = document.getElementById('generateImageBtn');
-        const styleTags = document.querySelectorAll('.tag-badge');
-        
-        const canvas = document.getElementById('image-canvas');
-        const placeholderText = document.getElementById('placeholder-text');
-        const loaderOverlay = document.getElementById('loader-overlay');
-        const canvasActions = document.getElementById('canvas-actions');
+{% block scripts %}{{ block.super }}
+<script>
+const GENERATE_URL = "{% url 'generate_image' %}";
+const SAVE_URL     = "{% url 'save_image' %}";
+const CSRF = "{{ csrf_token }}";
 
-        // 1. Style Tags Logic
-        styleTags.forEach(tag => {
-            tag.addEventListener('click', function() {
-                const tagValue = this.getAttribute('data-tag');
-                if(!promptInput.value.includes(tagValue)) {
-                    promptInput.value += (promptInput.value ? ', ' : '') + tagValue;
-                }
-            });
-        });
+let lastImageUrl = null, lastPrompt = null, lastStyle = null, lastRatio = null;
 
-        // 2. Generate simulation (Bonus)
-        generateBtn.addEventListener('click', function() {
-            const prompt = promptInput.value.trim();
-            if (!prompt) {
-                alert("Please write a prompt first!");
-                return;
-            }
+function resetResult() {
+  document.getElementById('gen-placeholder').style.display='flex';
+  document.getElementById('result-img').style.display='none';
+  document.getElementById('gen-canvas').classList.remove('has-generated-media');
+  document.getElementById('gen-actions').style.display='none';
+  document.getElementById('publish-confirm').style.display='none';
+  document.getElementById('image-share-actions').style.display='none';
+  document.getElementById('status-msg').textContent='';
+  lastImageUrl=null;
+}
 
-            // Start simulation
-            this.disabled = true;
-            this.textContent = "Creating...";
-            placeholderText.style.display = 'none';
-            loaderOverlay.style.display = 'flex';
-            canvasActions.style.display = 'none';
-            canvas.style.backgroundImage = 'none';
+function setStatus(msg, err=false) {
+  const el=document.getElementById('status-msg');
+  el.textContent=msg; el.style.color=err?'#dc3545':'#888';
+}
 
-            // Fake processing time (3 sec)
-            setTimeout(() => {
-                // Success
-                this.textContent = "Generate Image";
-                this.disabled = false;
-                loaderOverlay.style.display = 'none';
-                canvasActions.style.display = 'flex';
+function showActions() {
+  document.getElementById('gen-actions').style.display='flex';
+}
 
-                // Display a default placeholder image (Bonus)
-                // You can replace this URL with an actual generated image path in Phase 2
-                const mockImageUrl = 'https://images.unsplash.com/photo-1718042457814-c151475c40fb?q=80&w=600&auto=format&fit=crop';
-                
-                canvas.style.backgroundImage = `url(${mockImageUrl})`;
-                canvas.style.backgroundSize = 'contain';
-                canvas.style.backgroundRepeat = 'no-repeat';
-                canvas.style.backgroundPosition = 'center';
+document.querySelectorAll('.tag-badge').forEach(t => {
+  t.addEventListener('click', function() {
+    const inp=document.getElementById('promptInput'), v=this.dataset.tag;
+    if (!inp.value.includes(v)) inp.value += (inp.value?', ':'')+v;
+  });
+});
 
-            }, 3500);
-        });
-    });
-  </script>
+// ── Image generate ─────────────────────────────────────────────────
+document.getElementById('generateImageBtn').addEventListener('click', async function() {
+  const prompt=document.getElementById('promptInput').value.trim();
+  if (!prompt) {
+    window.RSToast && RSToast.show('Please enter a prompt first.', 'warning');
+    document.getElementById('promptInput')?.focus();
+    return;
+  }
+  this.disabled=true; this.textContent='Creating…';
+  document.getElementById('gen-placeholder').style.display='none';
+  document.getElementById('result-img').style.display='none';
+  document.getElementById('gen-canvas').classList.remove('has-generated-media');
+  document.getElementById('loader-overlay').style.display='flex';
+  document.getElementById('gen-actions').style.display='none';
+  document.getElementById('publish-confirm').style.display='none';
+  setStatus('Sending to AI generator…');
+  lastStyle=document.getElementById('imageStyle').value;
+  lastRatio=document.getElementById('aspectRatio').value;
+  lastPrompt=prompt;
+  try {
+    const r=await fetch(GENERATE_URL,{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+      body:JSON.stringify({prompt,style:lastStyle,aspect_ratio:lastRatio})});
+    const d=await r.json();
+    if (!d.success) throw new Error(d.error||'Failed');
+    lastImageUrl=d.image_url;
+    const img=document.getElementById('result-img');
+    img.onload = () => fitGeneratedPreview(img, document.getElementById('gen-canvas'));
+    img.src=d.image_url; img.style.display='block';
+    document.getElementById('downloadBtn').href=d.image_url;
+    showActions(); setStatus('Image generated successfully.');
+    const pb=document.getElementById('publishBtn');
+    if(pb) pb.textContent='Publish';
+  } catch(e) {
+    document.getElementById('gen-placeholder').style.display='flex';
+    setStatus(e.message||'Something went wrong.',true);
+    window.RSToast && RSToast.show(e.message||'Generation failed. Try again.', 'error');
+  } finally {
+    this.textContent='Generate Photo'; this.disabled=false;
+    document.getElementById('loader-overlay').style.display='none';
+  }
+});
+
+// ── Publish ────────────────────────────────────────────────────────
+const publishBtn=document.getElementById('publishBtn');
+if(publishBtn) publishBtn.addEventListener('click', async function() {
+  if(!lastImageUrl){
+    window.RSToast && RSToast.show('Nothing to publish. Generate an image first.', 'info');
+    return;
+  }
+  this.disabled=true; this.textContent='Publishing…';
+  try {
+    const r=await fetch(SAVE_URL,{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+      body:JSON.stringify({image_url:lastImageUrl,prompt:lastPrompt,style:lastStyle,aspect_ratio:lastRatio,publish:true})});
+    const d=await r.json();
+    if(d.success){
+      this.style.display='none';
+      const confirmEl=document.getElementById('publish-confirm');
+      confirmEl.innerHTML = d.detail_url ? `Published to Library! <a href="${d.detail_url}" class="text-success fw-semibold">View image →</a>` : 'Published to Library!';
+      confirmEl.style.display='block';
+      window.RSToast && RSToast.show('Image published to Library!', 'success');
+      if (d.public_url) {
+        document.getElementById('viewImageDetailBtn').href = d.detail_url || '#';
+        document.getElementById('copyImageLinkBtn').dataset.url = d.public_url;
+        document.getElementById('image-share-url-input').value = d.public_url;
+        buildImageShareGrid(d.public_url, lastImageUrl);
+        document.getElementById('image-share-actions').style.display='block';
+      }
+      setStatus('Published to the Library!');
+    } else throw new Error(d.error||'Failed');
+  } catch(e){
+    setStatus(e.message,true);
+    this.disabled=false; this.textContent='Publish';
+    window.RSToast && RSToast.show(e.message||'Publish failed.', 'error');
+  }
+});
+
+function fitGeneratedPreview(media, canvas) {
+  if (!media || !canvas) return;
+  const width = media.naturalWidth || media.videoWidth || 1;
+  const height = media.naturalHeight || media.videoHeight || 1;
+  const ratio = width / height;
+  media.classList.remove('is-wide', 'is-square', 'is-tall');
+  if (ratio > 1.15) media.classList.add('is-wide');
+  else if (ratio < 0.85) media.classList.add('is-tall');
+  else media.classList.add('is-square');
+  canvas.classList.add('has-generated-media');
+}
+
+function ensureFloatingPreview() {
+  let overlay = document.getElementById('rsFloatingPreview');
+  if (overlay) return overlay;
+  overlay = document.createElement('div');
+  overlay.id = 'rsFloatingPreview';
+  overlay.className = 'rs-floating-preview';
+  overlay.setAttribute('aria-hidden', 'true');
+  overlay.innerHTML = `
+    <button type="button" class="rs-floating-preview-close" aria-label="Close preview">&times;</button>
+    <div class="rs-floating-preview-stage">
+      <img id="rsFloatingPreviewImage" alt="Generated preview">
+      <video id="rsFloatingPreviewVideo" controls playsinline></video>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay || event.target.classList.contains('rs-floating-preview-close')) {
+      closeFloatingPreview();
+    }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeFloatingPreview();
+  });
+  return overlay;
+}
+
+function openFloatingPreview(type, src) {
+  if (!src) return;
+  const overlay = ensureFloatingPreview();
+  const image = document.getElementById('rsFloatingPreviewImage');
+  const video = document.getElementById('rsFloatingPreviewVideo');
+  image.style.display = 'none';
+  video.style.display = 'none';
+  video.pause();
+  video.removeAttribute('src');
+  image.removeAttribute('src');
+  if (type === 'video') {
+    video.src = src;
+    video.style.display = 'block';
+    video.load();
+  } else {
+    image.src = src;
+    image.style.display = 'block';
+  }
+  overlay.classList.add('is-open');
+  overlay.setAttribute('aria-hidden', 'false');
+}
+
+function closeFloatingPreview() {
+  const overlay = document.getElementById('rsFloatingPreview');
+  if (!overlay) return;
+  const video = document.getElementById('rsFloatingPreviewVideo');
+  if (video) {
+    video.pause();
+    video.removeAttribute('src');
+  }
+  overlay.classList.remove('is-open');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
+document.getElementById('result-img').addEventListener('click', function() {
+  openFloatingPreview('image', this.currentSrc || this.src);
+});
+
+const copyImageLinkBtn = document.getElementById('copyImageLinkBtn');
+if (copyImageLinkBtn) copyImageLinkBtn.addEventListener('click', async function() {
+  if (!this.dataset.url) { window.RSToast && RSToast.show('Link not available.','info'); return; }
+  try { await navigator.clipboard.writeText(this.dataset.url); }
+  catch (e) {
+    const tmp = document.createElement('input');
+    tmp.value = this.dataset.url;
+    document.body.appendChild(tmp); tmp.select(); document.execCommand('copy'); tmp.remove();
+  }
+  const old = this.textContent;
+  this.textContent = 'Copied!';
+  window.RSToast && RSToast.show('Link copied!', 'success', 2000);
+  setTimeout(() => { this.textContent = old; }, 1400);
+});
+
+function buildImageShareGrid(pageUrl, mediaUrl) {
+  const grid = document.getElementById('imageShareGrid');
+  if (!grid) return;
+  const svgs = {
+    facebook: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>',
+    instagram: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.881 1.44 1.44 0 0 0 0-2.881z"/></svg>',
+    pinterest: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12c0 5.084 3.163 9.426 7.627 11.174-.105-.949-.2-2.405.042-3.441.218-.937 1.407-5.965 1.407-5.965s-.359-.719-.359-1.782c0-1.668.967-2.914 2.171-2.914 1.023 0 1.518.769 1.518 1.69 0 1.029-.655 2.568-.994 3.995-.283 1.194.599 2.169 1.777 2.169 2.133 0 3.772-2.249 3.772-5.495 0-2.873-2.064-4.882-5.012-4.882-3.414 0-5.418 2.561-5.418 5.207 0 1.031.397 2.138.893 2.738a.36.36 0 0 1 .083.345l-.333 1.36c-.053.22-.174.267-.402.161-1.499-.698-2.436-2.889-2.436-4.649 0-3.785 2.75-7.262 7.929-7.262 4.163 0 7.398 2.967 7.398 6.931 0 4.136-2.607 7.464-6.227 7.464-1.216 0-2.359-.632-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0z"/></svg>',
+    twitter: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+    flickr: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M0 12c0 3.074 2.494 5.568 5.568 5.568 3.075 0 5.569-2.494 5.569-5.568 0-3.075-2.494-5.569-5.569-5.569C2.494 6.431 0 8.925 0 12zm12.863 0c0 3.074 2.494 5.568 5.568 5.568C21.505 17.568 24 15.074 24 12c0-3.075-2.495-5.569-5.569-5.569-3.074 0-5.568 2.494-5.568 5.569z"/></svg>',
+  };
+  const networks = [
+    { id:'facebook', label:'Facebook', cls:'facebook', fn:(u,m)=>openImgShareModal('Facebook',`<div style="background:#f0f4ff;border-radius:12px;padding:14px;margin-bottom:12px;"><strong style="font-size:.82rem;display:block;margin-bottom:8px;">Option 1 — Share page link</strong><a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(u)}" target="_blank" rel="noopener" class="btn btn-primary rounded-pill px-4 w-100" style="font-size:.82rem;">Open in Facebook</a></div><div style="background:#f9f9fb;border-radius:12px;padding:14px;"><strong style="font-size:.82rem;display:block;margin-bottom:6px;">Option 2 — Download & upload</strong><a href="${m}" download class="btn btn-outline-secondary rounded-pill px-4 w-100" style="font-size:.82rem;">Download Image</a></div>`)},
+    { id:'instagram', label:'Instagram', cls:'instagram', fn:(u,m)=>openImgShareModal('Instagram',`<div style="background:#fdf0f5;border-radius:12px;padding:14px;margin-bottom:12px;"><strong style="font-size:.82rem;display:block;margin-bottom:6px;">Step 1 — Download your image</strong><a href="${m}" download class="btn btn-outline-secondary rounded-pill px-4 w-100" style="font-size:.82rem;">Download Image</a></div><div style="background:#f9f9fb;border-radius:12px;padding:14px;"><strong style="font-size:.82rem;display:block;margin-bottom:6px;">Open Instagram app & post</strong><a href="https://www.instagram.com" target="_blank" rel="noopener" class="btn btn-outline-secondary rounded-pill px-4 w-100" style="font-size:.82rem;">Open Instagram</a></div>`)},
+    { id:'pinterest', label:'Pinterest', cls:'pinterest', fn:(u,m)=>window.open('https://pinterest.com/pin/create/button/?url='+encodeURIComponent(u)+'&media='+encodeURIComponent(m)+'&description=AI-generated+image','_blank','width=750,height=550')},
+    { id:'twitter', label:'X (Twitter)', cls:'twitter', fn:(u)=>window.open('https://x.com/intent/tweet?text='+encodeURIComponent('AI-generated image on ReelStock! ')+'&url='+encodeURIComponent(u),'_blank','width=600,height=450')},
+    { id:'flickr', label:'Flickr', cls:'', fn:(u,m)=>openImgShareModal('Flickr',`<p style="font-size:.85rem;color:#555;margin-bottom:14px;">Share your AI image to Flickr.</p><a href="${m}" download class="btn btn-outline-secondary rounded-pill px-4 w-100 mb-2" style="font-size:.82rem;">Download Image</a><a href="https://www.flickr.com/photos/upload" target="_blank" rel="noopener" class="btn btn-primary rounded-pill px-4 w-100" style="font-size:.82rem;">Open Flickr Upload</a>`)},
+  ];
+  grid.innerHTML = '';
+  networks.forEach(n => {
+    const btn = document.createElement('button');
+    btn.type='button'; btn.className='share-network-btn '+n.cls;
+    btn.innerHTML = (svgs[n.id]||'') + '<span>'+n.label+'</span>';
+    btn.addEventListener('click', () => n.fn(pageUrl, mediaUrl));
+    grid.appendChild(btn);
+  });
+}
+
+function openImgShareModal(platform, bodyHtml) {
+  document.getElementById('genShareModalPlatform').textContent = platform;
+  document.getElementById('genShareModalBody').innerHTML = bodyHtml;
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('genShareModal')).show();
+}
+</script>
+
+<!-- Gen Share Modal -->
+<div class="modal fade rs-share-modal" id="genShareModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">Share to <span id="genShareModalPlatform"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 pb-4" id="genShareModalBody"></div>
+    </div>
+  </div>
+</div>
 {% endblock %}

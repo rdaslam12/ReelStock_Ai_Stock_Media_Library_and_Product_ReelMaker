@@ -4,76 +4,85 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ReelStock Admin</title>
-
+  <title>{% block title %}ReelStock Admin{% endblock %}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
   <link rel="stylesheet" href="{% static 'css/admin.css' %}">
 </head>
-
 <body>
-  <div class="admin-wrap">
-    <div class="d-flex">
+  <div class="admin-shell">
+    <aside class="admin-sidebar">
+      <a class="admin-logo text-decoration-none" href="{% url 'admin_dashboard' %}">
+        <span class="admin-logo-mark"><i class="bi bi-play-btn-fill"></i></span>
+        <span>
+          <strong>ReelStock</strong>
+          <small>Control Center</small>
+        </span>
+      </a>
 
-      <!-- Sidebar -->
-      <aside class="admin-sidebar p-3">
-        <div class="d-flex align-items-center gap-2 mb-4">
-          <div class="rounded-3 p-2" style="background:#e8f0ff;color:#1d4ed8;">
-            <i class="bi bi-play-btn-fill"></i>
-          </div>
-          <div>
-            <div class="admin-brand">ReelStock</div>
-            <div class="text-muted small">Admin Panel</div>
+      <nav class="admin-nav">
+        <a class="admin-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}" href="{% url 'admin_dashboard' %}">
+          <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+        </a>
+        <a class="admin-link {% if request.resolver_match.url_name == 'admin_users' or request.resolver_match.url_name == 'admin_user_detail' %}active{% endif %}" href="{% url 'admin_users' %}">
+          <i class="bi bi-people"></i><span>Users</span>
+        </a>
+        <a class="admin-link {% if request.resolver_match.url_name == 'admin_assets' or request.resolver_match.url_name == 'admin_asset_detail' %}active{% endif %}" href="{% url 'admin_assets' %}">
+          <i class="bi bi-images"></i><span>Assets</span>
+        </a>
+        <a class="admin-link {% if request.resolver_match.url_name == 'admin_reels' %}active{% endif %}" href="{% url 'admin_reels' %}">
+          <i class="bi bi-camera-reels"></i><span>ReelMaker</span>
+        </a>
+        <a class="admin-link {% if request.resolver_match.url_name == 'admin_wallets' %}active{% endif %}" href="{% url 'admin_wallets' %}">
+          <i class="bi bi-wallet2"></i><span>Wallets</span>
+        </a>
+        <a class="admin-link {% if request.resolver_match.url_name == 'admin_engagement' %}active{% endif %}" href="{% url 'admin_engagement' %}">
+          <i class="bi bi-bookmark-heart"></i><span>Engagement</span>
+        </a>
+        <a class="admin-link {% if request.resolver_match.url_name == 'admin_reports' %}active{% endif %}" href="{% url 'admin_reports' %}">
+          <i class="bi bi-flag"></i><span>Reports</span>
+        </a>
+        <a class="admin-link {% if request.resolver_match.url_name == 'admin_tools' %}active{% endif %}" href="{% url 'admin_tools' %}">
+          <i class="bi bi-sliders"></i><span>Tools</span>
+        </a>
+      </nav>
+
+      <div class="admin-sidebar-footer">
+        <div class="admin-user-card">
+          <div class="admin-avatar">{{ admin_user.username|slice:":1"|upper }}</div>
+          <div class="min-w-0">
+            <div class="fw-semibold text-truncate">{{ admin_user.get_full_name|default:admin_user.username }}</div>
+            <div class="text-muted small">{% if admin_user.is_superuser %}Superuser{% else %}Staff{% endif %}</div>
           </div>
         </div>
-
-        <nav class="d-grid gap-1">
-          <a class="admin-link {% if request.path == '/admin-panel/' %}active{% endif %} text-decoration-none"
-             href="{% url 'admin_dashboard' %}">
-            <i class="bi bi-grid-1x2 me-2"></i>Overview
-          </a>
-
-          <a class="admin-link {% if '/admin-panel/assets/' in request.path %}active{% endif %} text-decoration-none"
-             href="{% url 'admin_assets' %}">
-            <i class="bi bi-collection-play me-2"></i>Assets
-        <a class="admin-link {% if '/admin-panel/reports/' in request.path %}active{% endif %} text-decoration-none"
-            href="{% url 'admin_reports' %}">
-           <i class="bi bi-flag me-2"></i>Reports
-         </a>
-          </a>
-        </nav>
-
-        <div class="mt-auto pt-4">
-          <div class="admin-card p-3">
-            <div class="d-flex align-items-center gap-2">
-              <div class="rounded-circle bg-light border" style="width:38px;height:38px;"></div>
-              <div>
-                <div class="fw-semibold">Admin User</div>
-                <div class="text-muted small">Moderator</div>
-              </div>
-            </div>
-            <a class="btn btn-outline-secondary w-100 mt-3" href="{% url 'admin_login' %}">Log Out</a>
-          </div>
+        <div class="d-grid gap-2 mt-3">
+          <a class="btn btn-sm btn-outline-secondary" href="{% url 'admin:index' %}">Django Admin</a>
+          <a class="btn btn-sm btn-outline-primary" href="{% url 'home' %}">View Site</a>
+          <a class="btn btn-sm btn-dark" href="{% url 'admin_logout' %}">Admin Logout</a>
         </div>
-      </aside>
-
-      <!-- Main -->
-      <div class="flex-grow-1">
-        <header class="admin-topbar px-4 py-3 d-flex justify-content-between align-items-center">
-          <div>
-            <div class="fw-bold fs-5">{% block page_title %}Admin Dashboard{% endblock %}</div>
-            <div class="text-muted small">{% block page_subtitle %}Overview & moderation queue{% endblock %}</div>
-          </div>
-          <div class="d-flex gap-2">
-            <span class="badge badge-soft">Last 30 days</span>
-          </div>
-        </header>
-
-        <main class="p-4">
-          {% block content %}{% endblock %}
-        </main>
       </div>
+    </aside>
 
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div>
+          <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+          <p>{% block page_subtitle %}Platform operations at a glance{% endblock %}</p>
+        </div>
+        <div class="admin-topbar-actions">
+          {% block page_actions %}{% endblock %}
+        </div>
+      </header>
+
+      <main class="admin-content">
+        {% if admin_flash %}
+          <div class="alert alert-{{ admin_flash.level|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ admin_flash.message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endif %}
+        {% block content %}{% endblock %}
+      </main>
     </div>
   </div>
 

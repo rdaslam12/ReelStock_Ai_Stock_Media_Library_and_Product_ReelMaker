@@ -1,0 +1,96 @@
+============================================================
+  ReelStock — Text-to-Video Model Integration Guide
+============================================================
+
+LOCATION: studio/services/video_provider.py
+ENDPOINT: studio/views.py → generate_video_text()
+URL:      POST /generate/video/
+
+------------------------------------------------------------
+HOW TO ADD A TEXT-TO-VIDEO MODEL
+------------------------------------------------------------
+
+Step 1 — Choose a model
+  Free / open options to consider:
+  • Hugging Face Inference API: many text-to-video models
+    e.g. "damo-vilab/text-to-video-ms-1.7b"
+         "cerspense/zeroscope_v2_576w"
+  • fal.ai fast-sdxl-video (paid but cheap)
+  • Replicate.com — pay-per-second, many free trial credits
+  Note: Most free video models are low resolution (256-576px)
+        and short (2-4 seconds). That is acceptable here.
+
+Step 2 — Add your API key to .env
+  For Hugging Face:
+    HF_API_TOKEN=hf_xxxxxxxxxxxxxxxxxxxx  (already used for images)
+
+  For Replicate:
+    REPLICATE_API_KEY=r8_xxxxxxxxxxxxxxxxxxxx
+
+Step 3 — Add settings to reelstock/settings.py
+  TEXT_VIDEO_MODEL = os.environ.get('TEXT_VIDEO_MODEL', 'damo-vilab/text-to-video-ms-1.7b')
+  TEXT_VIDEO_API   = os.environ.get('TEXT_VIDEO_API', 'huggingface')   # 'huggingface' | 'replicate'
+
+Step 4 — Implement provider in studio/services/video_provider.py
+  Add a class TextToVideoProvider with a generate(prompt) method.
+  
+  Example skeleton for Hugging Face:
+  ─────────────────────────────────────
+  import requests, base64
+  from pathlib import Path
+  from uuid import uuid4
+  from django.conf import settings
+
+  class TextToVideoProvider:
+      def generate(self, prompt: str) -> str:
+          """Returns a relative media URL to the saved video file."""
+          headers = {"Authorization": f"Bearer {settings.HF_API_TOKEN}"}
+          payload = {"inputs": prompt}
+          resp = requests.post(
+              f"https://api-inference.huggingface.co/models/{settings.TEXT_VIDEO_MODEL}",
+              headers=headers, json=payload, timeout=120
+          )
+          resp.raise_for_status()
+          # Response is raw video bytes
+          output_dir = Path(settings.MEDIA_ROOT) / "generated_videos"
+          output_dir.mkdir(parents=True, exist_ok=True)
+          filename = f"{uuid4().hex}.mp4"
+          (output_dir / filename).write_bytes(resp.content)
+          return f"{settings.MEDIA_URL}generated_videos/{filename}"
+  ─────────────────────────────────────
+
+Step 5 — Wire into studio/views.py → generate_video_text()
+  Replace the placeholder return with:
+  ─────────────────────────────────────
+  from .services.video_provider import TextToVideoProvider, VideoGenerationError
+
+  @require_POST
+  def generate_video_text(request):
+      payload = json.loads(request.body or '{}')
+      prompt  = (payload.get('prompt') or '').strip()
+      if not prompt:
+          return JsonResponse({'success': False, 'error': 'Enter a prompt.'}, status=400)
+      provider = TextToVideoProvider()
+      try:
+          video_url = provider.generate(prompt)
+      except Exception as exc:
+          return JsonResponse({'success': False, 'error': str(exc)}, status=503)
+      return JsonResponse({'success': True, 'video_url': video_url})
+  ─────────────────────────────────────
+
+Step 6 — In the Generate page template (prompt_to_image.html)
+  The video result area and Publish button are already wired up.
+  Once your endpoint returns { success:true, video_url:"..." }
+  the video player will appear automatically.
+
+------------------------------------------------------------
+NOTES
+------------------------------------------------------------
+- The Reel Maker (create.html) uses fal.ai IMAGE-to-video
+  (FAL_API_KEY). That is a separate flow and already complete.
+- This guide covers only the TEXT-to-video path on the
+  Generate page.
+- Hugging Face free tier may queue requests — add polling
+  if the model returns HTTP 503 with "estimated_time".
+
+============================================================

@@ -1,0 +1,126 @@
+{% extends 'admin_base.html' %}
+{% block page_title %}Wallet & Coin Management{% endblock %}
+{% block page_subtitle %}Balances, transactions, coin requests, and download purchase activity{% endblock %}
+
+{% block content %}
+<div class="admin-kpi-grid compact mb-4">
+  <div class="admin-kpi-card"><span>Total balance</span><strong>{{ total_balance }} RC</strong><small>Across all wallets</small></div>
+  <div class="admin-kpi-card"><span>Wallets shown</span><strong>{{ wallets.paginator.count }}</strong><small>Filtered accounts</small></div>
+  <div class="admin-kpi-card"><span>Requests listed</span><strong>{{ coin_requests|length }}</strong><small>Latest matching requests</small></div>
+  <div class="admin-kpi-card"><span>Transactions listed</span><strong>{{ transactions|length }}</strong><small>Latest ledger rows</small></div>
+</div>
+
+<section class="admin-card mb-4">
+  <form class="row g-3 align-items-end" method="get">
+    <div class="col-lg-5">
+      <label class="form-label">Search wallets</label>
+      <input class="form-control" name="q" value="{{ filters.q }}" placeholder="username or email">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">Coin requests</label>
+      <select class="form-select" name="request_status">
+        <option value="">All</option>
+        <option value="pending" {% if filters.request_status == 'pending' %}selected{% endif %}>Pending</option>
+        <option value="approved" {% if filters.request_status == 'approved' %}selected{% endif %}>Approved</option>
+        <option value="rejected" {% if filters.request_status == 'rejected' %}selected{% endif %}>Rejected</option>
+      </select>
+    </div>
+    <div class="col-md-4">
+      <button class="btn btn-primary" type="submit">Filter</button>
+      <a class="btn btn-outline-secondary" href="{% url 'admin_wallets' %}">Reset</a>
+    </div>
+  </form>
+</section>
+
+<div class="row g-4">
+  <div class="col-xl-7">
+    <section class="admin-card">
+      <div class="admin-card-header"><h2>Wallets</h2></div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>User</th><th>Balance</th><th>Transactions</th><th>Updated</th><th></th></tr></thead>
+          <tbody>
+            {% for wallet in wallets %}
+              <tr>
+                <td><a href="{% url 'admin_user_detail' wallet.user.pk %}">@{{ wallet.user.username }}</a><div class="text-muted small">{{ wallet.user.email }}</div></td>
+                <td class="fw-bold">{{ wallet.balance }} RC</td>
+                <td>{{ wallet.txn_count }}</td>
+                <td class="text-muted small">{{ wallet.updated_at|date:"M d, Y H:i" }}</td>
+                <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="{% url 'admin_user_detail' wallet.user.pk %}">Adjust</a></td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5" class="text-muted">No wallets match those filters.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {% include 'moderation/_admin_pagination.html' with page_obj=wallets %}
+  </div>
+
+  <div class="col-xl-5">
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Coin Requests</h2></div>
+      <div class="admin-stack-list">
+        {% for req in coin_requests %}
+          <div class="admin-request-item">
+            <div>
+              <strong>@{{ req.user.username }} requested {{ req.amount }} RC</strong>
+              {% if req.usd_amount %}<span class="badge text-bg-info ms-1">${{ req.usd_amount }} USD</span>{% endif %}
+              <small class="d-block mt-1">
+                <strong>Payment:</strong>
+                {% if req.payment_method == 'paypal' %}
+                  <span style="color:#003087;font-weight:bold;">PayPal</span>
+                {% elif req.payment_method == 'applepay' %}
+                  <span style="background:#000;color:#fff;padding:1px 6px;border-radius:3px;font-size:0.75rem;">Apple Pay</span>
+                {% elif req.payment_method == 'googlepay' %}
+                  <span style="color:#4285F4;font-weight:bold;">Google Pay</span>
+                {% else %}
+                  <span class="text-muted">Not provided</span>
+                {% endif %}
+                {% if req.transaction_id %}
+                  &nbsp;·&nbsp; TXN: <code style="font-size:0.8rem;background:#f5f5f5;padding:1px 5px;border-radius:3px;">{{ req.transaction_id }}</code>
+                {% endif %}
+              </small>
+              <small>{{ req.reason|default:"No reason provided"|truncatechars:80 }}</small>
+              <small class="text-muted">{{ req.created_at|date:"M d, Y H:i" }}</small>
+            </div>
+            <span class="badge {% if req.status == 'pending' %}text-bg-warning{% elif req.status == 'approved' %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ req.status|title }}</span>
+            {% if req.status == 'pending' %}
+              <form method="post" action="{% url 'admin_coin_request_action' req.pk 'approve' %}" class="admin-inline-form">
+                {% csrf_token %}
+                <input class="form-control form-control-sm" name="admin_note" placeholder="Required admin note" required>
+                <button class="btn btn-sm btn-success" type="submit">Approve</button>
+              </form>
+              <form method="post" action="{% url 'admin_coin_request_action' req.pk 'reject' %}" class="admin-inline-form">
+                {% csrf_token %}
+                <input class="form-control form-control-sm" name="admin_note" placeholder="Required rejection reason" required>
+                <button class="btn btn-sm btn-outline-danger" type="submit">Reject</button>
+              </form>
+            {% endif %}
+          </div>
+        {% empty %}
+          <p class="text-muted mb-0">No coin requests.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <div class="admin-card-header"><h2>Recent Transactions</h2></div>
+      <div class="admin-stack-list">
+        {% for txn in transactions %}
+          <div class="admin-stack-item">
+            <div>
+              <strong>@{{ txn.wallet.user.username }}</strong>
+              <small>{{ txn.get_kind_display }} · {{ txn.note|default:"No note"|truncatechars:72 }}</small>
+            </div>
+            <span class="{% if txn.delta >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">{{ txn.delta }} RC</span>
+          </div>
+        {% empty %}
+          <p class="text-muted mb-0">No transactions yet.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

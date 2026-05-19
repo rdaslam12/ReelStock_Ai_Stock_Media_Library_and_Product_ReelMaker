@@ -1,12 +1,17 @@
 {% load static %}
-
 <div class="card h-100 shadow-sm">
   <a href="/asset/{{ asset.id }}/" class="text-decoration-none">
-    <img
-      src="{% static asset.thumbnail %}"
-      class="card-img-top"
-      alt="{{ asset.title }} thumbnail"
-    />
+    {% if asset.thumbnail %}
+      {% if asset.thumbnail|slice:":4" == "http" or asset.thumbnail|slice:":1" == "/" %}
+        <img src="{{ asset.thumbnail }}" class="card-img-top" alt="{{ asset.title }} thumbnail"/>
+      {% else %}
+        <img src="{% static asset.thumbnail %}" class="card-img-top" alt="{{ asset.title }} thumbnail"/>
+      {% endif %}
+    {% else %}
+      <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height:200px;">
+        <span class="text-white opacity-50">No image</span>
+      </div>
+    {% endif %}
   </a>
   <div class="card-body">
     <h5 class="card-title fs-6 fw-bold mb-1 text-truncate">{{ asset.title }}</h5>

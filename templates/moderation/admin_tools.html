@@ -1,0 +1,191 @@
+{% extends 'admin_base.html' %}
+{% block page_title %}Settings & Quick Tools{% endblock %}
+{% block page_subtitle %}Operational shortcuts and maintenance actions for daily administration{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-xl-6">
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Quick Links</h2></div>
+      <div class="admin-tool-grid">
+        <a class="admin-tool-tile" href="{{ django_admin_url }}">
+          <i class="bi bi-shield-lock"></i>
+          <strong>Django Admin</strong>
+          <small>Backup model admin</small>
+        </a>
+        <a class="admin-tool-tile" href="{{ public_home_url }}">
+          <i class="bi bi-house"></i>
+          <strong>Public Website</strong>
+          <small>Open the storefront</small>
+        </a>
+        <a class="admin-tool-tile" href="{% url 'admin_wallets' %}?request_status=pending">
+          <i class="bi bi-cash-coin"></i>
+          <strong>Coin Requests</strong>
+          <small>Review pending top-ups</small>
+        </a>
+        <a class="admin-tool-tile" href="{% url 'admin_assets' %}?status=failed">
+          <i class="bi bi-exclamation-triangle"></i>
+          <strong>Failed Content</strong>
+          <small>Inspect broken generations</small>
+        </a>
+      </div>
+    </section>
+
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Home Feed Featured Picks</h2></div>
+      <form method="post" action="{% url 'admin_featured_action' %}" class="row g-2 align-items-end mb-3">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add">
+        <div class="col-md-3">
+          <label class="form-label">Type</label>
+          <select class="form-select" name="asset_type" id="featuredAssetType">
+            <option value="image">Image</option>
+            <option value="video">Video</option>
+          </select>
+        </div>
+        <div class="col-md-5">
+          <label class="form-label">Asset ID</label>
+          <input class="form-control" name="asset_id" placeholder="Published asset ID" required>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Order</label>
+          <input class="form-control" type="number" name="order" value="0">
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-primary w-100" type="submit">Add</button>
+        </div>
+      </form>
+
+      <div class="admin-candidate-row mb-3">
+        <strong>Recent image IDs:</strong>
+        {% for image in image_candidates|slice:":8" %}
+          <a href="{% url 'admin_asset_detail' 'image' image.pk %}">#{{ image.pk }}</a>
+        {% empty %}<span class="text-muted">No published images</span>{% endfor %}
+      </div>
+      <div class="admin-candidate-row mb-3">
+        <strong>Recent video IDs:</strong>
+        {% for video in video_candidates|slice:":8" %}
+          <a href="{% url 'admin_asset_detail' 'video' video.pk %}">#{{ video.pk }}</a>
+        {% empty %}<span class="text-muted">No published videos</span>{% endfor %}
+      </div>
+
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Featured Asset</th><th>Order</th><th></th></tr></thead>
+          <tbody>
+            {% for item in featured_items %}
+              {% with asset=item.get_asset %}
+              <tr>
+                <td>
+                  {% if asset %}
+                    {{ item.asset_type|title }} #{{ asset.pk }} · {{ asset.display_title|truncatechars:52 }}
+                    <div class="text-muted small">@{{ asset.user.username }}</div>
+                  {% else %}
+                    Missing asset
+                  {% endif %}
+                </td>
+                <td>
+                  <form method="post" action="{% url 'admin_featured_action' %}" class="admin-inline-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update">
+                    <input type="hidden" name="item_id" value="{{ item.pk }}">
+                    <input class="form-control form-control-sm" type="number" name="order" value="{{ item.order }}" style="width:90px;">
+                    <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
+                  </form>
+                </td>
+                <td>
+                  <form method="post" action="{% url 'admin_featured_action' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="remove">
+                    <input type="hidden" name="item_id" value="{{ item.pk }}">
+                    <button class="btn btn-sm btn-outline-danger" type="submit">Remove</button>
+                  </form>
+                </td>
+              </tr>
+              {% endwith %}
+            {% empty %}
+              <tr><td colspan="3" class="text-muted">No featured items configured.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div class="col-xl-6">
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Maintenance</h2></div>
+      <div class="admin-stack-list">
+        <div class="admin-stack-item">
+          <div>
+            <strong>Sync local video file references</strong>
+            <small>Backfills video_file when video_url points into /media/.</small>
+          </div>
+          <form method="post" action="{% url 'admin_sync_video_files' %}">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-primary" type="submit">Run</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Home Feed Blog Posts</h2></div>
+      <form method="post" action="{% url 'admin_blog_create' %}" class="vstack gap-2 mb-4">
+        {% csrf_token %}
+        <input class="form-control" name="title" placeholder="New post title" required>
+        <input class="form-control" name="category" placeholder="Category" value="Updates">
+        <textarea class="form-control" name="excerpt" rows="2" placeholder="Short excerpt"></textarea>
+        <textarea class="form-control" name="body" rows="5" placeholder="Post body" required></textarea>
+        <div class="row g-2 align-items-center">
+          <div class="col-md-4"><input class="form-control" type="number" name="home_order" value="0" placeholder="Home order"></div>
+          <div class="col-md-4"><label class="form-check"><input class="form-check-input" type="checkbox" name="is_published" checked> Published</label></div>
+          <div class="col-md-4"><label class="form-check"><input class="form-check-input" type="checkbox" name="show_on_home" checked> Show on home</label></div>
+        </div>
+        <button class="btn btn-primary" type="submit">Create Blog Post</button>
+      </form>
+
+      <div class="admin-stack-list">
+        {% for post in blog_posts %}
+          <div class="admin-request-item">
+            <form method="post" action="{% url 'admin_blog_save' post.pk %}" class="vstack gap-2">
+              {% csrf_token %}
+              <input class="form-control form-control-sm" name="title" value="{{ post.title }}" required>
+              <div class="row g-2">
+                <div class="col-md-5"><input class="form-control form-control-sm" name="category" value="{{ post.category }}"></div>
+                <div class="col-md-3"><input class="form-control form-control-sm" type="number" name="home_order" value="{{ post.home_order }}"></div>
+                <div class="col-md-2"><label class="form-check small"><input class="form-check-input" type="checkbox" name="is_published" {% if post.is_published %}checked{% endif %}> Published</label></div>
+                <div class="col-md-2"><label class="form-check small"><input class="form-check-input" type="checkbox" name="show_on_home" {% if post.show_on_home %}checked{% endif %}> Home</label></div>
+              </div>
+              <textarea class="form-control form-control-sm" name="excerpt" rows="2">{{ post.excerpt }}</textarea>
+              <textarea class="form-control form-control-sm" name="body" rows="4" required>{{ post.body }}</textarea>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-primary" type="submit">Save</button>
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'blog_detail' post.slug %}" target="_blank">Open</a>
+              </div>
+            </form>
+            <form method="post" action="{% url 'admin_blog_delete' post.pk %}" onsubmit="return confirm('Delete this blog post?');">
+              {% csrf_token %}
+              <button class="btn btn-sm btn-outline-danger mt-2" type="submit">Delete</button>
+            </form>
+          </div>
+        {% empty %}
+          <p class="text-muted mb-0">No blog posts yet.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <div class="admin-card-header"><h2>System Snapshot</h2></div>
+      <dl class="admin-meta-list mb-0">
+        <dt>Admin session cookie</dt><dd>reelstock_admin_sessionid</dd>
+        <dt>Cookie path</dt><dd>/admin-panel/</dd>
+        <dt>Local video candidates</dt><dd>{{ local_video_candidates }}</dd>
+        <dt>Orphan wallets</dt><dd>{{ orphan_wallets }}</dd>
+        <dt>Default image price</dt><dd>40 RC when published</dd>
+        <dt>Default video price</dt><dd>100 RC when published</dd>
+      </dl>
+    </section>
+  </div>
+</div>
+{% endblock %}

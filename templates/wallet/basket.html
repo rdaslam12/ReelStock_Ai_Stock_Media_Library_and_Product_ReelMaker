@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block title %}Download Basket – ReelStock{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:1180px;">
+
+  <div class="basket-page-header reveal-up">
+    <div>
+      <h2 class="fw-bold mb-1">🧺 Download Basket</h2>
+      <p class="text-muted mb-0">
+        {% if item_count %}
+          {{ item_count }} item{{ item_count|pluralize }} ready to download — pay with Reel Coins.
+        {% else %}
+          Add assets from the Library to download them as a single ZIP.
+        {% endif %}
+      </p>
+    </div>
+
+    <a href="{% url 'wallet_page' %}" class="basket-balance-card">
+      <span class="basket-balance-icon">🪙</span>
+      <div>
+        <div class="basket-balance-num">{{ balance }} <small class="basket-balance-label">RC</small></div>
+        <div class="basket-balance-label">Your balance</div>
+      </div>
+    </a>
+  </div>
+
+  {% if items %}
+    <div class="basket-grid reveal-up">
+
+      <!-- Left: items list -->
+      <div class="basket-list">
+        {% for item in items %}
+          <div class="basket-row" id="basket-row-{{ item.pk }}">
+            <a href="{% url 'asset_detail' item.asset_type item.asset.pk %}" class="basket-thumb {% if item.asset_type == 'video' %}basket-thumb-video{% endif %}">
+              {% if item.thumb_url %}
+                <img src="{{ item.thumb_url }}" alt="{{ item.title }}" loading="lazy">
+              {% endif %}
+            </a>
+
+            <div class="basket-row-meta">
+              <a class="text-decoration-none text-dark"
+                 href="{% url 'asset_detail' item.asset_type item.asset.pk %}">
+                <div class="basket-row-title">{{ item.title }}</div>
+              </a>
+              <div class="basket-row-sub">
+                {% if item.asset_type == 'image' %}
+                  🖼 Image
+                  {% if item.image.style %}· {{ item.image.style }}{% endif %}
+                  · by {{ item.image.user.get_full_name|default:item.image.user.username }}
+                {% else %}
+                  🎬 Reel
+                  {% if item.video.category %}· {{ item.video.category }}{% endif %}
+                  · by {{ item.video.user.get_full_name|default:item.video.user.username }}
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="basket-row-price">
+              🪙 {{ item.coin_price_snapshot }} RC
+            </div>
+
+            <form method="post" action="{% url 'basket_remove' item.pk %}" class="d-inline" data-basket-remove>
+              {% csrf_token %}
+              <button type="submit" class="basket-remove-btn" title="Remove from basket">✕</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- Right: summary -->
+      <aside class="basket-summary">
+        <h5>Order Summary</h5>
+
+        <div class="basket-summary-row">
+          <span>Items</span>
+          <span><strong>{{ item_count }}</strong></span>
+        </div>
+        <div class="basket-summary-row">
+          <span>Subtotal</span>
+          <span><strong>🪙 {{ total_coins }} RC</strong></span>
+        </div>
+        <div class="basket-summary-row">
+          <span>Your balance</span>
+          <span class="{% if not enough_balance %}warn{% endif %}">
+            🪙 {{ balance }} RC
+          </span>
+        </div>
+
+        <div class="basket-summary-row total">
+          <span>Total to pay</span>
+          <span>🪙 {{ total_coins }} RC</span>
+        </div>
+
+        {% if enough_balance %}
+          <form method="post" action="{% url 'basket_confirm' %}">
+            {% csrf_token %}
+            <button type="submit" class="basket-confirm-btn">
+              ✨ Confirm & Download ZIP
+            </button>
+          </form>
+          <p class="text-muted small text-center mt-2 mb-0">
+            After confirmation, you'll have <strong>🪙 {{ remaining_after }} RC</strong> left.
+          </p>
+        {% else %}
+          <button class="basket-confirm-btn" disabled title="Not enough coins">
+            ✨ Confirm & Download
+          </button>
+          <div class="alert alert-warning rounded-3 mt-3 mb-0 small">
+            ⚠️ You need <strong>{{ coins_short }}</strong> more RC to checkout.
+          </div>
+          <button type="button" class="basket-confirm-btn mt-2"
+                  style="background:linear-gradient(135deg,#f59e0b,#ef4444);"
+                  data-bs-toggle="modal" data-bs-target="#requestCoinsModal">
+            🪙 Request More Coins
+          </button>
+        {% endif %}
+
+        <form method="post" action="{% url 'basket_clear' %}" onsubmit="return confirm('Empty the entire basket?');">
+          {% csrf_token %}
+          <button type="submit" class="basket-clear-btn">Clear basket</button>
+        </form>
+
+        <p class="text-muted small mt-3 mb-0" style="font-size:0.78rem;">
+          🔒 Your basket is saved automatically. It stays even if you refresh
+          or visit other pages. It only clears when you check out or remove items.
+        </p>
+      </aside>
+    </div>
+  {% else %}
+    <div class="basket-list basket-empty-state reveal-up">
+      <div class="basket-empty-icon">🧺</div>
+      <h4 class="fw-bold mt-3">Your basket is empty</h4>
+      <p class="text-muted mb-4">Browse the Library and tap "Add to Basket" on any image or reel.</p>
+      <a href="{% url 'library' %}" class="btn btn-primary rounded-pill px-5">Browse Library</a>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Request More Coins modal -->
+<div class="modal fade" id="requestCoinsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">🪙 Request More Coins</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 pb-4">
+        <p class="text-muted small mb-3">
+          Request a coin top-up. An admin will review your request — once approved,
+          coins are added to your wallet automatically.
+        </p>
+        <form method="post" action="{% url 'request_coins' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">How many coins?</label>
+            <input class="form-control rounded-3" type="number" name="amount" id="reqAmount"
+                   min="1" max="10000" placeholder="e.g. 100" required>
+            <div class="coin-quick-amounts">
+              <button type="button" class="coin-quick-amount" onclick="document.getElementById('reqAmount').value=50">50</button>
+              <button type="button" class="coin-quick-amount" onclick="document.getElementById('reqAmount').value=100">100</button>
+              <button type="button" class="coin-quick-amount" onclick="document.getElementById('reqAmount').value=250">250</button>
+              <button type="button" class="coin-quick-amount" onclick="document.getElementById('reqAmount').value=500">500</button>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Why? (optional)</label>
+            <textarea class="form-control rounded-3" name="reason" rows="3"
+                      placeholder="Tell the admin why you need more coins…"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-bold rounded-3">Submit Request</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // AJAX-removable items — fall back to plain form if JS disabled.
+  document.querySelectorAll('form[data-basket-remove]').forEach(function (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var row = form.closest('.basket-row');
+      fetch(form.action, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'X-CSRFToken': window.RS.csrfToken,
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (!data.ok) {
+            window.rsToast('Could not remove item.', 'error');
+            return;
+          }
+          window.rsUpdateNavbar(data.count, data.balance);
+          if (row) {
+            row.style.transition = 'opacity 0.25s, transform 0.25s';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(-20px)';
+            setTimeout(function () { window.location.reload(); }, 280);
+          } else {
+            window.location.reload();
+          }
+        })
+        .catch(function () { window.location.reload(); });
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends 'admin_base.html' %}
+{% block page_title %}{{ managed_user.get_full_name|default:managed_user.username }}{% endblock %}
+{% block page_subtitle %}@{{ managed_user.username }} · {{ managed_user.email|default:"no email" }}{% endblock %}
+{% block page_actions %}
+  <a class="btn btn-outline-secondary" href="{% url 'admin_users' %}">Back to Users</a>
+{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-xl-4">
+    <section class="admin-card mb-4">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <div class="admin-profile-avatar">{{ managed_user.username|slice:":1"|upper }}</div>
+        <div>
+          <h2 class="h5 mb-1">{{ managed_user.get_full_name|default:managed_user.username }}</h2>
+          <div class="text-muted">@{{ managed_user.username }}</div>
+        </div>
+      </div>
+      <dl class="admin-meta-list">
+        <dt>Status</dt><dd>{% if managed_user.is_active %}Active{% else %}Inactive{% endif %}</dd>
+        <dt>Role</dt><dd>{% if managed_user.is_superuser %}Superuser{% elif managed_user.is_staff %}Staff{% else %}Customer{% endif %}</dd>
+        <dt>Joined</dt><dd>{{ managed_user.date_joined|date:"M d, Y H:i" }}</dd>
+        <dt>Last login</dt><dd>{{ managed_user.last_login|date:"M d, Y H:i"|default:"Never" }}</dd>
+        <dt>Bio</dt><dd>{{ managed_user.profile.bio|default:"No bio" }}</dd>
+      </dl>
+    </section>
+
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Account Controls</h2></div>
+      <div class="d-grid gap-2">
+        <form method="post" action="{% url 'admin_user_action' managed_user.pk 'toggle-active' %}">
+          {% csrf_token %}
+          <textarea class="form-control mb-2" name="admin_note" rows="2" required placeholder="Required reason for account status change"></textarea>
+          <button class="btn btn-outline-danger w-100" type="submit">
+            {% if managed_user.is_active %}Deactivate User{% else %}Activate User{% endif %}
+          </button>
+        </form>
+        <form method="post" action="{% url 'admin_user_action' managed_user.pk 'toggle-staff' %}">
+          {% csrf_token %}
+          <textarea class="form-control mb-2" name="admin_note" rows="2" required placeholder="Required reason for staff access change"></textarea>
+          <button class="btn btn-outline-primary w-100" type="submit">
+            {% if managed_user.is_staff %}Remove Staff Access{% else %}Grant Staff Access{% endif %}
+          </button>
+        </form>
+        <form method="post" action="{% url 'admin_user_action' managed_user.pk 'toggle-superuser' %}">
+          {% csrf_token %}
+          <textarea class="form-control mb-2" name="admin_note" rows="2" required placeholder="Required reason for superuser access change"></textarea>
+          <button class="btn btn-outline-dark w-100" type="submit">
+            {% if managed_user.is_superuser %}Remove Superuser{% else %}Grant Superuser{% endif %}
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <div class="admin-card-header"><h2>Wallet</h2><span>{{ wallet.balance }} RC</span></div>
+      <form method="post" action="{% url 'admin_user_adjust_wallet' managed_user.pk %}" class="vstack gap-2">
+        {% csrf_token %}
+        <input class="form-control" type="number" name="amount" placeholder="+100 or -50" required>
+        <textarea class="form-control" name="admin_note" rows="2" required placeholder="Required adjustment note"></textarea>
+        <button class="btn btn-primary" type="submit">Apply Coin Adjustment</button>
+      </form>
+    </section>
+
+    <section class="admin-card mt-4">
+      <div class="admin-card-header"><h2>Admin Action Log</h2></div>
+      <div class="admin-stack-list">
+        {% for log in admin_logs %}
+          <div class="admin-stack-item">
+            <div>
+              <strong>{{ log.get_action_display }}</strong>
+              <small>{{ log.note|truncatechars:90 }}</small>
+            </div>
+            <span class="text-muted small">{{ log.created_at|date:"M d" }}</span>
+          </div>
+        {% empty %}
+          <p class="text-muted mb-0">No admin actions logged for this user.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+
+  <div class="col-xl-8">
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Generated Images</h2><span>{{ images|length }}</span></div>
+      <div class="admin-mini-grid">
+        {% for img in images %}
+          <a class="admin-mini-asset" href="{% url 'admin_asset_detail' 'image' img.pk %}">
+            {% if img.media_url %}<img src="{{ img.media_url }}" alt="">{% endif %}
+            <span>{{ img.display_title|truncatechars:34 }}</span>
+          </a>
+        {% empty %}
+          <p class="text-muted mb-0">No images.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Generated Reels</h2><span>{{ videos|length }}</span></div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Reel</th><th>Status</th><th>Published</th><th>Date</th></tr></thead>
+          <tbody>
+            {% for vid in videos %}
+              <tr>
+                <td><a href="{% url 'admin_asset_detail' 'video' vid.pk %}">{{ vid.display_title }}</a></td>
+                <td>{{ vid.status|title }}</td>
+                <td>{% if vid.is_published %}Yes{% else %}No{% endif %}</td>
+                <td class="text-muted small">{{ vid.created_at|date:"M d, Y" }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4" class="text-muted">No reels.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="row g-4">
+      <div class="col-lg-6">
+        <section class="admin-card h-100">
+          <div class="admin-card-header"><h2>Recent Transactions</h2></div>
+          <div class="admin-stack-list">
+            {% for txn in transactions %}
+              <div class="admin-stack-item">
+                <div><strong>{{ txn.delta }} RC</strong><small>{{ txn.get_kind_display }}</small></div>
+                <span class="text-muted small">{{ txn.created_at|date:"M d" }}</span>
+              </div>
+            {% empty %}<p class="text-muted mb-0">No transactions.</p>{% endfor %}
+          </div>
+        </section>
+      </div>
+      <div class="col-lg-6">
+        <section class="admin-card h-100">
+          <div class="admin-card-header"><h2>Collections & Basket</h2></div>
+          <div class="admin-stack-list">
+            <div class="admin-stack-item"><strong>Collections</strong><span>{{ collections|length }}</span></div>
+            <div class="admin-stack-item"><strong>Bookmarks</strong><span>{{ bookmarks|length }}</span></div>
+            <div class="admin-stack-item"><strong>Basket Items</strong><span>{{ basket_items|length }}</span></div>
+            <div class="admin-stack-item"><strong>Coin Requests</strong><span>{{ coin_requests|length }}</span></div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

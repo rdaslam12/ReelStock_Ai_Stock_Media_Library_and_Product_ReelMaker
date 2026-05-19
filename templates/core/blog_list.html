@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Blog – ReelStock{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:1100px;">
+  <div class="mb-5 text-center reveal-up">
+    <h1 class="fw-bold mb-2">ReelStock Blog</h1>
+    <p class="text-muted">Tips, tutorials, and updates from the ReelStock team.</p>
+  </div>
+
+  {% if posts %}
+    <div class="row g-4">
+      {% for post in posts %}
+        <div class="col-md-6 col-lg-4 reveal-up">
+          <a href="{% url 'blog_detail' post.slug %}" class="text-decoration-none h-100">
+            <div class="blog-card h-100">
+              <div class="blog-card-cat">{{ post.category }}</div>
+              <h5 class="blog-card-title">{{ post.title }}</h5>
+              <p class="blog-card-excerpt">{{ post.excerpt|default:post.body|truncatechars:140 }}</p>
+              <div class="blog-card-footer">
+                <span>{{ post.author.get_full_name|default:post.author.username|default:"Team" }}</span>
+                <span>{{ post.created_at|date:"M d, Y" }}</span>
+              </div>
+              <span class="blog-card-read">Read more →</span>
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5">
+      <div style="font-size:3rem;">📝</div>
+      <h4 class="mt-3 mb-2">No posts yet</h4>
+      <p class="text-muted">Check back soon — new articles are on the way.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

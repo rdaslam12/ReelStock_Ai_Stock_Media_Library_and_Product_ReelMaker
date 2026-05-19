@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+{% block title %}My Wallet – ReelStock{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:1100px;">
+
+  <!-- Hero balance card -->
+  <div class="wallet-hero reveal-up">
+    <div class="wallet-hero-content">
+      <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+        <div>
+          <div class="wallet-hero-label">Reel Coin Balance</div>
+          <div class="wallet-hero-balance">
+            <span class="wallet-hero-coin">🪙</span>
+            <span>{{ wallet.balance }}</span>
+            <span class="wallet-hero-currency">RC</span>
+          </div>
+          <p class="mb-0 mt-2" style="opacity:.85;font-size:0.92rem;">
+            Use coins to download images and reels from the community Library.
+          </p>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+          <a href="{% url 'basket_page' %}" class="btn btn-light rounded-pill px-4 fw-bold">
+            🧺 View Basket
+          </a>
+          <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold"
+                  data-bs-toggle="modal" data-bs-target="#requestCoinsModal">
+            ➕ Buy More Coins
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pricing-banner reveal-up">
+    <div class="pricing-banner-inner">
+      <span class="pricing-banner-icon">💡</span>
+      <span><strong>Coin Pricing:</strong> 50 RC = $1.00 · 100 RC = $2.00 · 250 RC = $5.00 · 500 RC = $10.00</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="wallet-stat-row reveal-up">
+    <div class="wallet-stat-card blue">
+      <div class="wallet-stat-card-label">Current Balance</div>
+      <div class="wallet-stat-card-num">{{ wallet.balance }}</div>
+    </div>
+    <div class="wallet-stat-card green">
+      <div class="wallet-stat-card-label">Total Earned</div>
+      <div class="wallet-stat-card-num">+{{ total_earned }}</div>
+    </div>
+    <div class="wallet-stat-card red">
+      <div class="wallet-stat-card-label">Total Spent</div>
+      <div class="wallet-stat-card-num">−{{ total_spent }}</div>
+    </div>
+  </div>
+
+  <!-- Transaction history -->
+  <div class="wallet-section reveal-up">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">📒 Transaction History</h5>
+      <span class="text-muted small">Last {{ transactions|length }} entr{{ transactions|length|pluralize:"y,ies" }}</span>
+    </div>
+
+    {% if transactions %}
+      <div class="table-responsive">
+        <table class="txn-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Note</th>
+              <th class="text-end">Change</th>
+              <th class="text-end">Balance</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for txn in transactions %}
+              <tr>
+                <td><span class="text-muted small">{{ txn.created_at|date:"M d, Y · g:i a" }}</span></td>
+                <td><span class="txn-kind-badge">{{ txn.get_kind_display }}</span></td>
+                <td><span class="text-muted small">{{ txn.note|default:"—"|truncatechars:60 }}</span></td>
+                <td class="text-end">
+                  <span class="{% if txn.delta >= 0 %}txn-delta-pos{% else %}txn-delta-neg{% endif %}">
+                    {% if txn.delta >= 0 %}+{% endif %}{{ txn.delta }} RC
+                  </span>
+                </td>
+                <td class="text-end fw-bold">{{ txn.balance_after }} RC</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted text-center py-4 mb-0">No transactions yet. Start downloading from the Library!</p>
+    {% endif %}
+  </div>
+
+  <!-- Coin requests history -->
+  <div class="wallet-section reveal-up">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0">📨 Payment Requests</h5>
+      <button type="button" class="btn btn-sm btn-outline-primary rounded-pill"
+              data-bs-toggle="modal" data-bs-target="#requestCoinsModal">
+        + Buy Coins
+      </button>
+    </div>
+    {% if coin_requests %}
+      {% for req in coin_requests %}
+        <div class="coin-req-row">
+          <span class="coin-req-amount">🪙 {{ req.amount }}</span>
+          <div class="flex-grow-1" style="min-width:0;">
+            <div class="fw-semibold d-flex align-items-center flex-wrap gap-2" style="font-size:0.9rem;">
+              {% if req.payment_method == 'paypal' %}
+                <span class="pay-method-badge paypal-badge">PayPal</span>
+              {% elif req.payment_method == 'applepay' %}
+                <span class="pay-method-badge apple-badge">Apple Pay</span>
+              {% elif req.payment_method == 'googlepay' %}
+                <span class="pay-method-badge google-badge">Google Pay</span>
+              {% endif %}
+              {% if req.usd_amount %}
+                <span class="text-success fw-bold">${{ req.usd_amount }} USD</span>
+              {% endif %}
+              {% if req.transaction_id %}
+                <span class="text-muted small">TXN: <code>{{ req.transaction_id }}</code></span>
+              {% endif %}
+            </div>
+            <div class="text-muted small">
+              Requested {{ req.created_at|date:"M d, Y" }}
+              {% if req.resolved_at %}
+                · resolved {{ req.resolved_at|date:"M d, Y" }}
+                {% if req.resolved_by %}by {{ req.resolved_by.username }}{% endif %}
+              {% endif %}
+              {% if req.admin_note %}<br><em>"{{ req.admin_note }}"</em>{% endif %}
+              {% if req.reason %}<br>{{ req.reason|truncatechars:100 }}{% endif %}
+            </div>
+          </div>
+          <span class="coin-req-status {{ req.status }}">{{ req.get_status_display }}</span>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted text-center py-3 mb-0">No payment requests yet.</p>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Buy Coins modal -->
+<div class="modal fade" id="requestCoinsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width:580px;">
+    <div class="modal-content rounded-4 border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <div>
+          <h5 class="modal-title fw-bold">🪙 Buy Reel Coins</h5>
+          <p class="text-muted small mb-0">Choose a package, pay, then paste your transaction ID.</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 pb-4">
+        <div class="mb-4">
+          <label class="form-label fw-semibold small">1. Choose a package</label>
+          <div class="coin-pricing-grid" id="coinPricingGrid">
+            <button type="button" class="coin-price-option" data-coins="50">
+              <div class="coin-price-coins">50 RC</div>
+              <div class="coin-price-usd">$1.00</div>
+            </button>
+            <button type="button" class="coin-price-option" data-coins="100">
+              <div class="coin-price-coins">100 RC</div>
+              <div class="coin-price-usd">$2.00</div>
+            </button>
+            <button type="button" class="coin-price-option" data-coins="250">
+              <span class="coin-price-popular-label">Popular</span>
+              <div class="coin-price-coins">250 RC</div>
+              <div class="coin-price-usd">$5.00</div>
+            </button>
+            <button type="button" class="coin-price-option" data-coins="500">
+              <div class="coin-price-coins">500 RC</div>
+              <div class="coin-price-usd">$10.00</div>
+            </button>
+          </div>
+        </div>
+
+        <form method="post" action="{% url 'request_coins' %}" id="buyCoinsForm">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">2. Amount</label>
+            <div class="input-group">
+              <span class="input-group-text">🪙</span>
+              <input class="form-control" type="number" name="amount" id="rcAmount"
+                     min="1" max="10000" placeholder="e.g. 100" required>
+              <span class="input-group-text usd-preview-badge" id="usdPreview">= $0.00</span>
+            </div>
+            <div class="form-text">50 coins = $1.00 USD</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">3. Payment method</label>
+            <div class="payment-method-grid" id="paymentMethodGrid">
+              <button type="button" class="payment-method-card selected" data-method="paypal">
+                <span class="payment-method-logo fw-bold"><span style="color:#003087;">Pay</span><span style="color:#009cde;">Pal</span></span>
+                <span class="payment-method-name">PayPal</span>
+              </button>
+              <button type="button" class="payment-method-card" data-method="applepay">
+                <span class="payment-method-logo"><span class="pay-method-badge apple-badge">Apple Pay</span></span>
+                <span class="payment-method-name">Apple Pay</span>
+              </button>
+              <button type="button" class="payment-method-card" data-method="googlepay">
+                <span class="payment-method-logo"><span class="pay-method-badge google-badge">Google Pay</span></span>
+                <span class="payment-method-name">Google Pay</span>
+              </button>
+            </div>
+            <input type="hidden" name="payment_method" id="rcPayMethod" value="paypal">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">4. Transaction / Confirmation ID</label>
+            <input class="form-control rounded-3" type="text" name="transaction_id" id="rcTxnId"
+                   placeholder="e.g. PAY-8XM59113TM359211W" required>
+            <div class="form-text" id="rcTxnHint">After paying on PayPal, paste the Transaction ID from your confirmation email.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small">Why? (optional)</label>
+            <textarea class="form-control rounded-3" name="reason" rows="3"
+                      placeholder="Add any context for the admin..."></textarea>
+          </div>
+
+          <div class="payment-summary-box mb-3" id="paymentSummary" style="display:none;">
+            <div class="payment-summary-row"><span>Coins</span><strong id="summaryCoins">—</strong></div>
+            <div class="payment-summary-row"><span>Method</span><strong id="summaryMethod">PayPal</strong></div>
+            <div class="payment-summary-row"><span>Amount</span><strong id="summaryUsd" class="text-success">—</strong></div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-100 py-2 fw-bold rounded-3">Submit Payment Request</button>
+          <p class="payment-modal-note">Admin will verify the payment reference before crediting your coins.</p>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const modal = document.getElementById('requestCoinsModal');
+  if (!modal) return;
+
+  const methodNames = { paypal: 'PayPal', applepay: 'Apple Pay', googlepay: 'Google Pay' };
+  const placeholders = {
+    paypal: 'e.g. PAY-8XM59113TM359211W',
+    applepay: 'e.g. APC-20240513-789456123',
+    googlepay: 'e.g. GPY-TX-20240513-654321'
+  };
+  const hints = {
+    paypal: 'After paying on PayPal, paste the Transaction ID from your confirmation email.',
+    applepay: 'Find the confirmation code in your Apple Pay receipt or bank statement.',
+    googlepay: 'Copy the Transaction ID from your Google Pay activity.'
+  };
+
+  const amountInput = modal.querySelector('#rcAmount');
+  const methodInput = modal.querySelector('#rcPayMethod');
+  const txnInput = modal.querySelector('#rcTxnId');
+  const txnHint = modal.querySelector('#rcTxnHint');
+  const usdPreview = modal.querySelector('#usdPreview');
+  const summary = modal.querySelector('#paymentSummary');
+  const summaryCoins = modal.querySelector('#summaryCoins');
+  const summaryMethod = modal.querySelector('#summaryMethod');
+  const summaryUsd = modal.querySelector('#summaryUsd');
+
+  function usdForCoins(coins) {
+    return (Math.max(0, parseInt(coins, 10) || 0) / 50).toFixed(2);
+  }
+
+  function refreshSummary() {
+    const coins = parseInt(amountInput.value, 10) || 0;
+    const method = methodInput.value || 'paypal';
+    usdPreview.textContent = '= $' + usdForCoins(coins);
+    summary.style.display = coins > 0 ? 'block' : 'none';
+    summaryCoins.textContent = coins ? coins + ' RC' : '—';
+    summaryMethod.textContent = methodNames[method] || method;
+    summaryUsd.textContent = coins ? '$' + usdForCoins(coins) + ' USD' : '—';
+  }
+
+  function selectPackage(coins) {
+    amountInput.value = coins;
+    modal.querySelectorAll('.coin-price-option').forEach(button => {
+      button.classList.toggle('selected', button.dataset.coins === String(coins));
+    });
+    refreshSummary();
+  }
+
+  function selectMethod(method) {
+    methodInput.value = method;
+    modal.querySelectorAll('.payment-method-card').forEach(button => {
+      button.classList.toggle('selected', button.dataset.method === method);
+    });
+    txnInput.placeholder = placeholders[method] || '';
+    txnHint.textContent = hints[method] || '';
+    refreshSummary();
+  }
+
+  modal.addEventListener('click', event => {
+    const packageButton = event.target.closest('.coin-price-option');
+    if (packageButton && modal.contains(packageButton)) {
+      event.preventDefault();
+      selectPackage(packageButton.dataset.coins);
+      return;
+    }
+    const methodButton = event.target.closest('.payment-method-card');
+    if (methodButton && modal.contains(methodButton)) {
+      event.preventDefault();
+      selectMethod(methodButton.dataset.method);
+    }
+  });
+
+  amountInput.addEventListener('input', () => {
+    const amount = amountInput.value;
+    modal.querySelectorAll('.coin-price-option').forEach(button => {
+      button.classList.toggle('selected', button.dataset.coins === amount);
+    });
+    refreshSummary();
+  });
+
+  modal.querySelector('#buyCoinsForm').addEventListener('submit', event => {
+    if (!txnInput.value.trim()) {
+      event.preventDefault();
+      txnInput.focus();
+      txnInput.classList.add('is-invalid');
+    }
+  });
+
+  selectMethod('paypal');
+})();
+</script>
+{% endblock %}

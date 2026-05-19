@@ -1,0 +1,540 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Reel Maker – ReelStock{% endblock %}
+
+{% block content %}
+<div class="reel-maker-wrapper">
+  <div class="header-section">
+    <h1 class="page-title">Reel Maker</h1>
+    <p class="text-muted">Upload a product photo. AI removes the background, generates 5 cinematic scenes, and assembles them into a polished commercial reel.</p>
+  </div>
+
+  <div class="reel-maker-layout">
+
+    <!-- ── LEFT: Controls ── -->
+    <div class="controls-column">
+
+      <!-- Step 1 -->
+      <div class="glass-card">
+        <div class="card-header-flex">
+          <h3>1. PRODUCT TYPE</h3>
+          <span class="icon-small">⋮≡</span>
+        </div>
+        <p class="text-muted small mb-3">Sets the scene plan — watch, shoe, bag, or other.</p>
+        <div class="category-grid">
+          <div class="category-item active" data-category="Shoe"><span class="icon">👟</span><p>Shoe</p></div>
+          <div class="category-item" data-category="Watch"><span class="icon">⌚</span><p>Watch</p></div>
+          <div class="category-item" data-category="Bag"><span class="icon">🎒</span><p>Bag</p></div>
+          <div class="category-item" data-category="Other"><span class="icon">📦</span><p>Other</p></div>
+        </div>
+        <input type="hidden" id="selected-category" value="Shoe">
+        <div id="other-input-container" class="mt-3" style="display:none;">
+          <label class="small-label mb-1">Product Name</label>
+          <input type="text" id="other-product-name" class="form-control glass-input" placeholder="e.g. Sunglasses, Perfume…">
+        </div>
+
+        <!-- Scene plan preview -->
+        <div class="scene-plan-box mt-3" id="scene-plan-box"></div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="glass-card">
+        <div class="card-header-flex">
+          <h3>2. UPLOAD PRODUCT IMAGE</h3>
+          <span class="icon-small">📤</span>
+        </div>
+        <div class="upload-zone" id="drop-zone">
+          <div class="upload-content" id="upload-content">
+            <span style="font-size:2.2rem;">📷</span>
+            <p><strong>Drag & drop</strong> or click to upload</p>
+            <p class="text-muted small mb-0">JPG, PNG, WEBP — max 15MB</p>
+            <button type="button" class="btn-upload mt-3" id="uploadBtn">+ Choose File</button>
+            <input type="file" id="imageInput" accept="image/*" hidden>
+          </div>
+          <div id="upload-preview" style="display:none;text-align:center;padding:16px;">
+            <img id="upload-thumb" style="max-height:150px;max-width:100%;border-radius:10px;object-fit:contain;" alt="">
+            <p id="upload-filename" class="text-muted mt-2 mb-1" style="font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;margin:0 auto;"></p>
+            <button type="button" id="changeImgBtn" class="btn btn-xs btn-outline-secondary rounded-pill mt-1">Change image</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="glass-card">
+        <div class="card-header-flex">
+          <h3>3. CREATE REEL</h3>
+          <span class="icon-small">⚙</span>
+        </div>
+        <div class="reel-feature-list mb-3">
+          <div class="reel-feature">🔍 <span>AI removes your product background</span></div>
+          <div class="reel-feature">🎨 <span>5 cinematic scenes with rim light &amp; grading</span></div>
+          <div class="reel-feature">🎬 <span>Ken Burns + zoom morph, whip-pan &amp; flash cuts</span></div>
+          <div class="reel-feature">💡 <span>Scene-aware spotlight &amp; shadow compositing</span></div>
+          <div class="reel-feature">⏱️ <span>~1–3 min — fully local, no video API needed</span></div>
+        </div>
+        {% if user.is_authenticated %}
+          <button type="button" id="generateBtn" class="btn-generate-premium w-100">✨ Generate Reel</button>
+        {% else %}
+          <button class="btn-generate-premium w-100" data-bs-toggle="modal" data-bs-target="#loginModal">🔒 Log in to Generate</button>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── RIGHT: Preview ── -->
+    <div class="preview-column">
+      <div class="glass-card preview-card-premium d-flex flex-column">
+        <div class="card-header-flex">
+          <h3>PREVIEW</h3>
+          <span class="info-icon" title="Your reel will appear here once generated">ⓘ</span>
+        </div>
+
+        <!-- Canvas -->
+        <div class="reel-canvas" id="reel-canvas">
+          <div id="reel-placeholder" class="reel-placeholder">
+            <span style="font-size:3.2rem;">🎬</span>
+            <p>Your product reel<br>will appear here</p>
+          </div>
+          <div class="loader-overlay" id="loader-overlay" style="display:none;">
+            <div class="spinner-premium"></div>
+            <p id="loader-msg" class="loader-msg-text">PROCESSING…</p>
+          </div>
+          <video id="result-video"
+                 style="display:none;width:100%;height:100%;object-fit:contain;border-radius:16px;"
+                 controls loop playsinline></video>
+        </div>
+
+        <!-- Pipeline step tracker -->
+        <div id="pipeline-steps" class="pipeline-steps mt-3" style="display:none;">
+          <div class="pipe-step" id="pipe-upload">
+            <span class="pipe-dot pipe-done">✓</span>
+            <span class="pipe-label">Image uploaded</span>
+          </div>
+          <div class="pipe-step" id="pipe-bg">
+            <span class="pipe-dot pipe-pending" id="dot-bg">◌</span>
+            <span class="pipe-label" id="lbl-bg">Removing background…</span>
+          </div>
+          <div class="pipe-step" id="pipe-scenes">
+            <span class="pipe-dot pipe-pending" id="dot-scenes">◌</span>
+            <span class="pipe-label" id="lbl-scenes">Generating 5 cinematic scenes…</span>
+          </div>
+          <div class="pipe-step" id="pipe-composite">
+            <span class="pipe-dot pipe-pending" id="dot-composite">◌</span>
+            <span class="pipe-label" id="lbl-composite">Compositing product into scenes…</span>
+          </div>
+          <div class="pipe-step" id="pipe-video">
+            <span class="pipe-dot pipe-pending" id="dot-video">◌</span>
+            <span class="pipe-label" id="lbl-video">Assembling reel with motion effects…</span>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="status-footer-premium mt-3">
+          <div class="status-labels">
+            <span id="status-label">READY</span>
+            <span id="status-percent">0%</span>
+          </div>
+          <div class="premium-progress-track">
+            <div class="premium-progress-fill" id="progress-bar"></div>
+          </div>
+        </div>
+
+        <!-- Action buttons (hidden until done) -->
+        <div id="reel-actions" class="mt-3 d-flex gap-2 justify-content-center flex-wrap"
+             style="display:none!important;">
+          <a id="download-reel-btn" href="#" target="_blank"
+             class="btn btn-outline-secondary rounded-pill px-4">⬇ Download MP4</a>
+          {% if user.is_authenticated %}
+            <button id="publishReelBtn" class="btn btn-primary rounded-pill px-4">📢 Publish to Library</button>
+          {% else %}
+            <button class="btn btn-primary rounded-pill px-4"
+                    data-bs-toggle="modal" data-bs-target="#loginModal">Publish</button>
+          {% endif %}
+          <button id="newReelBtn" class="btn btn-outline-secondary rounded-pill px-4">↺ New Reel</button>
+        </div>
+
+        <div id="publish-confirm" class="text-center text-success small mt-2" style="display:none;">
+          ✅ Published to Library!
+        </div>
+        <div id="error-msg" class="alert alert-danger mt-3 rounded-3 small" style="display:none;"></div>
+      </div>
+    </div>
+
+  </div><!-- /.reel-maker-layout -->
+</div><!-- /.reel-maker-wrapper -->
+{% endblock %}
+
+{% block scripts %}{{ block.super }}
+<style>
+/* ── Reel Maker extras ── */
+.scene-plan-box {
+  background: rgba(91,124,250,0.06);
+  border: 1px solid rgba(91,124,250,0.15);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: .78rem;
+  color: #444;
+  line-height: 1.9;
+  white-space: pre-line;
+}
+.scene-plan-box .plan-heading {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--primary);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  display: block;
+}
+.reel-feature-list { display:flex; flex-direction:column; gap:6px; }
+.reel-feature {
+  display:flex; align-items:center; gap:8px;
+  font-size:.82rem; color:#555;
+}
+/* Pipeline steps */
+.pipeline-steps { display:flex; flex-direction:column; gap:5px; padding:2px 0; }
+.pipe-step { display:flex; align-items:center; gap:10px; font-size:.8rem; color:#666; }
+.pipe-dot {
+  width:20px; height:20px; border-radius:50%;
+  display:inline-flex; align-items:center; justify-content:center;
+  font-size:.72rem; font-weight:700; flex-shrink:0;
+}
+.pipe-done    { background:#22c55e; color:#fff; }
+.pipe-active  { background:var(--primary); color:#fff; animation:pdot 1.1s ease-in-out infinite; }
+.pipe-pending { background:#e5e7eb; color:#999; }
+@keyframes pdot { 0%,100%{opacity:1} 50%{opacity:.45} }
+.loader-msg-text {
+  color:white; margin-top:12px; font-weight:700;
+  letter-spacing:1px; font-size:.82rem;
+}
+</style>
+
+<script>
+const SUBMIT_URL   = "{% url 'submit_reel' %}";
+const STATUS_BASE  = "/reel/status/";
+const PUBLISH_BASE = "/reel/publish/";
+const CSRF = "{{ csrf_token }}";
+
+// Scene plan descriptions shown under category select
+const SCENE_PLANS = {
+  Shoe: `🎬 Scene plan (6 frames):
+① Original product on studio dark bg
+② Clean flat-lay on white surface
+③ Urban street backdrop — bokeh lights
+④ Nature / green field exterior
+⑤ Moody dark editorial with rim light
+⑥ Hero close-up with gradient spotlight`,
+
+  Watch: `🎬 Scene plan (6 frames):
+① Original product on studio dark bg
+② Dark studio with polished floor reflection
+③ White Carrara marble surface
+④ City rooftop at dusk — warm bokeh
+⑤ Two people handshake — wrists context
+⑥ Hero warm amber gradient close-up`,
+
+  Bag: `🎬 Scene plan (6 frames):
+① Original product on studio dark bg
+② Clean white studio — pure product shot
+③ Parisian cobblestone street backdrop
+④ White marble luxury surface
+⑤ Warm boutique interior background
+⑥ Moody dark editorial — dramatic light`,
+
+  Other: `🎬 Scene plan (6 frames):
+① Original product on studio dark bg
+② Professional dark studio with spotlight
+③ Warm gradient lifestyle background
+④ Natural outdoor — greenery bokeh
+⑤ Dark wood texture artisan surface
+⑥ Clean minimal white — modern aesthetic`,
+};
+
+document.addEventListener("DOMContentLoaded", function () {
+  /* ── DOM refs ── */
+  const catItems      = document.querySelectorAll(".category-item");
+  const hiddenCat     = document.getElementById("selected-category");
+  const otherContainer= document.getElementById("other-input-container");
+  const scenePlanBox  = document.getElementById("scene-plan-box");
+  const imageInput    = document.getElementById("imageInput");
+  const uploadBtn     = document.getElementById("uploadBtn");
+  const changeImgBtn  = document.getElementById("changeImgBtn");
+  const uploadContent = document.getElementById("upload-content");
+  const uploadPreview = document.getElementById("upload-preview");
+  const uploadThumb   = document.getElementById("upload-thumb");
+  const uploadFilename= document.getElementById("upload-filename");
+  const dropZone      = document.getElementById("drop-zone");
+  const generateBtn   = document.getElementById("generateBtn");
+  const progressBar   = document.getElementById("progress-bar");
+  const statusLabel   = document.getElementById("status-label");
+  const statusPercent = document.getElementById("status-percent");
+  const loaderOverlay = document.getElementById("loader-overlay");
+  const loaderMsg     = document.getElementById("loader-msg");
+  const resultVideo   = document.getElementById("result-video");
+  const reelActions   = document.getElementById("reel-actions");
+  const downloadBtn   = document.getElementById("download-reel-btn");
+  const publishBtn    = document.getElementById("publishReelBtn");
+  const newReelBtn    = document.getElementById("newReelBtn");
+  const errorMsg      = document.getElementById("error-msg");
+  const publishConfirm= document.getElementById("publish-confirm");
+  const reelPlaceholder = document.getElementById("reel-placeholder");
+  const pipelineSteps = document.getElementById("pipeline-steps");
+
+  let pollInterval = null, progressTimer = null, currentVideoId = null;
+
+  /* ── Scene plan ── */
+  function renderScenePlan(cat) {
+    scenePlanBox.innerHTML =
+      `<span class="plan-heading">Shot plan</span>${SCENE_PLANS[cat] || SCENE_PLANS.Other}`;
+  }
+  renderScenePlan("Shoe");
+
+  /* ── Category select ── */
+  catItems.forEach(item => {
+    item.addEventListener("click", function () {
+      catItems.forEach(i => i.classList.remove("active"));
+      this.classList.add("active");
+      hiddenCat.value = this.dataset.category;
+      otherContainer.style.display = this.dataset.category === "Other" ? "block" : "none";
+      renderScenePlan(this.dataset.category);
+    });
+  });
+
+  /* ── Upload ── */
+  uploadBtn.addEventListener("click", () => imageInput.click());
+  if (changeImgBtn) changeImgBtn.addEventListener("click", () => imageInput.click());
+
+  dropZone.addEventListener("dragover",  e => { e.preventDefault(); dropZone.style.borderColor = "var(--primary2)"; });
+  dropZone.addEventListener("dragleave", () => { dropZone.style.borderColor = "var(--primary)"; });
+  dropZone.addEventListener("drop", e => {
+    e.preventDefault(); dropZone.style.borderColor = "var(--primary)";
+    if (e.dataTransfer.files.length) { imageInput.files = e.dataTransfer.files; handleFile(); }
+  });
+  imageInput.addEventListener("change", handleFile);
+
+  function handleFile() {
+    if (!imageInput.files || !imageInput.files.length) return;
+    const file = imageInput.files[0];
+    const reader = new FileReader();
+    reader.onload = e => {
+      uploadThumb.src = e.target.result;
+      const n = file.name;
+      uploadFilename.textContent = n.length > 30 ? n.slice(0, 14) + "…" + n.slice(-12) : n;
+      uploadContent.style.display = "none";
+      uploadPreview.style.display = "block";
+      // Hint in canvas
+      reelPlaceholder.style.backgroundImage = `url(${e.target.result})`;
+      reelPlaceholder.style.backgroundSize = "contain";
+      reelPlaceholder.style.backgroundRepeat = "no-repeat";
+      reelPlaceholder.style.backgroundPosition = "center";
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* ── Progress helpers ── */
+  function setProgress(pct, label) {
+    progressBar.style.width = pct + "%";
+    statusPercent.textContent = pct + "%";
+    if (label) statusLabel.textContent = label;
+  }
+
+  function dotDone(id) {
+    const el = document.getElementById(id);
+    if (el) { el.className = "pipe-dot pipe-done"; el.textContent = "✓"; }
+  }
+  function dotActive(id, labelId, txt) {
+    const el = document.getElementById(id);
+    if (el) { el.className = "pipe-dot pipe-active"; el.textContent = "◌"; }
+    const lbl = document.getElementById(labelId);
+    if (lbl && txt) lbl.textContent = txt;
+  }
+
+  /* ── Animated progress (mirrors real pipeline phases) ── */
+  function startAnimatedProgress() {
+    let p = 6;
+    setProgress(p, "REMOVING BACKGROUND…");
+    dotActive("dot-bg", "lbl-bg", "Removing background…");
+
+    // Milestones fired when progress bar crosses these thresholds.
+    // Chosen to roughly match pipeline timing:
+    //   0–22%  → bg removal  (~8–12s)
+    //   22–65% → scene gen   (~40–90s with HF, ~5s local)
+    //   65–87% → compositing (~5s)
+    //   87–96% → video assemble (~10s)
+    const milestones = [
+      { at: 22, fn: () => {
+        dotDone("dot-bg");
+        dotActive("dot-scenes","lbl-scenes","Generating 5 cinematic scenes…");
+        setProgress(22, "GENERATING SCENES…");
+      }},
+      { at: 65, fn: () => {
+        dotDone("dot-scenes");
+        dotActive("dot-composite","lbl-composite","Compositing with lighting & shadows…");
+        setProgress(65, "COMPOSITING…");
+      }},
+      { at: 87, fn: () => {
+        dotDone("dot-composite");
+        dotActive("dot-video","lbl-video","Assembling reel — zoom morph, whip-pan…");
+        setProgress(87, "ASSEMBLING REEL…");
+      }},
+    ];
+    let mi = 0;
+
+    return setInterval(() => {
+      if (p < 95) {
+        const speed = p < 22 ? 1.0 : p < 65 ? 0.45 : p < 87 ? 0.90 : 0.28;
+        p = Math.min(p + speed, 95);
+        setProgress(Math.round(p));
+      }
+      while (mi < milestones.length && p >= milestones[mi].at) {
+        milestones[mi].fn(); mi++;
+      }
+    }, 900);
+  }
+
+  /* ── Stage label from backend (shown in loader overlay) ── */
+  function updateStageLabel(stage) {
+    if (stage && loaderMsg) loaderMsg.textContent = stage.toUpperCase();
+  }
+
+  /* ── Error / Done ── */
+  function showError(msg) {
+    errorMsg.innerHTML = "<strong>⚠ Generation failed:</strong> " + msg +
+      "<br><small class='text-muted'>Check that your image is clear and try again.</small>";
+    errorMsg.style.display = "block";
+    loaderOverlay.style.display = "none";
+    if (pollInterval)  clearInterval(pollInterval);
+    if (progressTimer) clearInterval(progressTimer);
+    if (generateBtn) {
+      generateBtn.disabled = false;
+      generateBtn.textContent = "✨ Generate Reel";
+    }
+    setProgress(0, "FAILED");
+  }
+
+  function showDone(videoUrl) {
+    if (pollInterval)  clearInterval(pollInterval);
+    if (progressTimer) clearInterval(progressTimer);
+    loaderOverlay.style.display = "none";
+    dotDone("dot-bg"); dotDone("dot-scenes"); dotDone("dot-composite"); dotDone("dot-video");
+    setProgress(100, "COMPLETED!");
+    errorMsg.style.display = "none";
+
+    // Show video player — hide the placeholder
+    reelPlaceholder.style.display = "none";
+
+    if (videoUrl) {
+      // Force-reload by clearing src first, then setting it
+      resultVideo.removeAttribute("src");
+      resultVideo.load();
+      resultVideo.src = videoUrl;
+      resultVideo.style.cssText = "display:block;width:100%;height:100%;object-fit:contain;border-radius:16px;";
+      downloadBtn.href = videoUrl;
+      downloadBtn.setAttribute("download", "product-reel.mp4");
+    }
+
+    // Unhide action row (it has display:none!important in inline style, remove that first)
+    reelActions.removeAttribute("style");
+    reelActions.style.display = "flex";
+
+    if (generateBtn) {
+      generateBtn.disabled = false;
+      generateBtn.textContent = "✨ Generate Reel";
+    }
+  }
+
+  function startPolling(videoId) {
+    let failCount = 0;
+    return setInterval(async () => {
+      try {
+        const r = await fetch(`${STATUS_BASE}${videoId}/`);
+        if (!r.ok) { failCount++; if (failCount > 4) showError("Lost connection — please refresh."); return; }
+        failCount = 0;
+        const d = await r.json();
+        if (d.status === "done") {
+          showDone(d.video_url);
+        } else if (d.status === "failed") {
+          showError(d.error || "Generation failed. Please try again.");
+        } else {
+          // pending / processing — update stage label if provided
+          if (d.stage) updateStageLabel(d.stage);
+        }
+      } catch (e) {
+        failCount++;
+        if (failCount > 4) showError("Lost connection. Please refresh and try again.");
+      }
+    }, 4000);  // poll every 4 s
+  }
+
+  /* ── Generate button ── */
+  if (generateBtn) {
+    generateBtn.addEventListener("click", async function () {
+      if (!imageInput.files || !imageInput.files.length) {
+        alert("Please upload a product image first.");
+        return;
+      }
+
+      // Reset UI fully
+      errorMsg.style.display = "none";
+      publishConfirm.style.display = "none";
+      resultVideo.style.display = "none";
+      resultVideo.removeAttribute("src");
+      reelActions.style.display = "none";
+      reelPlaceholder.style.display = "flex";
+      this.disabled = true;
+      this.textContent = "Uploading…";
+      loaderOverlay.style.display = "flex";
+      loaderMsg.textContent = "UPLOADING…";
+      pipelineSteps.style.display = "flex";
+
+      // Reset pipeline dots
+      ["dot-bg","dot-scenes","dot-composite","dot-video"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.className = "pipe-dot pipe-pending"; el.textContent = "◌"; }
+      });
+      setProgress(3, "UPLOADING…");
+
+      const fd = new FormData();
+      fd.append("product_image", imageInput.files[0]);
+      fd.append("category", hiddenCat.value);
+      const otherName = document.getElementById("other-product-name");
+      if (hiddenCat.value === "Other" && otherName && otherName.value.trim())
+        fd.append("product_name", otherName.value.trim());
+      fd.append("csrfmiddlewaretoken", CSRF);
+
+      try {
+        const r = await fetch(SUBMIT_URL, { method: "POST", body: fd });
+        const d = await r.json();
+        if (!d.success) { showError(d.error || "Submission failed."); return; }
+
+        currentVideoId = d.video_id;
+        this.textContent = "Generating…";
+        loaderMsg.textContent = "GENERATING…";
+        progressTimer = startAnimatedProgress();
+        pollInterval  = startPolling(d.video_id);
+
+      } catch (e) {
+        showError("Network error. Please check your connection and try again.");
+      }
+    });
+  }
+
+  /* ── Publish ── */
+  if (publishBtn) {
+    publishBtn.addEventListener("click", async function () {
+      if (!currentVideoId) return;
+      this.disabled = true; this.textContent = "Publishing…";
+      try {
+        const fd = new FormData();
+        fd.append("csrfmiddlewaretoken", CSRF);
+        const r = await fetch(`${PUBLISH_BASE}${currentVideoId}/`, { method: "POST", body: fd });
+        const d = await r.json();
+        if (d.success) { this.style.display = "none"; publishConfirm.style.display = "block"; }
+        else throw new Error(d.error || "Publish failed.");
+      } catch (e) { this.disabled = false; this.textContent = "📢 Publish to Library"; }
+    });
+  }
+
+  if (newReelBtn) newReelBtn.addEventListener("click", () => location.reload());
+});
+</script>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Account Restricted – ReelStock{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:720px;">
+  <div class="bg-white border rounded-4 shadow-sm p-5 text-center">
+    <div class="mb-3" style="font-size:3rem;">⚠️</div>
+    <h2 class="fw-bold mb-2">Account Restricted</h2>
+    <p class="text-muted mb-4">
+      This account has been deactivated by the ReelStock admin team, so logged-in
+      platform features are unavailable. If you think this was a mistake, contact
+      the admin team and include your account email or username.
+    </p>
+    {% if admin_email %}
+      <a class="btn btn-primary rounded-pill px-4" href="mailto:{{ admin_email }}?subject={{ subject|urlencode }}">
+        Contact Admin
+      </a>
+    {% else %}
+      <a class="btn btn-primary rounded-pill px-4" href="mailto:?subject={{ subject|urlencode }}">
+        Contact Admin
+      </a>
+    {% endif %}
+    <a class="btn btn-outline-secondary rounded-pill px-4 ms-2" href="{% url 'home' %}">Back to Home</a>
+  </div>
+</div>
+{% endblock %}

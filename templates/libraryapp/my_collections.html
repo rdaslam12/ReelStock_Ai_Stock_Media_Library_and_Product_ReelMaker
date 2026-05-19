@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}My Collections – ReelStock{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:900px;">
+
+  <div class="d-flex align-items-center justify-content-between mb-4 reveal-up">
+    <div>
+      <h2 class="fw-bold mb-1">📁 My Collections</h2>
+      <p class="text-muted mb-0">Organize your favorite assets into named boards.</p>
+    </div>
+    <button class="btn btn-primary rounded-pill px-4" id="create-collection-btn">+ New Collection</button>
+  </div>
+
+  <!-- Create form (hidden by default) -->
+  <div id="create-collection-form" class="card border-0 shadow-sm rounded-3 mb-4 p-4 reveal-up" style="display:none;">
+    <h5 class="fw-semibold mb-3">Create a new collection</h5>
+    <div class="mb-3">
+      <input type="text" id="col-name" class="form-control rounded-3" placeholder="Collection name (e.g. Cyberpunk Vibes)" maxlength="100">
+    </div>
+    <div class="mb-3">
+      <input type="text" id="col-desc" class="form-control rounded-3" placeholder="Description (optional)" maxlength="300">
+    </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary rounded-pill px-4" id="submit-collection-btn">Create</button>
+      <button class="btn btn-outline-secondary rounded-pill" id="cancel-collection-btn">Cancel</button>
+    </div>
+  </div>
+
+  {% if collections %}
+    <div class="row g-3" id="collections-grid">
+      {% for col in collections %}
+        <div class="col-md-6 col-lg-4 reveal-up">
+          <a href="{% url 'collection_detail' col.pk %}" class="collection-card">
+            <div class="d-flex align-items-start justify-content-between">
+              <div>
+                <div class="fw-semibold fs-5">{{ col.name }}</div>
+                {% if col.description %}<div class="text-muted small mt-1">{{ col.description }}</div>{% endif %}
+              </div>
+              <span class="badge bg-light text-dark border">{{ col.item_count }} items</span>
+            </div>
+            <div class="d-flex align-items-center justify-content-between mt-3">
+              <span class="text-muted small">{{ col.created_at|date:"M d, Y" }}</span>
+              {% if col.is_public %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle">Public</span>
+              {% else %}
+                <span class="badge bg-secondary-subtle text-secondary border">Private</span>
+              {% endif %}
+            </div>
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="text-center py-5 text-muted reveal-up" id="empty-state">
+      <div style="font-size:3.5rem;">📁</div>
+      <h5 class="mt-3 fw-semibold">No collections yet</h5>
+      <p>Create your first collection to start organizing assets.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const btn = document.getElementById('create-collection-btn');
+const form = document.getElementById('create-collection-form');
+const cancelBtn = document.getElementById('cancel-collection-btn');
+const submitBtn = document.getElementById('submit-collection-btn');
+
+btn.addEventListener('click', () => { form.style.display = 'block'; btn.style.display = 'none'; });
+cancelBtn.addEventListener('click', () => { form.style.display = 'none'; btn.style.display = 'inline-block'; });
+
+submitBtn.addEventListener('click', async () => {
+  const name = document.getElementById('col-name').value.trim();
+  const desc = document.getElementById('col-desc').value.trim();
+  if (!name) { alert('Please enter a collection name.'); return; }
+  try {
+    const res = await fetch('{% url "create_collection" %}', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json','X-CSRFToken': getCookie('csrftoken')},
+      body: JSON.stringify({name, description: desc})
+    });
+    if (res.ok) { location.reload(); }
+  } catch(e) {}
+});
+
+function getCookie(name) {
+  const v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
+  return v ? v[2] : null;
+}
+</script>
+{% endblock %}

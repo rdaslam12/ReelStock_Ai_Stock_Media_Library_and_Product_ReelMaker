@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block title %}Complete Profile – ReelStock{% endblock %}
+{% block content %}
+<div class="auth-page-wrap">
+  <div class="auth-card reveal-up">
+    <div class="auth-logo"><span class="text-primary fw-bold">Reel</span>Stock</div>
+    <h2 class="auth-heading">Complete your profile</h2>
+    <p class="auth-sub">Choose the public name people will see on your shared assets.</p>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label fw-semibold small" for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors|join:", " }}</div>{% endif %}
+      </div>
+      <div class="mb-4">
+        <label class="form-label fw-semibold small" for="{{ form.display_name.id_for_label }}">Display name</label>
+        {{ form.display_name }}
+        {% if form.display_name.errors %}<div class="text-danger small mt-1">{{ form.display_name.errors|join:", " }}</div>{% endif %}
+      </div>
+      <button type="submit" class="btn btn-primary w-100 py-2 fw-bold rounded-3">Continue</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

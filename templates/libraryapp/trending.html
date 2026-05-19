@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Trending – ReelStock{% endblock %}
+{% block content %}
+<div class="container py-4" style="max-width:1280px;">
+
+  <div class="d-flex align-items-center gap-3 mb-2 reveal-up">
+    <h2 class="fw-bold mb-0">Trending This Week</h2>
+  </div>
+  <p class="text-muted mb-5 reveal-up">Top assets from the past 7 days, ranked by views, ratings, and conversation.</p>
+
+  <!-- Trending Images -->
+  <h4 class="fw-semibold mb-3 reveal-up">Top Images</h4>
+  {% if top_images %}
+    <div class="library-grid mb-5">
+      {% for asset in top_images %}
+        <a href="{% url 'asset_detail' 'image' asset.pk %}" class="lib-card text-decoration-none reveal-up" style="position:relative;">
+          <div class="trending-rank">{{ forloop.counter }}</div>
+          <div class="lib-card-media">
+            <img src="{{ asset.media_url }}" alt="{{ asset.display_title }}" loading="lazy">
+          </div>
+          <div class="lib-card-info">
+            <div class="lib-card-title">{{ asset.display_title }}</div>
+            <div class="lib-card-meta">
+              <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ asset.user.username }}"
+                   class="lib-avatar" alt="{{ asset.user.username }}">
+              <span>{{ asset.user.get_full_name|default:asset.user.username }}</span>
+              {% if asset.style %}<span class="lib-badge">{{ asset.style }}</span>{% endif %}
+              <span class="asset-views-chip">👁 {{ asset.view_count }}</span>
+              <span class="lib-price-chip ms-auto"><span class="coin-icon">🪙</span>{{ asset.coin_price }} RC</span>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted mb-5">No trending images yet — check back soon!</p>
+  {% endif %}
+
+  <!-- Trending Videos -->
+  <h4 class="fw-semibold mb-3 reveal-up">Top Product Reels</h4>
+  {% if top_videos %}
+    <div class="library-grid mb-5">
+      {% for asset in top_videos %}
+        <a href="{% url 'asset_detail' 'video' asset.pk %}" class="lib-card text-decoration-none reveal-up" style="position:relative;">
+          <div class="trending-rank">{{ forloop.counter }}</div>
+          <div class="lib-card-media lib-card-video">
+            {% if asset.playback_url %}
+              <video src="{{ asset.playback_url }}" muted loop playsinline preload="metadata"
+                     {% if asset.source_media_url %}poster="{{ asset.source_media_url }}"{% endif %}
+                     style="width:100%;height:100%;object-fit:cover;"
+                     onmouseenter="this.play()" onmouseleave="this.pause();this.currentTime=0;"></video>
+            {% elif asset.source_media_url %}
+              <img src="{{ asset.source_media_url }}" alt="{{ asset.display_title }}" loading="lazy">
+            {% endif %}
+            <div class="lib-play-icon">▶</div>
+          </div>
+          <div class="lib-card-info">
+            <div class="lib-card-title">{{ asset.display_title }}</div>
+            <div class="lib-card-meta">
+              <img src="https://api.dicebear.com/7.x/initials/svg?seed={{ asset.user.username }}"
+                   class="lib-avatar" alt="{{ asset.user.username }}">
+              <span>{{ asset.user.get_full_name|default:asset.user.username }}</span>
+              {% if asset.category %}<span class="lib-badge">{{ asset.category }}</span>{% endif %}
+              <span class="asset-views-chip">👁 {{ asset.view_count }}</span>
+              <span class="lib-price-chip ms-auto"><span class="coin-icon">🪙</span>{{ asset.coin_price }} RC</span>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-muted mb-5">No trending videos yet — check back soon!</p>
+  {% endif %}
+
+</div>
+{% endblock %}

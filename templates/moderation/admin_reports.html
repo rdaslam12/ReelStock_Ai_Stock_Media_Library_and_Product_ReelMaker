@@ -1,240 +1,98 @@
-{% extends "admin_base.html" %}
-{% load static %}
-
-{% block page_title %}Admin Dashboard - Reports{% endblock %}
-{% block page_subtitle %}Review community reports and take actions {% endblock %}
+{% extends 'admin_base.html' %}
+{% block page_title %}Real Platform Reports{% endblock %}
+{% block page_subtitle %}Live metrics from users, content, wallets, downloads, moderation logs, and engagement{% endblock %}
 
 {% block content %}
+<div class="admin-kpi-grid mb-4">
+  <div class="admin-kpi-card"><span>Users</span><strong>{{ report_stats.total_users }}</strong><small>{{ report_stats.active_users }} active · {{ report_stats.inactive_users }} inactive</small></div>
+  <div class="admin-kpi-card"><span>Images</span><strong>{{ report_stats.published_images }}</strong><small>{{ report_stats.unpublished_images }} unpublished</small></div>
+  <div class="admin-kpi-card"><span>Videos</span><strong>{{ report_stats.published_videos }}</strong><small>{{ report_stats.failed_videos }} failed · {{ report_stats.unpublished_videos }} unpublished</small></div>
+  <div class="admin-kpi-card"><span>Moderation</span><strong>{{ report_stats.moderated_assets }}</strong><small>{{ report_stats.removed_assets }} removed assets</small></div>
+  <div class="admin-kpi-card"><span>Wallets</span><strong>{{ report_stats.wallet_balance }} RC</strong><small>{{ report_stats.wallet_count }} wallets</small></div>
+  <div class="admin-kpi-card"><span>Downloads</span><strong>{{ report_stats.downloads }}</strong><small>{{ report_stats.download_coins }} RC spent</small></div>
+  <div class="admin-kpi-card"><span>Engagement</span><strong>{{ report_stats.bookmarks }}</strong><small>{{ report_stats.collections }} collections · {{ report_stats.comments }} comments</small></div>
+  <div class="admin-kpi-card"><span>Trending</span><strong>{{ report_stats.manual_trending }}</strong><small>Manual active picks</small></div>
+</div>
 
-<div class="row g-3">
-  <!-- LEFT: filters + table -->
-  <div class="col-lg-8">
-    <!-- Filters -->
-    <div class="admin-card p-3 mb-3">
-      <div class="row g-3 align-items-end">
-        <div class="col-md-5">
-          <label class="form-label mb-1">Search</label>
-          <input id="repSearch" class="form-control" placeholder="Search reports...">
-        </div>
-
-        <div class="col-md-3">
-          <label class="form-label mb-1">Status</label>
-          <select id="repStatus" class="form-select">
-            <option value="">All</option>
-            <option value="open">Open</option>
-            <option value="resolved">Resolved</option>
-            <option value="dismissed">Dismissed</option>
-          </select>
-        </div>
-
-        <div class="col-md-2">
-          <label class="form-label mb-1">Report Type</label>
-          <select id="repType" class="form-select">
-            <option value="">All</option>
-            <option value="hate speech">Hate Speech</option>
-            <option value="nudity">Nudity</option>
-            <option value="copyright">Copyright</option>
-            <option value="spam">Spam</option>
-          </select>
-        </div>
-
-        <div class="col-md-2">
-          <label class="form-label mb-1">Date Range</label>
-          <input id="repDate" class="form-control" type="date">
-        </div>
-      </div>
-    </div>
-
-    <!-- Table -->
-    <div class="admin-card p-3">
-      <div class="fw-semibold mb-2">Report Queue</div>
-
+<div class="row g-4">
+  <div class="col-xl-6">
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Top Creators</h2></div>
       <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead>
-            <tr>
-              <th style="width:70px;">ID</th>
-              <th>Reported Asset/User</th>
-              <th style="width:120px;">Reporter</th>
-              <th style="width:140px;">Reason</th>
-              <th style="width:140px;">Timestamp</th>
-              <th style="width:120px;">Status</th>
-              <th style="width:120px;">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody id="repRows">
-            {% for r in reports %}
-            <tr class="rep-row"
-                role="button"
-                data-id="{{ r.id }}"
-                data-asset="{{ r.asset_id }}"
-                data-reporter="{{ r.reporter_id }}"
-                data-reason="{{ r.reason }}"
-                data-status="{{ r.status|lower }}"
-                data-time="2026-02-20 12:00">
-              <td class="fw-semibold">{{ r.id }}</td>
-
-              <td>
-                <div class="d-flex align-items-center gap-2">
-                  {% with a=assets|first %}
-                  <img src="{% static 'img/placeholder.png' %}" width="56" height="36" class="rounded-3 border" style="object-fit:cover;">
-                  {% endwith %}
-                  <div>
-                    <div class="fw-semibold">Asset #{{ r.asset_id }}</div>
-                    <div class="text-muted small">by {{ r.reporter_id }}</div>
-                  </div>
-                </div>
-              </td>
-
-              <td><a class="text-decoration-none" href="#">@{{ r.reporter_id }}</a></td>
-              <td class="text-capitalize">{{ r.reason }}</td>
-              <td class="text-muted">2026-02-20</td>
-
-              <td>
-                {% if r.status|lower == 'open' %}
-                  <span class="badge rounded-pill pill-open">Open</span>
-                {% elif r.status|lower == 'resolved' %}
-                  <span class="badge rounded-pill pill-resolved">Resolved</span>
-                {% else %}
-                  <span class="badge rounded-pill pill-dismissed">Dismissed</span>
-                {% endif %}
-              </td>
-
-              <td>
-                <button class="btn btn-sm btn-primary open-panel">Review</button>
-              </td>
-            </tr>
-            {% endfor %}
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Creator</th><th>Images</th><th>Videos</th><th>Followers</th></tr></thead>
+          <tbody>
+            {% for creator in top_creators %}
+              <tr>
+                <td><a href="{% url 'admin_user_detail' creator.pk %}">@{{ creator.username }}</a></td>
+                <td>{{ creator.published_images }}</td>
+                <td>{{ creator.published_videos }}</td>
+                <td>{{ creator.followers_count }}</td>
+              </tr>
+            {% empty %}<tr><td colspan="4" class="text-muted">No published creators yet.</td></tr>{% endfor %}
           </tbody>
         </table>
       </div>
+    </section>
 
-      <div class="d-flex justify-content-between align-items-center pt-3">
-        <div class="text-muted small">Showing 1-{{ reports|length }} of {{ reports|length }} reports</div>
-        <div class="btn-group">
-          <button class="btn btn-sm btn-outline-secondary" disabled>&laquo;</button>
-          <button class="btn btn-sm btn-primary">1</button>
-          <button class="btn btn-sm btn-outline-secondary">2</button>
-          <button class="btn btn-sm btn-outline-secondary">&raquo;</button>
+    <section class="admin-card">
+      <div class="admin-card-header"><h2>Top Video Categories</h2></div>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Category</th><th>Videos</th><th>Views</th></tr></thead>
+          <tbody>
+            {% for row in top_categories %}
+              <tr><td>{{ row.category|default:"Uncategorized" }}</td><td>{{ row.count }}</td><td>{{ row.views|default:0 }}</td></tr>
+            {% empty %}<tr><td colspan="3" class="text-muted">No video categories yet.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div class="col-xl-6">
+    <section class="admin-card mb-4">
+      <div class="admin-card-header"><h2>Top Assets by Views</h2></div>
+      <div class="row g-4">
+        <div class="col-lg-6">
+          <h3 class="admin-section-title">Images</h3>
+          <div class="admin-stack-list">
+            {% for asset in top_images %}
+              <a class="admin-stack-item text-decoration-none" href="{% url 'admin_asset_detail' 'image' asset.pk %}">
+                <div><strong>{{ asset.display_title|truncatechars:42 }}</strong><small>@{{ asset.user.username }}</small></div>
+                <span>{{ asset.view_count }}</span>
+              </a>
+            {% empty %}<p class="text-muted mb-0">No images.</p>{% endfor %}
+          </div>
+        </div>
+        <div class="col-lg-6">
+          <h3 class="admin-section-title">Videos</h3>
+          <div class="admin-stack-list">
+            {% for asset in top_videos %}
+              <a class="admin-stack-item text-decoration-none" href="{% url 'admin_asset_detail' 'video' asset.pk %}">
+                <div><strong>{{ asset.display_title|truncatechars:42 }}</strong><small>@{{ asset.user.username }}</small></div>
+                <span>{{ asset.view_count }}</span>
+              </a>
+            {% empty %}<p class="text-muted mb-0">No videos.</p>{% endfor %}
+          </div>
         </div>
       </div>
-    </div>
-  </div>
+    </section>
 
-  <!-- RIGHT: details panel -->
-  <div class="col-lg-4">
-    <div class="report-panel p-3">
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <div class="fw-semibold">Report Details</div>
-        <button id="closePanel" class="btn btn-sm btn-outline-secondary">✕</button>
+    <section class="admin-card">
+      <div class="admin-card-header"><h2>Recent Admin Actions</h2></div>
+      <div class="admin-stack-list">
+        {% for log in recent_admin_actions %}
+          <div class="admin-stack-item">
+            <div>
+              <strong>{{ log.get_action_display }}</strong>
+              <small>{{ log.object_label|default:"No object label" }} · {{ log.note|truncatechars:90 }}</small>
+            </div>
+            <span class="text-muted small">{{ log.created_at|date:"M d, H:i" }}</span>
+          </div>
+        {% empty %}<p class="text-muted mb-0">No admin actions logged yet.</p>{% endfor %}
       </div>
-
-      <div id="panelBody">
-        <div class="text-muted small">Select a report to preview details.</div>
-      </div>
-
-      <div class="d-grid gap-2 mt-3">
-        <button class="btn btn-danger" disabled id="btnRemove">Remove Content</button>
-        <button class="btn btn-outline-secondary" disabled id="btnWarn">Warn User</button>
-        <button class="btn btn-outline-dark" disabled id="btnBan">Ban User</button>
-        <button class="btn btn-outline-secondary" disabled id="btnDismiss">Dismiss Report</button>
-      </div>
-
-      <button class="btn btn-primary w-100 mt-3" disabled id="btnResolve">Mark as Resolved</button>
-    </div>
+    </section>
   </div>
 </div>
-
-{% endblock %}
-
-{% block scripts %}
-<script>
-  const repRows = [...document.querySelectorAll(".rep-row")];
-  const panelBody = document.getElementById("panelBody");
-  const closePanel = document.getElementById("closePanel");
-
-  const enableButtons = (on) => {
-    ["btnRemove","btnWarn","btnBan","btnDismiss","btnResolve"].forEach(id=>{
-      document.getElementById(id).disabled = !on;
-    });
-  };
-
-  function openDetails(row){
-    const id = row.dataset.id;
-    const asset = row.dataset.asset;
-    const reporter = row.dataset.reporter;
-    const reason = row.dataset.reason;
-    const status = row.dataset.status;
-
-    panelBody.innerHTML = `
-      <div class="mb-2"><span class="text-muted small">Reported for:</span>
-        <div class="fw-semibold text-capitalize">${reason}</div>
-        <div class="text-muted small">by @${reporter}</div>
-      </div>
-
-      <div class="admin-card p-2 mb-3">
-        <img src="{% static 'img/placeholder.png' %}" class="w-100 rounded-3 border" style="height:160px;object-fit:cover;">
-      </div>
-
-      <div class="text-muted small mb-1">Report metadata</div>
-      <ul class="small mb-0">
-        <li>Report ID: <b>#${id}</b></li>
-        <li>Asset ID: <b>#${asset}</b></li>
-        <li>Status: <b class="text-capitalize">${status}</b></li>
-      </ul>
-
-      <hr>
-      <div class="text-muted small mb-1">Reporter’s comment:</div>
-      <div class="small">“This is a mock comment for demo purposes.”</div>
-    `;
-    enableButtons(true);
-  }
-
-  repRows.forEach(r=>{
-    r.addEventListener("click", (e)=>{
-      if(e.target.classList.contains("open-panel") || e.target.closest(".open-panel")) {
-        openDetails(r);
-      } else {
-        openDetails(r);
-      }
-    });
-  });
-
-  closePanel.addEventListener("click", ()=>{
-    panelBody.innerHTML = `<div class="text-muted small">Select a report to preview details.</div>`;
-    enableButtons(false);
-  });
-
-  // Simple filters
-  const q = id => document.getElementById(id);
-  
-  function applyFilters(){
-    const s = q("repSearch").value.toLowerCase().trim();
-    const st = q("repStatus").value;
-    const ty = q("repType").value;
-    const dt = q("repDate").value; // Get the selected date (Format: YYYY-MM-DD)
-
-    repRows.forEach(r=>{
-      const reason = r.dataset.reason.toLowerCase();
-      const reporter = r.dataset.reporter.toLowerCase();
-      const status = r.dataset.status.toLowerCase();
-      const rowDate = r.dataset.time; // Format: "YYYY-MM-DD HH:MM"
-
-      const matchSearch = !s || reason.includes(s) || reporter.includes(s) || r.dataset.asset.includes(s);
-      const matchStatus = !st || status === st;
-      const matchType = !ty || reason === ty;
-      
-      // Check if the row's time starts with the selected date (or if no date is selected)
-      const matchDate = !dt || rowDate.startsWith(dt);
-
-      r.style.display = (matchSearch && matchStatus && matchType && matchDate) ? "" : "none";
-    });
-  }
-
-  // Added "repDate" to the array so it triggers the filter when changed
-  ["repSearch", "repStatus", "repType", "repDate"].forEach(id=>{
-    q(id).addEventListener(id==="repSearch" ? "input" : "change", applyFilters);
-  });
-</script>
 {% endblock %}

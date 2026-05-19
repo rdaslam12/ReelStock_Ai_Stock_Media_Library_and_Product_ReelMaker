@@ -1,0 +1,123 @@
+============================================================
+  ReelStock — Project Architecture Overview
+============================================================
+
+PURPOSE
+  AI-powered product media platform. Users generate images
+  from text prompts, or upload product photos to get
+  commercial-style video reels. Content can be published
+  to a community library.
+
+------------------------------------------------------------
+TECH STACK
+------------------------------------------------------------
+  Backend:   Django 4.2, SQLite (dev), Python 3.10+
+  Frontend:  Bootstrap 5.3, custom CSS (glass morphism)
+  AI Images: Hugging Face Inference API (FLUX.1-schnell)
+  AI Video:  fal.ai Kling v1.6 (image-to-video)
+  Auth:      Django built-in (email or username login)
+
+------------------------------------------------------------
+APPS
+------------------------------------------------------------
+  core/
+    Models:  UserProfile, GeneratedImage, GeneratedVideo,
+             BlogPost, FeaturedAsset
+    Views:   Home, Login, Register, Logout, Account,
+             EditProfile, BlogList, BlogDetail
+    Purpose: Auth, user profiles, blog, homepage data
+
+  studio/
+    Services: image_provider.py (HuggingFace text-to-image)
+              video_provider.py (fal.ai image-to-video)
+    Views:   Generate page, Reel Maker, My Assets,
+             save_image, submit_reel, reel_status, publish_reel
+    Purpose: All AI generation flows
+
+  libraryapp/
+    Views:   library, asset_detail, creator_profile
+    Purpose: Public browsing of published images/videos
+
+  moderation/
+    Views:   Dashboard, admin_assets, admin_reports
+    Purpose: Staff-only view of all content
+
+------------------------------------------------------------
+KEY MODELS
+------------------------------------------------------------
+  UserProfile       — extends User with bio, social links
+  GeneratedImage    — stores image URL, prompt, style; 
+                      is_saved (in My Assets) + is_published (in Library)
+  GeneratedVideo    — product reel; status lifecycle:
+                      pending → processing → done | failed
+                      Failed records are deleted automatically
+  BlogPost          — title, slug, category, body; superuser-authored
+  FeaturedAsset     — links to an image or video; admin picks order
+
+------------------------------------------------------------
+AUTH FLOW
+------------------------------------------------------------
+  Register: First name + last name + email + password
+            Username auto-derived from email prefix
+  Login:    Email or username + password
+  Sessions: Standard Django sessions
+
+------------------------------------------------------------
+AI PIPELINES
+------------------------------------------------------------
+  Image Generation (Generate page):
+    Browser → POST /generate/image/ → HuggingFace FLUX
+    → saves file to media/generated/ → returns URL
+    → user clicks Publish → POST /generate/image/save/
+    → GeneratedImage(is_published=True)
+
+  Video Generation (Reel Maker):
+    Browser → POST /reel/submit/ (multipart with image file)
+    → image saved to media/reel_inputs/
+    → fal.ai job submitted → request_id stored in DB
+    → Browser polls GET /reel/status/{id}/ every 6s
+    → fal.ai completes → video_url stored
+    → user clicks Publish → POST /reel/publish/{id}/
+    → GeneratedVideo(is_published=True) → visible in Library
+
+  Text-to-Video (Generate page, not yet wired):
+    See VIDEO_MODEL_INTEGRATION.txt
+
+------------------------------------------------------------
+MEDIA FILES
+------------------------------------------------------------
+  media/generated/      — AI-generated images
+  media/reel_inputs/    — uploaded product photos
+  media/reels/          — downloaded reel files (optional)
+  Served by Django in DEBUG mode via /media/ URL
+
+------------------------------------------------------------
+ADMIN
+------------------------------------------------------------
+  /admin/               — Django admin (superuser)
+    GeneratedImage      — list_editable: is_published
+    GeneratedVideo      — list_editable: is_published
+    BlogPost            — create/edit posts; auto-slug
+    FeaturedAsset       — pick image/video + set order
+    UserProfile         — view/edit user profiles
+
+  /admin-panel/         — Moderation dashboard (staff)
+
+------------------------------------------------------------
+ENVIRONMENT VARIABLES (.env)
+------------------------------------------------------------
+  DJANGO_SECRET_KEY     — Django secret key
+  HF_API_TOKEN          — HuggingFace token (images)
+  HF_IMAGE_MODEL        — default: FLUX.1-schnell
+  FAL_API_KEY           — fal.ai key (product reels)
+
+------------------------------------------------------------
+SETUP
+------------------------------------------------------------
+  pip install -r requirements.txt
+  cp .env.example .env   # fill in keys
+  python manage.py migrate
+  python manage.py createsuperuser
+  python manage.py runserver
+
+============================================================

@@ -1,32 +1,50 @@
 {% extends 'base.html' %}
-
+{% block title %}Register – ReelStock{% endblock %}
 {% block content %}
-  <div class="row justify-content-center">
-    <div class="col-md-6 col-lg-4">
-      <h2 class="h4 mb-3 text-center">Register</h2>
-      <form>
-        <div class="mb-3">
-          <label for="id_username" class="form-label">Username</label>
-          <input type="text" class="form-control" id="id_username" placeholder="Choose a username" />
+<div class="auth-page-wrap">
+  <div class="auth-card reveal-up">
+    <div class="auth-logo"><span class="text-primary fw-bold">Reel</span>Stock</div>
+    <h2 class="auth-heading">Create your account</h2>
+    <p class="auth-sub">Join the AI creator community</p>
+
+    {% if messages %}
+      {% for msg in messages %}
+        <div class="alert alert-danger rounded-3 py-2 small">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" onsubmit="showAuthOverlay('Creating your account…')">
+      {% csrf_token %}
+      <div class="row g-2 mb-3">
+        <div class="col-6">
+          <label class="form-label fw-semibold small">First Name</label>
+          <input class="form-control rounded-3" type="text" name="first_name" placeholder="First" required autofocus>
         </div>
-        <div class="mb-3">
-          <label for="id_email" class="form-label">Email address</label>
-          <input type="email" class="form-control" id="id_email" placeholder="Enter email" />
+        <div class="col-6">
+          <label class="form-label fw-semibold small">Last Name</label>
+          <input class="form-control rounded-3" type="text" name="last_name" placeholder="Last">
         </div>
-        <div class="mb-3">
-          <label for="id_password" class="form-label">Password</label>
-          <input type="password" class="form-control" id="id_password" placeholder="Create a password" />
-        </div>
-        <div class="mb-3">
-          <label for="id_confirm_password" class="form-label">Confirm Password</label>
-          <input type="password" class="form-control" id="id_confirm_password" placeholder="Confirm password" />
-        </div>
-        <button type="submit" class="btn btn-primary w-100">Register</button>
-      </form>
-      <p class="mt-3 text-center">
-        Already have an account?
-        <a href="{% url 'login' %}">Login here</a>
-      </p>
-    </div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold small">Email</label>
+        <input class="form-control rounded-3" type="email" name="email" placeholder="you@email.com" required>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold small">Password</label>
+        <input class="form-control rounded-3" type="password" name="password" placeholder="At least 8 characters" required>
+      </div>
+      <div class="mb-4">
+        <label class="form-label fw-semibold small">Confirm Password</label>
+        <input class="form-control rounded-3" type="password" name="password2" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary w-100 py-2 fw-bold rounded-3">Create account</button>
+    </form>
+
+    {% include 'core/_social_auth_buttons.html' %}
+
+    <p class="text-center text-muted small mt-4 mb-0">
+      Already have an account? <a href="{% url 'login' %}">Sign in</a>
+    </p>
   </div>
+</div>
 {% endblock %}

@@ -1,154 +1,127 @@
-{% extends "admin_base.html" %}
-{% load static %}
-
-{% block page_title %}Admin Dashboard - Overview{% endblock %}
+{% extends 'admin_base.html' %}
+{% block page_title %}Dashboard{% endblock %}
+{% block page_subtitle %}Users, generated content, coins, downloads, and review queues{% endblock %}
 
 {% block content %}
-  <!-- KPI Row -->
-  <div class="row g-3 mb-4">
-    <div class="col-12 col-lg">
-      <div class="admin-card p-3 h-100">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="kpi-title">Total Assets</div>
-            <p class="kpi-value">{{ assets|length }}</p>
-            <p class="kpi-sub">Published only</p>
-          </div>
-          <div class="rounded-3 p-2" style="background:#e8f0ff;color:#1d4ed8;"><i class="bi bi-collection-play"></i></div>
-        </div>
-      </div>
-    </div>
+<div class="admin-kpi-grid">
+  <a class="admin-kpi-card" href="{% url 'admin_users' %}">
+    <span>Total users</span>
+    <strong>{{ stats.total_users }}</strong>
+    <small>{{ stats.new_users_7d }} joined in 7 days</small>
+  </a>
+  <a class="admin-kpi-card" href="{% url 'admin_assets' %}?type=image&status=published">
+    <span>Published images</span>
+    <strong>{{ stats.published_images }}</strong>
+    <small>Visible in Library</small>
+  </a>
+  <a class="admin-kpi-card" href="{% url 'admin_assets' %}?type=video&status=published">
+    <span>Published videos</span>
+    <strong>{{ stats.published_videos }}</strong>
+    <small>Done and library-ready</small>
+  </a>
+  <a class="admin-kpi-card" href="{% url 'admin_wallets' %}">
+    <span>Wallet balance</span>
+    <strong>{{ stats.coin_balance }} RC</strong>
+    <small>{{ stats.transactions }} coin transactions</small>
+  </a>
+  <a class="admin-kpi-card" href="{% url 'admin_reels' %}">
+    <span>Generated reels</span>
+    <strong>{{ stats.generated_reels }}</strong>
+    <small>{{ stats.failed_reels }} failed</small>
+  </a>
+  <a class="admin-kpi-card" href="{% url 'admin_wallets' %}?request_status=pending">
+    <span>Coin requests</span>
+    <strong>{{ stats.pending_coin_requests }}</strong>
+    <small>Pending review</small>
+  </a>
+  <a class="admin-kpi-card" href="{% url 'admin_engagement' %}">
+    <span>Downloads</span>
+    <strong>{{ stats.downloads }}</strong>
+    <small>{{ stats.download_coins }} RC spent</small>
+  </a>
+  <a class="admin-kpi-card" href="{% url 'admin_reports' %}">
+    <span>Reports</span>
+    <strong>{{ stats.reports }}</strong>
+    <small>Moderation records</small>
+  </a>
+</div>
 
-    <div class="col-12 col-lg">
-      <div class="admin-card p-3 h-100">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="kpi-title">Open Reports</div>
-            <p class="kpi-value">{{ reports|length }}</p>
-            <p class="kpi-sub">Waiting review</p>
-          </div>
-          <div class="rounded-3 p-2" style="background:#fff7ed;color:#c2410c;"><i class="bi bi-flag"></i></div>
-        </div>
+<div class="row g-4 mt-1">
+  <div class="col-xl-8">
+    <section class="admin-card">
+      <div class="admin-card-header">
+        <h2>Recent Assets</h2>
+        <a href="{% url 'admin_assets' %}">View all</a>
       </div>
-    </div>
-
-    <div class="col-12 col-lg">
-      <div class="admin-card p-3 h-100">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <div class="kpi-title">New Uploads</div>
-            <p class="kpi-value">+{{ assets|length }}</p>
-            <p class="kpi-sub">Today </p>
-          </div>
-          <div class="rounded-3 p-2" style="background:#ecfdf5;color:#047857;"><i class="bi bi-upload"></i></div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-lg">
-      <div class="admin-card p-3 h-100">
-        <div class="kpi-title mb-2">Quick Actions</div>
-        <div class="d-flex gap-2 flex-wrap">
-          <button class="btn btn-sm btn-outline-secondary">Export CSV </button>
-          <button class="btn btn-sm btn-outline-secondary">Bulk Review</button>
-          <button class="btn btn-sm btn-outline-secondary">Settings </button>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-lg">
-      <div class="admin-card p-3 h-100">
-        <div class="kpi-title mb-2">Moderation Queue Summary</div>
-        <div class="text-muted small">Recent reported items</div>
-        <div class="mt-3 d-grid gap-2">
-          {% for r in reports|slice:":2" %}
-            <div class="d-flex align-items-center justify-content-between">
-              <div>
-                <div class="fw-semibold">Asset #{{ r.asset_id }}</div>
-                <div class="text-muted small">Reason: {{ r.reason }}</div>
-              </div>
-              <div class="btn-group">
-                <button class="btn btn-sm btn-primary">Review</button>
-                <button class="btn btn-sm btn-outline-danger">Remove</button>
-                <button class="btn btn-sm btn-outline-secondary">Dismiss</button>
-              </div>
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Tables -->
-  <div class="row g-3">
-    <div class="col-lg-7" id="assets">
-      <div class="admin-card p-3">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <div class="fw-semibold">Recent Assets</div>
-          <span class="text-muted small">Latest uploads (mock)</span>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead>
+      <div class="table-responsive">
+        <table class="table align-middle mb-0">
+          <thead><tr><th>Asset</th><th>Owner</th><th>Status</th><th>Price</th><th>Date</th></tr></thead>
+          <tbody>
+            {% for row in recent_assets %}
               <tr>
-                <th>Preview</th>
-                <th>Title</th>
-                <th>Category</th>
-                <th>Owner</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for a in assets|slice:":5" %}
-              <tr>
-                <td><img src="{% static a.thumbnail %}" width="64" class="rounded-3 border" alt=""></td>
-                <td class="fw-semibold">{{ a.title }}</td>
-                <td><span class="badge badge-soft">{{ a.category }}</span></td>
-                <td class="text-muted">{{ a.owner }}</td>
                 <td>
-                  <div class="btn-group">
-                    <a class="btn btn-sm btn-outline-secondary" href="/asset/{{ a.id }}/">View</a>
-                    <button class="btn btn-sm btn-outline-warning">Hide</button>
-                    <button class="btn btn-sm btn-outline-danger">Delete</button>
-                  </div>
+                  <a class="d-flex align-items-center gap-3 text-decoration-none" href="{% url 'admin_asset_detail' row.type row.obj.pk %}">
+                    <span class="admin-thumb">{% if row.thumb %}<img src="{{ row.thumb }}" alt="">{% else %}<i class="bi bi-file-earmark"></i>{% endif %}</span>
+                    <span>
+                      <strong class="d-block text-dark">{{ row.title|truncatechars:48 }}</strong>
+                      <small class="text-muted">{{ row.type|title }} #{{ row.obj.pk }}</small>
+                    </span>
+                  </a>
                 </td>
+                <td>@{{ row.owner.username }}</td>
+                <td><span class="badge {% if row.published %}text-bg-success{% else %}text-bg-secondary{% endif %}">{{ row.status }}</span></td>
+                <td>{{ row.price }} RC</td>
+                <td class="text-muted small">{{ row.created_at|date:"M d, H:i" }}</td>
               </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+            {% empty %}
+              <tr><td colspan="5" class="text-muted">No generated assets yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-    </div>
-
-    <div class="col-lg-5" id="reports">
-      <div class="admin-card p-3">
-        <div class="d-flex justify-content-between align-items-center mb-2">
-          <div class="fw-semibold">Recent Reports</div>
-          <span class="text-muted small">Community flags</span>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Asset</th>
-                <th>Reason</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for r in reports %}
-              <tr>
-                <td class="fw-semibold">#{{ r.id }}</td>
-                <td class="text-muted">#{{ r.asset_id }}</td>
-                <td>{{ r.reason }}</td>
-                <td><span class="badge badge-soft">{{ r.status }}</span></td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    </section>
   </div>
+
+  <div class="col-xl-4">
+    <section class="admin-card mb-4">
+      <div class="admin-card-header">
+        <h2>Pending Coin Requests</h2>
+        <a href="{% url 'admin_wallets' %}?request_status=pending">Review</a>
+      </div>
+      <div class="admin-stack-list">
+        {% for req in pending_requests %}
+          <div class="admin-stack-item">
+            <div>
+              <strong>@{{ req.user.username }}</strong>
+              <small>{{ req.amount }} RC requested</small>
+            </div>
+            <span class="badge text-bg-warning">Pending</span>
+          </div>
+        {% empty %}
+          <p class="text-muted mb-0">No pending requests.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <div class="admin-card-header">
+        <h2>Latest Transactions</h2>
+        <a href="{% url 'admin_wallets' %}">Wallets</a>
+      </div>
+      <div class="admin-stack-list">
+        {% for txn in recent_transactions %}
+          <div class="admin-stack-item">
+            <div>
+              <strong>@{{ txn.wallet.user.username }}</strong>
+              <small>{{ txn.get_kind_display }}</small>
+            </div>
+            <span class="{% if txn.delta >= 0 %}text-success{% else %}text-danger{% endif %} fw-bold">{{ txn.delta }} RC</span>
+          </div>
+        {% empty %}
+          <p class="text-muted mb-0">No transactions yet.</p>
+        {% endfor %}
+      </div>
+    </section>
+  </div>
+</div>
 {% endblock %}
